@@ -28,9 +28,9 @@ Deno.serve(async (req) => {
 
     console.log(`Creating bucket for user: ${email} (${user_id})`)
 
-    // Call the database function to create user bucket
+    // Call the simplified database function to create user bucket
     const { data: bucketName, error } = await supabase
-      .rpc('create_user_bucket_by_email', {
+      .rpc('create_user_bucket_simple', {
         user_email: email,
         user_id: user_id
       })

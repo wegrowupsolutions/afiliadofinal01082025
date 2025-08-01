@@ -464,6 +464,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      create_user_bucket_simple: {
+        Args: { user_email: string; user_id: string }
+        Returns: string
+      }
       gerar_codigo_afiliado: {
         Args: Record<PropertyKey, never>
         Returns: string
