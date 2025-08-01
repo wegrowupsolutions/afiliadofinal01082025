@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Evolution = () => {
   const navigate = useNavigate();
@@ -18,11 +19,40 @@ const Evolution = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
+  const [connectedInstance, setConnectedInstance] = useState<{instance_name: string, phone_number?: string} | null>(null);
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
   
   useEffect(() => {
+    const checkExistingInstance = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return;
+
+        const { data, error } = await supabase
+          .from('evolution_instances')
+          .select('instance_name, phone_number')
+          .eq('user_id', user.user.id)
+          .eq('is_connected', true)
+          .order('connected_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Erro ao verificar instância existente:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setConnectedInstance(data[0]);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar instância conectada:', error);
+      }
+    };
+
+    checkExistingInstance();
+    
     return () => {
       if (statusCheckIntervalRef.current !== null) {
         clearInterval(statusCheckIntervalRef.current);
@@ -320,6 +350,40 @@ const Evolution = () => {
         
         
         <div className="max-w-xl mx-auto">
+          {connectedInstance && !qrCodeData && confirmationStatus !== 'confirmed' && (
+            <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30 mb-6">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 dark:text-white">Instância Conectada</h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Você já possui uma instância <span className="font-semibold">{connectedInstance.instance_name}</span> conectada
+                    {connectedInstance.phone_number && (
+                      <span> ao número <span className="font-semibold">{connectedInstance.phone_number}</span></span>
+                    )}.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <Button 
+                      onClick={() => navigate('/chats')}
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Ir para Conversas
+                    </Button>
+                    <Button 
+                      onClick={() => setConnectedInstance(null)}
+                      variant="outline"
+                    >
+                      Criar Nova Instância
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
