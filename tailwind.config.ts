@@ -26,9 +26,9 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				petshop: {
-					blue: '#1a365d',
-					gold: '#fbbf24',
-					navy: '#172554',
+					blue: 'hsl(218, 71%, 21%)',
+					gold: 'hsl(42, 100%, 50%)',
+					navy: 'hsl(218, 91%, 17%)',
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
