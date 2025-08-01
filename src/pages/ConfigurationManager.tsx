@@ -494,7 +494,7 @@ const ConfigurationManager = () => {
             <div className="space-y-6 py-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="endpoint-url" className="text-sm font-medium">
+                  <Label htmlFor="endpoint-url" className="text-sm font-medium text-foreground">
                     URL do Endpoint
                   </Label>
                   <span className="text-xs text-muted-foreground">
@@ -514,9 +514,9 @@ const ConfigurationManager = () => {
               </div>
               
               {newEndpointValue && (
-                <div className="bg-muted/50 p-3 rounded-lg border">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Preview:</p>
-                  <p className="font-mono text-xs break-all">
+                <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
+                  <p className="text-xs font-medium text-foreground mb-2">Preview:</p>
+                  <p className="font-mono text-xs break-all text-foreground bg-background/50 p-2 rounded border">
                     {newEndpointValue}
                   </p>
                 </div>
