@@ -12,6 +12,7 @@ import ClientsCard from '@/components/dashboard/ClientsCard';
 import EvolutionCard from '@/components/dashboard/EvolutionCard';
 import AcademiaCard from '@/components/dashboard/AcademiaCard';
 import ConfigCard from '@/components/dashboard/ConfigCard';
+import AgentConfigCard from '@/components/dashboard/AgentConfigCard';
 
 const Dashboard = () => {
   const { user, isLoading } = useAuth();
@@ -51,6 +52,7 @@ const Dashboard = () => {
           <ClientsCard />
           <EvolutionCard />
           <AcademiaCard />
+          <AgentConfigCard />
           {isAdmin && <ConfigCard />}
         </div>
       </main>
