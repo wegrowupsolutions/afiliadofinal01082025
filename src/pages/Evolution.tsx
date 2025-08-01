@@ -29,7 +29,6 @@ const Evolution = () => {
   } = useEvolutionApi();
   
   const [instanceName, setInstanceName] = useState('');
-  const [webhookPath, setWebhookPath] = useState('');
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
   const statusCheckIntervalRef = useRef<number | null>(null);
@@ -150,22 +149,13 @@ const Evolution = () => {
       return;
     }
 
-    if (!webhookPath.trim()) {
-      toast({
-        title: "Caminho do webhook obrigatório",
-        description: "Por favor, informe o caminho do webhook.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setQrCodeData(null);
     setConfirmationStatus(null);
     retryCountRef.current = 0;
     
     try {
-      console.log('Criando instância:', { instanceName, webhookPath });
-      const blob = await createInstance(instanceName, webhookPath);
+      console.log('Criando instância:', { instanceName });
+      const blob = await createInstance(instanceName);
       
       if (blob) {
         const qrCodeUrl = URL.createObjectURL(blob);
@@ -367,16 +357,9 @@ const Evolution = () => {
                         value={instanceName}
                         onChange={(e) => setInstanceName(e.target.value)}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="webhook-path">Caminho do Webhook</Label>
-                      <Input 
-                        id="webhook-path" 
-                        placeholder="Ex: /webhook/atendimento" 
-                        className="dark:bg-gray-700"
-                        value={webhookPath}
-                        onChange={(e) => setWebhookPath(e.target.value)}
-                      />
+                      <p className="text-xs text-muted-foreground">
+                        Os webhooks serão configurados automaticamente através das configurações do sistema.
+                      </p>
                     </div>
                   </div>
                   

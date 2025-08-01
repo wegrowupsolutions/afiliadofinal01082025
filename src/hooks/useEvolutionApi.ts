@@ -41,13 +41,13 @@ export const useEvolutionApi = () => {
     return headers;
   };
 
-  const createInstance = async (instanceName: string, webhookPath: string): Promise<Blob | null> => {
+  const createInstance = async (instanceName: string): Promise<Blob | null> => {
     try {
       setIsConnecting(true);
-      console.log('Criando instância Evolution:', { instanceName, webhookPath });
+      console.log('Criando instância Evolution:', { instanceName });
       
       const endpoint = getEvolutionEndpoint('instance');
-      const webhookUrl = configurations['evolution_webhook_url'] || webhookPath;
+      const webhookUrl = configurations['webhook_mensagem'] || '';
       
       console.log('Usando endpoint:', endpoint);
       console.log('Webhook URL:', webhookUrl);
