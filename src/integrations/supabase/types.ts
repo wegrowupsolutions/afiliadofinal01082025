@@ -456,6 +456,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_user_bucket_if_not_exists: {
+        Args: { user_id: string }
+        Returns: string
+      }
       gerar_codigo_afiliado: {
         Args: Record<PropertyKey, never>
         Returns: string
