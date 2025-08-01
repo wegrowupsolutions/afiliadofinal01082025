@@ -28,7 +28,7 @@ export const useDocuments = () => {
     return defaultValue;
   };
 
-  // Fetch documents from Supabase
+  // Fetch documents from user's Supabase Storage bucket
   const fetchDocuments = async () => {
     try {
       setIsLoading(true);
@@ -40,43 +40,65 @@ export const useDocuments = () => {
         return;
       }
 
-      // Select titulo and user_id to ensure we have user-specific documents
-      const { data, error } = await supabase
-        .from('documents')
-        .select('titulo, user_id, created_at')
-        .eq('user_id', user.id);
+      // Get user's bucket name
+      const bucketName = `user-${user.email?.replace(/[@.]/g, '-')}`;
+      
+      // List files from user's bucket
+      const { data: files, error } = await supabase.storage
+        .from(bucketName)
+        .list('', {
+          limit: 100,
+          offset: 0,
+        });
 
       if (error) {
-        console.error('Error fetching documents:', error);
+        console.error('Error fetching files from bucket:', error);
         toast({
-          title: "Erro ao carregar documentos",
+          title: "Erro ao carregar arquivos",
           description: error.message,
           variant: "destructive",
         });
         return;
       }
 
-      // Transform the data to match our Document interface
-      const formattedDocs: Document[] = data.map((doc, index) => {
-        // Use titulo from the database if available, otherwise generate a name
-        const documentName = doc.titulo || `Documento ${index + 1}`;
-        
-        // Create dummy data for other required fields since we don't have metadata
-        return {
-          id: index + 1, // Generate dummy id
-          name: documentName,
-          type: 'unknown',
-          size: 'Unknown',
-          category: 'Sem categoria',
-          uploadedAt: new Date().toISOString().split('T')[0],
-          titulo: doc.titulo,
-        };
-      });
+      // Transform storage files to Document interface
+      const formattedDocs: Document[] = files
+        .filter(file => file.name && !file.name.startsWith('.')) // Filter out hidden files
+        .map((file, index) => {
+          const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+          const fileSize = file.metadata?.size ? `${(file.metadata.size / 1024).toFixed(1)} KB` : 'Unknown';
+          
+          // Determine file type and category
+          let type = 'unknown';
+          let category = 'Documento';
+          
+          if (['pdf'].includes(fileExtension)) {
+            type = 'pdf';
+            category = 'PDF';
+          } else if (['doc', 'docx'].includes(fileExtension)) {
+            type = 'document';
+            category = 'Documento';
+          } else if (['txt'].includes(fileExtension)) {
+            type = 'text';
+            category = 'Texto';
+          } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+            type = 'image';
+            category = 'Imagem';
+          }
 
-      // Filter out duplicates based on the titulo field
-      const uniqueDocs = filterUniqueByTitle(formattedDocs);
+          return {
+            id: index + 1,
+            name: file.name,
+            type,
+            size: fileSize,
+            category,
+            uploadedAt: file.created_at ? new Date(file.created_at).toLocaleDateString('pt-BR') : 'Unknown',
+            titulo: file.name,
+            metadata: file.metadata,
+          };
+        });
       
-      setDocuments(uniqueDocs);
+      setDocuments(formattedDocs);
     } catch (err) {
       console.error('Unexpected error fetching documents:', err);
       toast({
