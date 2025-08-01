@@ -47,10 +47,19 @@ export const parseMessage = (afiliadoMsg: AfiliadoMensagem): ChatMessage[] => {
           console.log('🔥 Conversation is array with length:', conversation.length);
           conversation.forEach((msg: any, index: number) => {
             console.log(`🔥 Processing message ${index}:`, msg);
-            if (msg.role && msg.content) {
+            
+            let content = '';
+            // Handle different content structures
+            if (msg.content) {
+              content = msg.content;
+            } else if (msg.parts && Array.isArray(msg.parts)) {
+              content = msg.parts.map((part: any) => part.text || part.content || '').join('');
+            }
+            
+            if (msg.role && content) {
               const chatMessage = {
                 role: msg.role,
-                content: msg.content,
+                content: content,
                 timestamp: timestamp
               };
               console.log('🔥 Adding message to parsed:', chatMessage);
@@ -59,15 +68,28 @@ export const parseMessage = (afiliadoMsg: AfiliadoMensagem): ChatMessage[] => {
               console.log('🔥 Message missing role or content:', msg);
             }
           });
-        } else if (conversation.role && conversation.content) {
+        } else if (conversation.role) {
           console.log('🔥 Conversation is single object');
-          const chatMessage = {
-            role: conversation.role,
-            content: conversation.content,
-            timestamp: timestamp
-          };
-          console.log('🔥 Adding single message to parsed:', chatMessage);
-          parsedMessages.push(chatMessage);
+          
+          let content = '';
+          // Handle different content structures for single object
+          if (conversation.content) {
+            content = conversation.content;
+          } else if (conversation.parts && Array.isArray(conversation.parts)) {
+            content = conversation.parts.map((part: any) => part.text || part.content || '').join('');
+          }
+          
+          if (content) {
+            const chatMessage = {
+              role: conversation.role,
+              content: content,
+              timestamp: timestamp
+            };
+            console.log('🔥 Adding single message to parsed:', chatMessage);
+            parsedMessages.push(chatMessage);
+          } else {
+            console.log('🔥 Single conversation missing content');
+          }
         } else {
           console.log('🔥 Conversation object invalid structure:', conversation);
         }
