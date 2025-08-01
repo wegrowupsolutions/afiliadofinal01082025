@@ -39,7 +39,7 @@ const App = () => (
               <Route path="/evolution" element={<Evolution />} />
               <Route path="/schedule" element={<Schedule />} />
               <Route path="/academia" element={<Academia />} />
-              <Route path="/configuration" element={<ConfigurationManager />} />
+              <Route path="/configuration-manager" element={<ConfigurationManager />} />
               <Route path="/agent-configuration" element={<AgentConfiguration />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
