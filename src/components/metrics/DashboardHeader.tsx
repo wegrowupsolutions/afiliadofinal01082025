@@ -24,7 +24,7 @@ const DashboardHeader: React.FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <PawPrint className="h-8 w-8 text-petshop-gold" />
-          <h1 className="text-2xl font-bold">Pet Paradise</h1>
+          <h1 className="text-2xl font-bold">Afiliado IA</h1>
         </div>
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="bg-white/10 text-white border-0 px-3 py-1">
