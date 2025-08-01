@@ -19,9 +19,9 @@ export const useEvolutionApi = () => {
       case 'instance':
         return 'https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado';
       case 'qr_code':
-        return configurations['webhook_atualizar_qr_code'] || `${baseUrl}/instance/connect`;
+        return 'https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado';
       case 'confirm':
-        return configurations['webhook_confirma'] || `${baseUrl}/instance/connectionState`;
+        return 'https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado';
       default:
         throw new Error(`Tipo de endpoint inválido: ${type}`);
     }
@@ -47,7 +47,7 @@ export const useEvolutionApi = () => {
       console.log('Criando instância Evolution:', { instanceName });
       
       const endpoint = getEvolutionEndpoint('instance');
-      const webhookUrl = configurations['webhook_mensagem'] || '';
+      const webhookUrl = 'https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado';
       
       console.log('Usando endpoint:', endpoint);
       console.log('Webhook URL:', webhookUrl);
