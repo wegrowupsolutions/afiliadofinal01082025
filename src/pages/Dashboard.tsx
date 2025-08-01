@@ -9,7 +9,7 @@ import ChatsCard from '@/components/dashboard/ChatsCard';
 import KnowledgeCard from '@/components/dashboard/KnowledgeCard';
 import ClientsCard from '@/components/dashboard/ClientsCard';
 import EvolutionCard from '@/components/dashboard/EvolutionCard';
-import ScheduleCard from '@/components/dashboard/ScheduleCard';
+import AcademiaCard from '@/components/dashboard/AcademiaCard';
 import ConfigCard from '@/components/dashboard/ConfigCard';
 
 const Dashboard = () => {
@@ -48,7 +48,7 @@ const Dashboard = () => {
           <KnowledgeCard />
           <ClientsCard />
           <EvolutionCard />
-          <ScheduleCard />
+          <AcademiaCard />
           <ConfigCard />
         </div>
       </main>
