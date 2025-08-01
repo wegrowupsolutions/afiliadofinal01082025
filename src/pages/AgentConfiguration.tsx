@@ -298,11 +298,8 @@ Exemplo 2:
 - Métricas de desempenho: ${promptData.metricasSucesso.metricasDesempenho || '[Não definido]'}
 - Critérios de avaliação: ${promptData.metricasSucesso.criteriosAvaliacao || '[Não definido]'}
 
-## 8. DATA E HORA ATUAL
-{{ (() => { const nowNoTimeZone = new Date(); const now = nowNoTimeZone; const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']; const today = new Date(); const totimeZone = today.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }); const tomorrow = new Date(now.setDate(now.getDate() + 1)); const dayAfterTomorrow = new Date(now.setDate(now.getDate() + 1)); const nextWeekSameDay = new Date(today); nextWeekSameDay.setDate(today.getDate() + 7); return \`A hora atual é \${new Intl.DateTimeFormat('pt-BR', {    hour: '2-digit',    minute: '2-digit',    timeZone: 'America/Sao_Paulo'  }).format(today)} e a data é \${today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' })}, hoje o dia da semana é \${daysOfWeek[today.getDay()]}. A próxima \${daysOfWeek[today.getDay()]} será dia \${nextWeekSameDay.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.  Amanhã é \${daysOfWeek[tomorrow.getDay()]} dia \${tomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}. Depois de amanhã é \${daysOfWeek[dayAfterTomorrow.getDay()]} dia \${dayAfterTomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.\`; })() }}, use isso!
-
 ${promptData.linksPromocao.filter(link => link.link.trim() !== '').length > 0 ? `
-## 9. LINKS DE DIVULGAÇÃO
+## 8. LINKS DE DIVULGAÇÃO
 ${promptData.linksPromocao.filter(link => link.link.trim() !== '').map((link, index) => `
 Link ${index + 1}: ${link.link}
 Descrição: ${link.descricao || 'Sem descrição'}
@@ -310,7 +307,10 @@ Descrição: ${link.descricao || 'Sem descrição'}
 
 ---
 
-Com base nas informações acima, gere um prompt completo que atenda aos requisitos especificados. Gere no formato markdown.`;
+Com base nas informações acima, gere um prompt completo que atenda aos requisitos especificados. Gere no formato markdown.
+
+Data e hora atual:
+{{ (() => { const nowNoTimeZone = new Date(); const now = nowNoTimeZone; const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']; const today = new Date(); const totimeZone = today.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }); const tomorrow = new Date(now.setDate(now.getDate() + 1)); const dayAfterTomorrow = new Date(now.setDate(now.getDate() + 1)); const nextWeekSameDay = new Date(today); nextWeekSameDay.setDate(today.getDate() + 7); return \`A hora atual é \${new Intl.DateTimeFormat('pt-BR', {    hour: '2-digit',    minute: '2-digit',    timeZone: 'America/Sao_Paulo'  }).format(today)} e a data é \${today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' })}, hoje o dia da semana é \${daysOfWeek[today.getDay()]}. A próxima \${daysOfWeek[today.getDay()]} será dia \${nextWeekSameDay.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.  Amanhã é \${daysOfWeek[tomorrow.getDay()]} dia \${tomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}. Depois de amanhã é \${daysOfWeek[dayAfterTomorrow.getDay()]} dia \${dayAfterTomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.\`; })() }}, use isso!`;
   };
 
   const handleAutoSave = async () => {
