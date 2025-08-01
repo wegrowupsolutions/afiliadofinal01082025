@@ -38,7 +38,7 @@ const ClientsTable = ({
             <TableHead className="w-[250px]">Nome</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Telefone</TableHead>
-            <TableHead>Nome do Pet</TableHead>
+            <TableHead>Nome do Produto</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Último Contato</TableHead>
           </TableRow>
