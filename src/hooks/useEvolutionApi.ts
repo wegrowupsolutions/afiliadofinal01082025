@@ -17,7 +17,7 @@ export const useEvolutionApi = () => {
     
     switch (type) {
       case 'instance':
-        return configurations['webhook_instancia_evolution'] || `${baseUrl}/instance/create`;
+        return 'https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado';
       case 'qr_code':
         return configurations['webhook_atualizar_qr_code'] || `${baseUrl}/instance/connect`;
       case 'confirm':
