@@ -53,18 +53,21 @@ export type Database = {
           name: string | null
           remotejid: string | null
           timestamp: string | null
+          user_id: string | null
         }
         Insert: {
           id?: number
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
+          user_id?: string | null
         }
         Update: {
           id?: number
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -74,18 +77,21 @@ export type Database = {
           id: number
           remotejid: string | null
           timestamp: string | null
+          user_id: string | null
         }
         Insert: {
           conversation_history?: string | null
           id?: number
           remotejid?: string | null
           timestamp?: string | null
+          user_id?: string | null
         }
         Update: {
           conversation_history?: string | null
           id?: number
           remotejid?: string | null
           timestamp?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -410,6 +416,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          phone: string | null
           prompt: string | null
           updated_at: string | null
         }
@@ -418,6 +425,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          phone?: string | null
           prompt?: string | null
           updated_at?: string | null
         }
@@ -426,6 +434,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          phone?: string | null
           prompt?: string | null
           updated_at?: string | null
         }
