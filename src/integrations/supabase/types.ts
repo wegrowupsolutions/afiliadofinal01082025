@@ -499,6 +499,10 @@ export type Database = {
         Args: { email_to_check: string }
         Returns: boolean
       }
+      is_current_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       mark_instance_connected: {
         Args: {
           p_user_id: string
