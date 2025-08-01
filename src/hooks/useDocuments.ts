@@ -32,10 +32,19 @@ export const useDocuments = () => {
   const fetchDocuments = async () => {
     try {
       setIsLoading(true);
-      // Only select titulo column
+      
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setDocuments([]);
+        return;
+      }
+
+      // Select titulo and user_id to ensure we have user-specific documents
       const { data, error } = await supabase
         .from('documents')
-        .select('titulo');
+        .select('titulo, user_id, created_at')
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Error fetching documents:', error);
