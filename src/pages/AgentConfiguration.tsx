@@ -195,10 +195,12 @@ const AgentConfiguration = () => {
 
       if (data?.prompt) {
         try {
+          // Tenta primeiro carregar como JSON (dados antigos)
           const parsedData = JSON.parse(data.prompt);
           setPromptData({ ...promptData, ...parsedData });
         } catch (e) {
-          console.error('Erro ao parsear prompt existente:', e);
+          // Se não for JSON, assume que já é markdown e deixa os campos vazios para nova edição
+          console.log('Prompt já salvo em markdown, iniciando edição nova');
         }
       }
     } catch (error) {
@@ -236,130 +238,83 @@ const AgentConfiguration = () => {
   };
 
   const generateMarkdownPrompt = (): string => {
-    const links = promptData.linksPromocao.filter(link => link.link.trim() !== '');
-    
-    return `# Configuração do Agente IA
-
-## 1. CONTEXTO
-${promptData.contexto.cenarioEspecifico || '[Descreva aqui o cenário específico onde o agente será utilizado]'}
-
-### Problema a ser Resolvido
-${promptData.contexto.problemaResolver || '[Qual é o problema que precisa ser resolvido?]'}
-
-### Resultado Esperado
-${promptData.contexto.resultadoEsperado || '[Qual é o resultado esperado?]'}
-
-### Público-Alvo
-${promptData.contexto.publicoAlvo || '[Quem é o público-alvo?]'}
-
-### Ambiente/Situação
-${promptData.contexto.ambiente || '[Em qual ambiente/situação será utilizado?]'}
+    return `## 1. CONTEXTO
+[Descreva aqui o cenário específico e objetivo do prompt]
+${promptData.contexto.cenarioEspecifico || '- Qual é o problema que precisa ser resolvido?'}
+${promptData.contexto.problemaResolver || '- Qual é o resultado esperado?'}
+${promptData.contexto.resultadoEsperado || '- Quem é o público-alvo?'}
+${promptData.contexto.publicoAlvo || '- Em qual ambiente/situação será utilizado?'}
+${promptData.contexto.ambiente || ''}
 
 ## 2. PERSONALIDADE
-[Configure o comportamento e características do agente]
-
-### Tom de Voz
-${promptData.personalidade.tomVoz || '[Ex: formal, informal, amigável, profissional]'}
-
-### Nível de Linguagem
-${promptData.personalidade.nivelLinguagem || '[Ex: técnico, simples, acadêmico, coloquial]'}
-
-### Características de Personalidade
-${promptData.personalidade.caracteristicasPersonalidade || '[Descreva as características específicas de personalidade que o agente deve ter]'}
-
-### Conhecimentos Específicos
-${promptData.personalidade.conhecimentosEspecificos || '[Liste os conhecimentos específicos necessários para o agente]'}
+[Defina o comportamento e características do agente]
+- Tom de voz (formal/informal): ${promptData.personalidade.tomVoz || '[Não definido]'}
+- Nível de linguagem: ${promptData.personalidade.nivelLinguagem || '[Não definido]'}
+- Características de personalidade específicas: ${promptData.personalidade.caracteristicasPersonalidade || '[Não definido]'}
+- Conhecimentos específicos necessários: ${promptData.personalidade.conhecimentosEspecificos || '[Não definido]'}
 
 ## 3. DIRETRIZES
-[Regras e restrições do negócio]
-
-### Políticas Importantes
-${promptData.diretrizes.politicasImportantes || '[Liste as políticas importantes que o agente deve seguir]'}
-
-### Limites de Atuação
-${promptData.diretrizes.limitesAtuacao || '[Defina os limites de atuação do agente]'}
-
-### Restrições Legais ou Éticas
-${promptData.diretrizes.restricoesLegais || '[Liste as restrições legais ou éticas]'}
-
-### Procedimentos Obrigatórios
-${promptData.diretrizes.procedimentosObrigatorios || '[Descreva os procedimentos obrigatórios que o agente deve seguir]'}
-
-### Informações Confidenciais ou Sensíveis (Opcional)
-${promptData.diretrizes.informacoesConfidenciais || '[Liste informações que o agente deve tratar com confidencialidade]'}
+[Liste as regras e restrições do negócio]
+- Políticas importantes: ${promptData.diretrizes.politicasImportantes || '[Não definido]'}
+- Limites de atuação: ${promptData.diretrizes.limitesAtuacao || '[Não definido]'}
+- Restrições legais ou éticas: ${promptData.diretrizes.restricoesLegais || '[Não definido]'}
+- Procedimentos obrigatórios: ${promptData.diretrizes.procedimentosObrigatorios || '[Não definido]'}
+- Informações confidenciais ou sensíveis: ${promptData.diretrizes.informacoesConfidenciais || '[Não definido]'}
 
 ## 4. ESTRUTURA DA CONVERSA
-[Passo a passo do raciocínio]
-
+[Detalhe o passo a passo do raciocínio]
 ${promptData.estruturaConversa || `1. Primeiro passo
-   - Subtarefas
-   - Considerações importantes
-
+- Subtarefas
+- Considerações importantes
 2. Segundo passo
-   - Subtarefas
-   - Considerações importantes
-
+- Subtarefas
+- Considerações importantes
 [Continue com os passos necessários]`}
 
 ## 5. FAQ
-[Perguntas frequentes e respostas]
-
+[Liste as perguntas frequentes e suas respostas]
 ${promptData.faq || `P1: [Pergunta frequente 1]
 R1: [Resposta detalhada]
-
 P2: [Pergunta frequente 2]
 R2: [Resposta detalhada]
-
 [Continue com mais perguntas relevantes]`}
 
 ## 6. EXEMPLOS DE USO
-[Interações práticas e modelos]
-
+[Forneça exemplos práticos de interações]
 ${promptData.exemplosUso || `Exemplo 1:
-- Situação: [Descreva a situação]
-- Diálogo modelo: [Mostre a conversa]
-- Resultado esperado: [O que deve acontecer]
-
+- Situação
+- Diálogo modelo
+- Resultado esperado
 Exemplo 2:
-- Situação: [Descreva a situação]
-- Diálogo modelo: [Mostre a conversa]
-- Resultado esperado: [O que deve acontecer]`}
+- Situação
+- Diálogo modelo
+- Resultado esperado`}
 
 ## 7. MÉTRICAS DE SUCESSO
-[Como medir o desempenho]
+[Defina como medir o sucesso do prompt]
+- Indicadores de qualidade: ${promptData.metricasSucesso.indicadoresQualidade || '[Não definido]'}
+- Métricas de desempenho: ${promptData.metricasSucesso.metricasDesempenho || '[Não definido]'}
+- Critérios de avaliação: ${promptData.metricasSucesso.criteriosAvaliacao || '[Não definido]'}
 
-### Indicadores de Qualidade
-${promptData.metricasSucesso.indicadoresQualidade || '[Defina os indicadores de qualidade para avaliar o desempenho do agente]'}
-
-### Métricas de Desempenho
-${promptData.metricasSucesso.metricasDesempenho || '[Liste as métricas de desempenho (tempo de resposta, precisão, etc.)]'}
-
-### Critérios de Avaliação
-${promptData.metricasSucesso.criteriosAvaliacao || '[Descreva os critérios de avaliação para determinar o sucesso]'}
-
+${promptData.linksPromocao.filter(link => link.link.trim() !== '').length > 0 ? `
 ## 8. LINKS DE DIVULGAÇÃO
-[Links para divulgação do produto]
-
-${links.length > 0 ? links.map((link, index) => `### Link ${index + 1}
-- **URL:** ${link.link}
-- **Descrição:** ${link.descricao}
-`).join('\n') : '[Nenhum link configurado]'}
-
----
-*Configuração gerada automaticamente - ${new Date().toLocaleString('pt-BR')}*`;
+${promptData.linksPromocao.filter(link => link.link.trim() !== '').map((link, index) => `
+Link ${index + 1}: ${link.link}
+Descrição: ${link.descricao || 'Sem descrição'}
+`).join('')}` : ''}`;
   };
 
   const handleAutoSave = async () => {
     if (!user) return;
 
     try {
-      const dataToSave = JSON.stringify(promptData);
+      const markdownPrompt = generateMarkdownPrompt();
       
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
-          prompt: dataToSave
+          prompt: markdownPrompt
         });
 
       if (!error) {
@@ -376,13 +331,12 @@ ${links.length > 0 ? links.map((link, index) => `### Link ${index + 1}
     setSaving(true);
     try {
       const markdownPrompt = generateMarkdownPrompt();
-      const dataToSave = JSON.stringify(promptData);
 
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
-          prompt: dataToSave
+          prompt: markdownPrompt
         });
 
       if (error) {
