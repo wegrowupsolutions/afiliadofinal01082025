@@ -93,36 +93,38 @@ const ConfigurationManager = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Configurações do Sistema</h1>
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-          Salvar Alterações
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Configurações do Sistema</h1>
+          <Button onClick={handleSave} variant="default">
+            Salvar Alterações
+          </Button>
+        </div>
 
-      <div className="grid gap-6">
-        {Object.entries(endpointGroups).map(([groupTitle, fields]) => (
-          <Card key={groupTitle} className="w-full">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold mb-4">{groupTitle}</h3>
-              <div className="space-y-4">
-                {fields.map((field) => (
-                  <div key={field.id} className="space-y-2">
-                    <Label htmlFor={field.id}>{field.label}</Label>
-                    <Input
-                      id={field.id}
-                      value={field.readOnly ? field.value : endpoints[field.key as keyof typeof endpoints]}
-                      onChange={field.readOnly ? undefined : (e) => handleEndpointChange(field.key, e.target.value)}
-                      readOnly={field.readOnly}
-                      className="w-full font-mono text-sm"
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="grid gap-6">
+          {Object.entries(endpointGroups).map(([groupTitle, fields]) => (
+            <Card key={groupTitle} className="w-full bg-card border-border">
+              <CardContent className="pt-6">
+                <h3 className="text-lg font-semibold mb-4 text-card-foreground">{groupTitle}</h3>
+                <div className="space-y-4">
+                  {fields.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label htmlFor={field.id} className="text-foreground">{field.label}</Label>
+                      <Input
+                        id={field.id}
+                        value={field.readOnly ? field.value : endpoints[field.key as keyof typeof endpoints]}
+                        onChange={field.readOnly ? undefined : (e) => handleEndpointChange(field.key, e.target.value)}
+                        readOnly={field.readOnly}
+                        className="w-full font-mono text-sm bg-background text-foreground border-input"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
