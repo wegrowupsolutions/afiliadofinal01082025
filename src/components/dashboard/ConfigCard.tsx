@@ -9,7 +9,7 @@ const ConfigCard = () => {
   const navigate = useNavigate();
   
   const handleClick = () => {
-    navigate('/agent-configuration');
+    navigate('/configuration-manager');
   };
   
   return (
