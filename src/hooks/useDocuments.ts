@@ -170,32 +170,99 @@ export const useDocuments = () => {
     });
   };
 
-  // Delete document - Updated to call the webhook with the title
+  // Delete document from Supabase Storage
   const handleDeleteDocument = async (id: number, title: string) => {
     try {
-      // Call webhook to delete file from RAG system
-      console.log('Enviando solicitação para excluir arquivo:', title);
-      
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/excluir-arquivo-rag', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          titulo: title 
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao excluir o arquivo: ${response.statusText}`);
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      // Only remove from UI if webhook call was successful
+      // Find the document to get its full path
+      const document = documents.find(doc => doc.id === id);
+      if (!document) {
+        toast({
+          title: "Erro",
+          description: "Documento não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get user's bucket name
+      const bucketName = `user-${user.email?.replace(/[@.]/g, '-')}`;
+      
+      // Find the file in storage to get its exact path
+      const allFiles: any[] = [];
+      
+      // Get the user folder
+      const { data: userFolder, error: folderError } = await supabase.storage
+        .from(bucketName)
+        .list(user.id, {
+          limit: 100,
+          offset: 0,
+        });
+
+      if (!folderError && userFolder) {
+        for (const folder of userFolder) {
+          if (folder.name) {
+            const { data: subFiles, error: subError } = await supabase.storage
+              .from(bucketName)
+              .list(`${user.id}/${folder.name}`, {
+                limit: 100,
+                offset: 0,
+              });
+
+            if (!subError && subFiles) {
+              const filesWithPath = subFiles.map(file => ({
+                ...file,
+                fullPath: `${user.id}/${folder.name}/${file.name}`,
+                folder: folder.name
+              }));
+              allFiles.push(...filesWithPath);
+            }
+          }
+        }
+      }
+
+      // Find the exact file to delete
+      const fileToDelete = allFiles.find(file => file.name === title);
+      if (!fileToDelete) {
+        toast({
+          title: "Erro",
+          description: "Arquivo não encontrado no storage.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Delete from Supabase Storage
+      const { error: deleteError } = await supabase.storage
+        .from(bucketName)
+        .remove([fileToDelete.fullPath]);
+
+      if (deleteError) {
+        console.error('Error deleting file from storage:', deleteError);
+        toast({
+          title: "Erro ao excluir arquivo",
+          description: deleteError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Remove from UI
       setDocuments(documents.filter(doc => doc.id !== id));
       
       toast({
         title: "Documento excluído",
-        description: "O documento foi removido com sucesso!",
+        description: "O arquivo foi removido com sucesso!",
         variant: "destructive",
       });
     } catch (err) {
@@ -208,21 +275,69 @@ export const useDocuments = () => {
     }
   };
 
-  // New function to clear all documents
+  // Clear all documents from Supabase Storage
   const clearAllDocuments = async () => {
     try {
-      console.log('Enviando solicitação para excluir toda a base de conhecimento');
-      
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/excluir-rag', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      });
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      if (!response.ok) {
-        throw new Error(`Erro ao limpar a base de conhecimento: ${response.statusText}`);
+      console.log('Limpando todos os arquivos do usuário');
+      
+      // Get user's bucket name
+      const bucketName = `user-${user.email?.replace(/[@.]/g, '-')}`;
+      
+      // Get all files from user's folder
+      const allFiles: string[] = [];
+      
+      // Get the user folder
+      const { data: userFolder, error: folderError } = await supabase.storage
+        .from(bucketName)
+        .list(user.id, {
+          limit: 100,
+          offset: 0,
+        });
+
+      if (!folderError && userFolder) {
+        for (const folder of userFolder) {
+          if (folder.name) {
+            const { data: subFiles, error: subError } = await supabase.storage
+              .from(bucketName)
+              .list(`${user.id}/${folder.name}`, {
+                limit: 100,
+                offset: 0,
+              });
+
+            if (!subError && subFiles) {
+              const filePaths = subFiles.map(file => `${user.id}/${folder.name}/${file.name}`);
+              allFiles.push(...filePaths);
+            }
+          }
+        }
+      }
+
+      // Delete all files
+      if (allFiles.length > 0) {
+        const { error: deleteError } = await supabase.storage
+          .from(bucketName)
+          .remove(allFiles);
+
+        if (deleteError) {
+          console.error('Error deleting files from storage:', deleteError);
+          toast({
+            title: "Erro ao limpar arquivos",
+            description: deleteError.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       // Clear the documents array
