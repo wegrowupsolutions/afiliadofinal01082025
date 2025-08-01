@@ -196,121 +196,169 @@ const ConfigurationManager = () => {
           </div>
         </div>
 
-        {/* Cards de Status - Layout melhorado */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Status Card */}
-          <div className="lg:col-span-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings2 className="h-5 w-5 text-primary" />
-                  Status das Configurações
-                </CardTitle>
-                <CardDescription>
-                  Visão geral das configurações atuais do sistema
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gradient-to-br from-muted/30 to-muted/60 p-6 rounded-lg border">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
-                    <div>
-                      <h3 className="text-2xl font-bold text-primary">
-                        {getConfiguredEndpointsCount()} / {getTotalEndpointsCount()}
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Endpoints configurados
-                      </p>
+        {/* Dashboard de Status - Layout Aprimorado */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
+          {/* Status Principal */}
+          <div className="xl:col-span-3">
+            <Card className="h-full overflow-hidden border-border/50 shadow-lg">
+              <div className="bg-gradient-to-br from-primary/5 via-primary/3 to-transparent p-1">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="w-10 h-10 bg-primary/15 rounded-xl flex items-center justify-center">
+                      <Settings2 className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full text-sm font-medium">
-                      <Wifi className="h-4 w-4" />
-                      <span>Sistema Online</span>
+                    Status das Configurações
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Visão geral das integrações e endpoints do sistema
+                  </CardDescription>
+                </CardHeader>
+              </div>
+
+              <CardContent className="p-6">
+                {/* Métricas Principais */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="text-center p-4 bg-gradient-to-br from-background to-muted/20 rounded-xl border border-border/30">
+                    <div className="text-3xl font-bold text-primary mb-2">
+                      {getConfiguredEndpointsCount()}
                     </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span>Progresso de configuração</span>
-                      <span className="font-medium">
-                        {Math.round((getConfiguredEndpointsCount() / getTotalEndpointsCount()) * 100)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-3">
-                      <div 
-                        className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-500 ease-out" 
-                        style={{ 
-                          width: `${(getConfiguredEndpointsCount() / getTotalEndpointsCount()) * 100}%` 
-                        }}
-                      ></div>
+                    <div className="text-sm text-muted-foreground font-medium">
+                      Endpoints Ativos
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-4 border-t border-muted text-sm space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status:</span>
-                      <span className={`font-medium ${
+                  <div className="text-center p-4 bg-gradient-to-br from-background to-muted/20 rounded-xl border border-border/30">
+                    <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-2">
+                      {getTotalEndpointsCount() - getConfiguredEndpointsCount()}
+                    </div>
+                    <div className="text-sm text-muted-foreground font-medium">
+                      Pendentes
+                    </div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-gradient-to-br from-background to-muted/20 rounded-xl border border-border/30">
+                    <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                      {Math.round((getConfiguredEndpointsCount() / getTotalEndpointsCount()) * 100)}%
+                    </div>
+                    <div className="text-sm text-muted-foreground font-medium">
+                      Progresso Total
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de Progresso */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Configuração Global</span>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
                         getConfiguredEndpointsCount() === getTotalEndpointsCount() 
-                          ? 'text-green-600 dark:text-green-400' 
-                          : 'text-amber-600 dark:text-amber-400'
-                      }`}>
+                          ? 'bg-green-500' 
+                          : 'bg-amber-500'
+                      }`}></div>
+                      <span className="text-sm font-semibold">
                         {getConfiguredEndpointsCount() === getTotalEndpointsCount() 
-                          ? '✅ Totalmente configurado' 
-                          : '⚠️ Configuração parcial'
+                          ? 'Completo' 
+                          : 'Em Progresso'
                         }
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Última atualização:</span>
-                      <span className="font-medium">
-                        {new Date().toLocaleString('pt-BR')}
-                      </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-primary via-primary-foreground to-primary h-3 rounded-full transition-all duration-700 ease-out shadow-lg" 
+                      style={{ 
+                        width: `${(getConfiguredEndpointsCount() / getTotalEndpointsCount()) * 100}%` 
+                      }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Status das Integrações */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 rounded-lg border border-green-200/50 dark:border-green-800/30">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Wifi className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <span className="font-medium text-green-700 dark:text-green-300">Sistema Online</span>
                     </div>
+                    <p className="text-xs text-green-600/80 dark:text-green-400/80">
+                      Todos os serviços estão operacionais
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 rounded-lg border border-blue-200/50 dark:border-blue-800/30">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="font-medium text-blue-700 dark:text-blue-300">Última Sync</span>
+                    </div>
+                    <p className="text-xs text-blue-600/80 dark:text-blue-400/80">
+                      {new Date().toLocaleString('pt-BR', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Save Card */}
+          {/* Painel de Ações */}
           <div>
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Save className="h-5 w-5 text-primary" />
-                  Salvar Alterações
-                </CardTitle>
-                <CardDescription>
-                  Sincronizar configurações
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col justify-center h-full">
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Save className="h-8 w-8 text-primary" />
+            <Card className="h-full border-border/50 shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-br from-secondary/10 to-secondary/5 p-1">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <div className="w-8 h-8 bg-secondary/20 rounded-lg flex items-center justify-center">
+                      <Save className="h-4 w-4 text-secondary-foreground" />
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Clique para sincronizar todas as alterações com o sistema
-                    </p>
+                    Ações
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    Gerenciar configurações
+                  </CardDescription>
+                </CardHeader>
+              </div>
+              
+              <CardContent className="p-6 space-y-6">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <Save className="h-10 w-10 text-primary" />
                   </div>
-                  <Button 
-                    size="lg" 
-                    className="w-full" 
-                    onClick={handleSaveAll}
-                    disabled={saving || !isAdmin}
-                  >
-                    {saving ? (
-                      <>
-                        <span className="mr-2 h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
-                        Salvando...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-5 w-5" />
-                        Salvar Configurações
-                      </>
-                    )}
-                  </Button>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                    Sincronize todas as alterações feitas nos endpoints com o sistema
+                  </p>
                 </div>
+                
+                <Button 
+                  size="lg" 
+                  className="w-full h-12 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200" 
+                  onClick={handleSaveAll}
+                  disabled={saving || !isAdmin}
+                >
+                  {saving ? (
+                    <>
+                      <div className="mr-3 h-5 w-5 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-3 h-5 w-5" />
+                      Salvar Configurações
+                    </>
+                  )}
+                </Button>
+
+                {!isAdmin && (
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-lg">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                      <Lock className="h-4 w-4" />
+                      <span className="text-xs font-medium">Acesso Restrito</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
