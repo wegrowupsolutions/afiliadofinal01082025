@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 // Import refactored components
 import SearchBar from '@/components/knowledge/SearchBar';
 import DocumentGrid from '@/components/knowledge/DocumentGrid';
-import AddDocumentDialog from '@/components/knowledge/AddDocumentDialog';
+import MediaUploadDialog from '@/components/knowledge/MediaUploadDialog';
 import { useDocuments } from '@/hooks/useDocuments';
 
 const KnowledgeManager = () => {
@@ -19,7 +19,7 @@ const KnowledgeManager = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
+  const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false);
   
   // Use the custom hook for document management
   const { 
@@ -28,8 +28,8 @@ const KnowledgeManager = () => {
     isRefreshing, 
     handleRefresh, 
     handleDeleteDocument,
-    uploadFileToWebhook,
-    clearAllDocuments
+    clearAllDocuments,
+    fetchDocuments
   } = useDocuments();
 
   // Navigate back to dashboard
@@ -37,9 +37,9 @@ const KnowledgeManager = () => {
     navigate('/dashboard');
   };
 
-  // Handle adding a new document
-  const handleAddDocument = async (file: File, category: string) => {
-    await uploadFileToWebhook(file, category);
+  // Handle upload completion
+  const handleUploadComplete = () => {
+    fetchDocuments();
   };
 
   if (isLoading || authLoading) {
@@ -93,7 +93,7 @@ const KnowledgeManager = () => {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onRefresh={handleRefresh}
-            onAddDocument={() => setIsAddDocumentOpen(true)}
+            onAddDocument={() => setIsMediaUploadOpen(true)}
             onClearAll={clearAllDocuments}
             isRefreshing={isRefreshing}
           />
@@ -105,11 +105,11 @@ const KnowledgeManager = () => {
             onDeleteDocument={handleDeleteDocument}
           />
 
-          {/* Add Document Dialog */}
-          <AddDocumentDialog 
-            isOpen={isAddDocumentOpen}
-            onOpenChange={setIsAddDocumentOpen}
-            onAddDocument={handleAddDocument}
+          {/* Media Upload Dialog */}
+          <MediaUploadDialog 
+            isOpen={isMediaUploadOpen}
+            onOpenChange={setIsMediaUploadOpen}
+            onUploadComplete={handleUploadComplete}
           />
         </div>
       </main>
