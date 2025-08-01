@@ -40,22 +40,32 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Configurações de endpoints organizadas por categoria
 const endpointGroups = {
-  'Configuração do Bot': [
-    { id: 'webhook_mensagem', label: 'Enviar Mensagem', key: 'webhook_mensagem', description: 'Endpoint para envio de mensagens' },
-    { id: 'webhook_pausa_bot', label: 'Pausar Bot', key: 'webhook_pausa_bot', description: 'Endpoint para pausar o bot' },
-    { id: 'webhook_inicia_bot', label: 'Iniciar Bot', key: 'webhook_inicia_bot', description: 'Endpoint para iniciar o bot' },
-    { id: 'webhook_confirma', label: 'Confirmar', key: 'webhook_confirma', description: 'Endpoint para confirmações' }
+  'Configuração do Bot N8N': [
+    { id: 'webhook_mensagem', label: 'Enviar Mensagem', key: 'webhook_mensagem', description: 'Endpoint N8N para envio de mensagens' },
+    { id: 'webhook_pausa_bot', label: 'Pausar Bot', key: 'webhook_pausa_bot', description: 'Endpoint N8N para pausar o bot' },
+    { id: 'webhook_inicia_bot', label: 'Iniciar Bot', key: 'webhook_inicia_bot', description: 'Endpoint N8N para iniciar o bot' },
+    { id: 'webhook_confirma', label: 'Confirmar Status', key: 'webhook_confirma', description: 'Endpoint N8N para verificar status da conexão' },
+    { id: 'n8n_base_url', label: 'URL Base N8N', key: 'n8n_base_url', description: 'URL base da instância N8N' },
+    { id: 'n8n_api_key', label: 'API Key N8N', key: 'n8n_api_key', description: 'Chave de API para autenticação N8N' }
   ],
-  'Configuração Evolution': [
-    { id: 'webhook_instancia_evolution', label: 'Instância Evolution', key: 'webhook_instancia_evolution', description: 'Endpoint da instância Evolution' },
-    { id: 'webhook_atualizar_qr_code', label: 'Atualizar QR Code', key: 'webhook_atualizar_qr_code', description: 'Endpoint para atualizar QR Code' }
+  'Configuração Evolution API': [
+    { id: 'webhook_instancia_evolution', label: 'Criar Instância', key: 'webhook_instancia_evolution', description: 'Endpoint para criar/conectar instância Evolution' },
+    { id: 'webhook_atualizar_qr_code', label: 'Atualizar QR Code', key: 'webhook_atualizar_qr_code', description: 'Endpoint para obter/atualizar QR Code' },
+    { id: 'evolution_api_url', label: 'URL Evolution API', key: 'evolution_api_url', description: 'URL base da Evolution API' },
+    { id: 'evolution_api_key', label: 'API Key Evolution', key: 'evolution_api_key', description: 'Chave de API da Evolution' },
+    { id: 'evolution_webhook_url', label: 'Webhook Evolution', key: 'evolution_webhook_url', description: 'URL do webhook para receber eventos' }
   ],
   'Configuração da Agenda': [
     { id: 'webhook_agenda_banho', label: 'Agenda Banho', key: 'webhook_agenda_banho', description: 'Endpoint para agendamento de banho' },
     { id: 'webhook_agenda_vet', label: 'Agenda Veterinário', key: 'webhook_agenda_vet', description: 'Endpoint para agendamento veterinário' },
-    { id: 'webhook_agenda_adicionar', label: 'Adicionar Evento', key: 'webhook_agenda_adicionar', description: 'Endpoint para adicionar eventos' },
-    { id: 'webhook_agenda_alterar', label: 'Alterar Evento', key: 'webhook_agenda_alterar', description: 'Endpoint para alterar eventos' },
-    { id: 'webhook_agenda_excluir', label: 'Excluir Evento', key: 'webhook_agenda_excluir', description: 'Endpoint para excluir eventos' }
+    { id: 'webhook_agenda_adicionar', label: 'Adicionar Evento', key: 'webhook_agenda_adicionar', description: 'Endpoint para adicionar eventos na agenda' },
+    { id: 'webhook_agenda_alterar', label: 'Alterar Evento', key: 'webhook_agenda_alterar', description: 'Endpoint para alterar eventos da agenda' },
+    { id: 'webhook_agenda_excluir', label: 'Excluir Evento', key: 'webhook_agenda_excluir', description: 'Endpoint para excluir eventos da agenda' }
+  ],
+  'Configuração Supabase': [
+    { id: 'supabase_url', label: 'URL Supabase', key: 'supabase_url', description: 'URL do projeto Supabase' },
+    { id: 'supabase_anon_key', label: 'Anon Key Supabase', key: 'supabase_anon_key', description: 'Chave anônima do Supabase' },
+    { id: 'supabase_service_key', label: 'Service Key Supabase', key: 'supabase_service_key', description: 'Chave de serviço do Supabase (admin)' }
   ]
 };
 

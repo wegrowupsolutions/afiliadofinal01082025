@@ -7,17 +7,38 @@ export const useEvolutionApi = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
 
-  const getEndpoint = (type: 'instance' | 'qr_code' | 'confirm') => {
+  const getEvolutionEndpoint = (type: 'instance' | 'qr_code' | 'confirm') => {
+    const baseUrl = configurations['evolution_api_url'] || 'https://evolution-api.serverwegrowup.com.br';
+    const apiKey = configurations['evolution_api_key'];
+    
+    if (!apiKey) {
+      console.warn('Evolution API Key não configurada');
+    }
+    
     switch (type) {
       case 'instance':
-        return configurations['webhook_instancia_evolution'] || 'https://webhook.serverwegrowup.com.br/webhook/instancia-evolution-afiliado';
+        return configurations['webhook_instancia_evolution'] || `${baseUrl}/instance/create`;
       case 'qr_code':
-        return configurations['webhook_atualizar_qr_code'] || 'https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado';
+        return configurations['webhook_atualizar_qr_code'] || `${baseUrl}/instance/connect`;
       case 'confirm':
-        return configurations['webhook_confirma'] || 'https://webhook.serverwegrowup.com.br/webhook/pop-up';
+        return configurations['webhook_confirma'] || `${baseUrl}/instance/connectionState`;
       default:
         throw new Error(`Tipo de endpoint inválido: ${type}`);
     }
+  };
+
+  const getHeaders = () => {
+    const apiKey = configurations['evolution_api_key'];
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+      headers['apikey'] = apiKey;
+    }
+    
+    return headers;
   };
 
   const createInstance = async (instanceName: string, webhookPath: string): Promise<Blob | null> => {
@@ -25,18 +46,32 @@ export const useEvolutionApi = () => {
       setIsConnecting(true);
       console.log('Criando instância Evolution:', { instanceName, webhookPath });
       
-      const endpoint = getEndpoint('instance');
+      const endpoint = getEvolutionEndpoint('instance');
+      const webhookUrl = configurations['evolution_webhook_url'] || webhookPath;
+      
       console.log('Usando endpoint:', endpoint);
+      console.log('Webhook URL:', webhookUrl);
+      
+      const requestBody = {
+        instanceName: instanceName.trim(),
+        webhook: webhookUrl.trim(),
+        webhook_by_events: false,
+        events: [
+          "APPLICATION_STARTUP",
+          "QRCODE_UPDATED", 
+          "CONNECTION_UPDATE",
+          "MESSAGES_UPSERT",
+          "MESSAGES_UPDATE",
+          "SEND_MESSAGE"
+        ]
+      };
+      
+      console.log('Request body:', requestBody);
       
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          instanceName: instanceName.trim(),
-          webhookPath: webhookPath.trim()
-        }),
+        headers: getHeaders(),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -73,17 +108,12 @@ export const useEvolutionApi = () => {
       setIsConnecting(true);
       console.log('Atualizando QR Code para instância:', instanceName);
       
-      const endpoint = getEndpoint('qr_code');
+      const endpoint = `${getEvolutionEndpoint('qr_code')}/${instanceName.trim()}`;
       console.log('Usando endpoint:', endpoint);
       
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          instanceName: instanceName.trim() 
-        }),
+        method: 'GET',
+        headers: getHeaders(),
       });
 
       if (!response.ok) {
@@ -108,17 +138,12 @@ export const useEvolutionApi = () => {
     try {
       console.log('Verificando status da conexão para:', instanceName);
       
-      const endpoint = getEndpoint('confirm');
+      const endpoint = `${getEvolutionEndpoint('confirm')}/${instanceName.trim()}`;
       console.log('Usando endpoint:', endpoint);
       
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          instanceName: instanceName.trim() 
-        }),
+        method: 'GET',
+        headers: getHeaders(),
       });
 
       if (!response.ok) {
@@ -136,7 +161,8 @@ export const useEvolutionApi = () => {
         return false;
       }
 
-      if (responseData && responseData.respond === "positivo") {
+      // Evolution API retorna diferentes formatos dependendo do status
+      if (responseData && (responseData.state === "open" || responseData.status === "open" || responseData.instance?.state === "open")) {
         console.log('Conexão confirmada!');
         setConnectionStatus('connected');
         
@@ -144,7 +170,7 @@ export const useEvolutionApi = () => {
         const { error } = await supabase.rpc('mark_instance_connected', {
           p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
           p_instance_name: instanceName.trim(),
-          p_phone_number: responseData.phone_number || null
+          p_phone_number: responseData.instance?.owner || responseData.owner || null
         });
 
         if (error) {
@@ -152,7 +178,7 @@ export const useEvolutionApi = () => {
         }
 
         return true;
-      } else if (responseData && responseData.respond === "negativo") {
+      } else if (responseData && (responseData.state === "close" || responseData.status === "close" || responseData.instance?.state === "close")) {
         console.log('Conexão ainda não estabelecida');
         return false;
       }
@@ -195,11 +221,16 @@ export const useEvolutionApi = () => {
     isConnecting,
     connectionStatus,
     setConnectionStatus,
-    // Expor endpoints para debug
+    // Expor endpoints e configurações para debug
     endpoints: {
-      instance: getEndpoint('instance'),
-      qr_code: getEndpoint('qr_code'),
-      confirm: getEndpoint('confirm')
+      instance: getEvolutionEndpoint('instance'),
+      qr_code: getEvolutionEndpoint('qr_code'),
+      confirm: getEvolutionEndpoint('confirm')
+    },
+    configurations: {
+      apiUrl: configurations['evolution_api_url'],
+      apiKey: configurations['evolution_api_key'] ? '***' : 'não configurada',
+      webhookUrl: configurations['evolution_webhook_url']
     }
   };
 };
