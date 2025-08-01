@@ -171,102 +171,136 @@ const ConfigurationManager = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
-          <Button variant="outline" onClick={handleGoBack} className="mr-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-          <h1 className="text-3xl font-bold">Configurações de Endpoints</h1>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={handleGoBack} className="shrink-0">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Configurações de Endpoints</h1>
+              <p className="text-muted-foreground mt-1">Configure os endpoints do sistema e integrações</p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div>
-            <Card>
+        {/* Cards de Status - Layout melhorado */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Status Card */}
+          <div className="lg:col-span-2">
+            <Card className="h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings2 className="h-5 w-5 text-primary" />
                   Status das Configurações
                 </CardTitle>
                 <CardDescription>
-                  Visão geral das configurações atuais
+                  Visão geral das configurações atuais do sistema
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
+                <div className="bg-gradient-to-br from-muted/30 to-muted/60 p-6 rounded-lg border">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
                     <div>
-                      <h3 className="text-xl font-medium">
-                        {getConfiguredEndpointsCount()} de {getTotalEndpointsCount()}
+                      <h3 className="text-2xl font-bold text-primary">
+                        {getConfiguredEndpointsCount()} / {getTotalEndpointsCount()}
                       </h3>
                       <p className="text-muted-foreground">
                         Endpoints configurados
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 text-green-600 text-sm">
+                    <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full text-sm font-medium">
                       <Wifi className="h-4 w-4" />
-                      <span>Sincronizado</span>
+                      <span>Sistema Online</span>
                     </div>
                   </div>
                   
-                  <div className="w-full bg-muted rounded-full h-2 mb-4">
-                    <div 
-                      className="bg-primary h-2 rounded-full transition-all duration-300" 
-                      style={{ 
-                        width: `${(getConfiguredEndpointsCount() / getTotalEndpointsCount()) * 100}%` 
-                      }}
-                    ></div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Progresso de configuração</span>
+                      <span className="font-medium">
+                        {Math.round((getConfiguredEndpointsCount() / getTotalEndpointsCount()) * 100)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-3">
+                      <div 
+                        className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-500 ease-out" 
+                        style={{ 
+                          width: `${(getConfiguredEndpointsCount() / getTotalEndpointsCount()) * 100}%` 
+                        }}
+                      ></div>
+                    </div>
                   </div>
                   
-                  <div className="text-sm space-y-1">
-                    <p>
-                      <span className="font-medium">Status:</span> {
+                  <div className="mt-6 pt-4 border-t border-muted text-sm space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className={`font-medium ${
                         getConfiguredEndpointsCount() === getTotalEndpointsCount() 
-                          ? 'Completo' 
-                          : 'Parcial'
-                      }
-                    </p>
-                    <p>
-                      <span className="font-medium">Última sincronização:</span> {
-                        new Date().toLocaleString('pt-BR')
-                      }
-                    </p>
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-amber-600 dark:text-amber-400'
+                      }`}>
+                        {getConfiguredEndpointsCount() === getTotalEndpointsCount() 
+                          ? '✅ Totalmente configurado' 
+                          : '⚠️ Configuração parcial'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Última atualização:</span>
+                      <span className="font-medium">
+                        {new Date().toLocaleString('pt-BR')}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
+          {/* Save Card */}
           <div>
-            <Card>
+            <Card className="h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Save className="h-5 w-5 text-primary" />
-                  Salvar Configurações
+                  Salvar Alterações
                 </CardTitle>
                 <CardDescription>
-                  Sincronizar alterações com o sistema
+                  Sincronizar configurações
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex justify-center p-6">
-                <Button 
-                  size="lg" 
-                  className="w-full" 
-                  onClick={handleSaveAll}
-                  disabled={saving || !isAdmin}
-                >
-                  {saving ? (
-                    <>
-                      <span className="mr-2 h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-5 w-5" />
-                      Salvar Todas as Configurações
-                    </>
-                  )}
-                </Button>
+              <CardContent className="flex flex-col justify-center h-full">
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Save className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Clique para sincronizar todas as alterações com o sistema
+                    </p>
+                  </div>
+                  <Button 
+                    size="lg" 
+                    className="w-full" 
+                    onClick={handleSaveAll}
+                    disabled={saving || !isAdmin}
+                  >
+                    {saving ? (
+                      <>
+                        <span className="mr-2 h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-5 w-5" />
+                        Salvar Configurações
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -282,57 +316,98 @@ const ConfigurationManager = () => {
           </Alert>
         )}
 
-        <div className="space-y-6">
+        {/* Seções de Configuração de Endpoints */}
+        <div className="space-y-8">
           {Object.entries(endpointGroups).map(([groupTitle, endpoints]) => (
-            <Card key={groupTitle}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings2 className="h-5 w-5 text-primary" />
-                  {groupTitle}
-                </CardTitle>
-                <CardDescription>
-                  {endpoints.filter(endpoint => localValues[endpoint.key]?.trim()).length} de {endpoints.length} endpoints configurados
-                </CardDescription>
+            <Card key={groupTitle} className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Settings2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">{groupTitle}</CardTitle>
+                      <CardDescription className="mt-1">
+                        {endpoints.filter(endpoint => localValues[endpoint.key]?.trim()).length} de {endpoints.length} endpoints configurados
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 bg-background/80 px-3 py-1.5 rounded-full text-sm font-medium">
+                    <div className={`w-2 h-2 rounded-full ${
+                      endpoints.filter(endpoint => localValues[endpoint.key]?.trim()).length === endpoints.length
+                        ? 'bg-green-500' 
+                        : endpoints.filter(endpoint => localValues[endpoint.key]?.trim()).length > 0
+                        ? 'bg-amber-500'
+                        : 'bg-gray-400'
+                    }`}></div>
+                    <span className="text-muted-foreground">
+                      {Math.round((endpoints.filter(endpoint => localValues[endpoint.key]?.trim()).length / endpoints.length) * 100)}%
+                    </span>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                   {endpoints.map((endpoint) => (
-                    <Card key={endpoint.id} className={`border ${localValues[endpoint.key]?.trim() ? 'border-green-200 bg-green-50/50' : 'border-muted'}`}>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg flex justify-between items-center">
-                          <span>{endpoint.label}</span>
-                          {localValues[endpoint.key]?.trim() && (
-                            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded text-xs">
+                    <Card 
+                      key={endpoint.id} 
+                      className={`border-2 transition-all duration-200 hover:shadow-md ${
+                        localValues[endpoint.key]?.trim() 
+                          ? 'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20' 
+                          : 'border-muted hover:border-muted-foreground/20'
+                      }`}
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-base font-medium leading-tight">
+                            {endpoint.label}
+                          </CardTitle>
+                          {localValues[endpoint.key]?.trim() ? (
+                            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md text-xs font-medium shrink-0">
                               <Check className="h-3 w-3" />
-                              Configurado
+                              OK
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-medium shrink-0">
+                              <AlertTriangle className="h-3 w-3" />
+                              Vazio
                             </div>
                           )}
-                        </CardTitle>
-                        <CardDescription>
+                        </div>
+                        <CardDescription className="text-xs leading-relaxed">
                           {endpoint.description}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="text-sm">
+                      <CardContent className="py-3">
                         {localValues[endpoint.key]?.trim() ? (
-                          <p className="font-mono text-xs text-muted-foreground truncate">
-                            {localValues[endpoint.key]}
-                          </p>
+                          <div className="space-y-2">
+                            <p className="text-xs text-muted-foreground font-medium">URL configurada:</p>
+                            <p className="font-mono text-xs bg-muted/50 p-2 rounded border text-muted-foreground break-all">
+                              {localValues[endpoint.key]}
+                            </p>
+                          </div>
                         ) : (
-                          <p className="text-muted-foreground italic">
-                            Não configurado
-                          </p>
+                          <div className="text-center py-4">
+                            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center mx-auto mb-2">
+                              <Settings2 className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Endpoint não configurado
+                            </p>
+                          </div>
                         )}
                       </CardContent>
-                      <CardFooter>
+                      <CardFooter className="pt-3">
                         <Button 
-                          variant="outline" 
+                          variant={localValues[endpoint.key]?.trim() ? "outline" : "default"}
                           size="sm" 
                           onClick={() => handleEditEndpoint(endpoint)}
                           disabled={!isAdmin}
                           className="w-full"
                         >
                           <Edit className="mr-2 h-3 w-3" />
-                          {localValues[endpoint.key]?.trim() ? 'Editar' : 'Configurar'}
+                          {localValues[endpoint.key]?.trim() ? 'Editar URL' : 'Configurar'}
                         </Button>
                       </CardFooter>
                     </Card>
@@ -343,36 +418,63 @@ const ConfigurationManager = () => {
           ))}
         </div>
 
-        {/* Edit Endpoint Dialog */}
+        {/* Edit Endpoint Dialog - Melhorado */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Configurar Endpoint</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Edit className="h-4 w-4 text-primary" />
+                </div>
+                Configurar Endpoint
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-relaxed">
                 {selectedEndpoint?.description}
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="endpoint-url">URL do Endpoint</Label>
+            <div className="space-y-6 py-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="endpoint-url" className="text-sm font-medium">
+                    URL do Endpoint
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    {selectedEndpoint?.label}
+                  </span>
+                </div>
                 <Input
                   id="endpoint-url"
                   value={newEndpointValue}
                   onChange={(e) => setNewEndpointValue(e.target.value)}
-                  placeholder="https://exemplo.com/webhook"
+                  placeholder="https://exemplo.com/webhook/endpoint"
                   className="font-mono text-sm"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Insira a URL completa do webhook para este endpoint
+                </p>
               </div>
+              
+              {newEndpointValue && (
+                <div className="bg-muted/50 p-3 rounded-lg border">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Preview:</p>
+                  <p className="font-mono text-xs break-all">
+                    {newEndpointValue}
+                  </p>
+                </div>
+              )}
             </div>
             
-            <DialogFooter>
+            <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSaveEndpoint}>
+              <Button 
+                onClick={handleSaveEndpoint}
+                disabled={!newEndpointValue.trim()}
+              >
                 <Check className="mr-2 h-4 w-4" />
-                Salvar
+                Salvar Endpoint
               </Button>
             </DialogFooter>
           </DialogContent>
