@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { PawPrint, LogOut, ArrowLeft } from 'lucide-react';
+import { Bot, LogOut, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +55,7 @@ const KnowledgeManager = () => {
       <header className="bg-petshop-blue dark:bg-gray-800 text-white shadow-md transition-colors duration-300">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <PawPrint className="h-8 w-8 text-petshop-gold" />
+            <Bot className="h-8 w-8 text-petshop-gold" />
             <h1 className="text-2xl font-bold">Afiliado IA</h1>
           </div>
           <div className="flex items-center gap-4">
