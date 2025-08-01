@@ -137,17 +137,20 @@ const MediaUploadDialog: React.FC<MediaUploadDialogProps> = ({
   const uploadToSupabase = async (file: File) => {
     if (!user) throw new Error('Usuário não autenticado');
     
-    // Primeiro, criar o bucket do usuário se não existir
-    const { data: bucketName, error: bucketError } = await supabase
-      .rpc('create_user_bucket_if_not_exists', { user_id: user.id });
-    
+    // Primeiro, garantir que o bucket do usuário existe
+    const { data: createBucketResult, error: bucketError } = await supabase.functions.invoke('create-user-bucket', {
+      body: {
+        email: user.email,
+        user_id: user.id
+      }
+    });
+
     if (bucketError) {
-      console.error('Erro ao criar bucket:', bucketError);
-      throw new Error('Erro ao criar bucket do usuário');
+      console.error('Erro ao criar/verificar bucket:', bucketError);
+      throw new Error('Erro ao preparar área de armazenamento do usuário');
     }
-    
-    const config = mediaTypes[selectedMediaType];
-    const fileExtension = file.name.split('.').pop();
+
+    const bucketName = createBucketResult.bucket_name;
     const fileName = `${user.id}/${selectedMediaType}/${Date.now()}-${file.name}`;
     
     // Upload para o bucket do usuário

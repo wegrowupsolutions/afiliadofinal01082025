@@ -456,6 +456,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_user_bucket_by_email: {
+        Args: { user_email: string; user_id: string }
+        Returns: string
+      }
       create_user_bucket_if_not_exists: {
         Args: { user_id: string }
         Returns: string
@@ -467,6 +471,10 @@ export type Database = {
       get_admin_emails: {
         Args: Record<PropertyKey, never>
         Returns: string[]
+      }
+      get_current_user_bucket: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       has_role: {
         Args: {

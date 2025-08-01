@@ -26,11 +26,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+
+        // Criar bucket automaticamente quando o usuário fizer login
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(async () => {
+            try {
+              const { data, error } = await supabase.functions.invoke('create-user-bucket', {
+                body: {
+                  email: session.user.email,
+                  user_id: session.user.id
+                }
+              });
+
+              if (error) {
+                console.error('Erro ao criar bucket do usuário:', error);
+              } else {
+                console.log('Bucket do usuário verificado/criado:', data.bucket_name);
+              }
+            } catch (error) {
+              console.error('Erro na criação automática do bucket:', error);
+            }
+          }, 100);
+        }
       }
     );
 
