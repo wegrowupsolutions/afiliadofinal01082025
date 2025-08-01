@@ -69,7 +69,7 @@ const ClientsDashboard = () => {
           <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <CardTitle className="text-xl">Gerenciamento de Clientes</CardTitle>
+                <CardTitle className="text-xl">Gerenciamento de Leads</CardTitle>
                 <CardDescription>Visualize, adicione e edite seus clientes</CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
