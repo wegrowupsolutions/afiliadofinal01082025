@@ -11,6 +11,13 @@ export interface Client {
   raca_pet?: string;
 }
 
+export interface AfiliadoBaseLead {
+  id: number;
+  name: string;
+  remotejid: string;
+  timestamp: string;
+}
+
 export interface ChatMessage {
   role: string;
   content: string;

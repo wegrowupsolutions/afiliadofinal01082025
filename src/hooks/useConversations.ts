@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Conversation, AfiliadoMensagem, Client } from '@/types/chat';
+import { Conversation, AfiliadoMensagem, Client, AfiliadoBaseLead } from '@/types/chat';
 import { formatMessageTime } from '@/utils/chatUtils';
 
 export function useConversations() {
@@ -85,28 +85,28 @@ export function useConversations() {
       ));
       
       const { data: clientsData, error: clientsError } = await supabase
-        .from('dados_cliente')
+        .from('afiliado_base_leads')
         .select('*')
-        .in('sessionid', uniqueSessionIds)
-        .not('telefone', 'is', null);
+        .in('remotejid', uniqueSessionIds)
+        .not('name', 'is', null);
       
       if (clientsError) throw clientsError;
       
       if (clientsData && clientsData.length > 0) {
-        const conversationsData: Conversation[] = clientsData.map((client: Client) => {
+        const conversationsData: Conversation[] = clientsData.map((lead: AfiliadoBaseLead) => {
           return {
-            id: client.sessionid,
-            name: client.nome || 'Cliente sem nome',
+            id: lead.remotejid,
+            name: lead.name || 'Cliente sem nome',
             lastMessage: 'Carregando...',
             time: 'Recente',
             unread: 0,
             avatar: '👤',
-            phone: client.telefone,
-            email: client.email || 'Sem email',
-            petName: client.nome_pet || 'Não informado',
-            petType: client.porte_pet || 'Não informado',
-            petBreed: client.raca_pet || 'Não informado',
-            sessionId: client.sessionid
+            phone: lead.remotejid.replace('@s.whatsapp.net', ''),
+            email: 'Não informado',
+            petName: 'Não informado',
+            petType: 'Não informado',
+            petBreed: 'Não informado',
+            sessionId: lead.remotejid
           };
         });
         
