@@ -783,10 +783,470 @@ ${links.length > 0 ? links.map((link, index) => `### Link ${index + 1}
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* Adicione as outras seções seguindo o mesmo padrão... */}
-                {/* Para simplicidade, vou focar nas primeiras duas seções principais */}
+                {/* 3. Diretrizes */}
+                <AccordionItem value="diretrizes" className="border-b-0">
+                  <AccordionTrigger className="px-8 py-6 hover:no-underline hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${sections[2].color} text-white shadow-lg`}>
+                        <Shield className="h-5 w-5" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <h3 className="text-lg font-semibold">Diretrizes</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Regras e restrições do negócio
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={getSectionCompletion('diretrizes') * 100} className="w-16 h-2" />
+                        {getSectionCompletion('diretrizes') === 1 && (
+                          <CheckCircle2 className="h-5 w-5 text-green-500 animate-scale-in" />
+                        )}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-8 pb-8 pt-0">
+                    <div className={`space-y-6 bg-gradient-to-br ${sections[2].bgColor} rounded-xl p-6 border border-gray-100 dark:border-gray-700`}>
+                      <div className="space-y-3">
+                        <Label htmlFor="politicas" className="text-base font-medium">Políticas Importantes</Label>
+                        <Textarea
+                          id="politicas"
+                          placeholder="Liste as políticas importantes que o agente deve seguir..."
+                          value={promptData.diretrizes.politicasImportantes}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            diretrizes: { ...promptData.diretrizes, politicasImportantes: e.target.value }
+                          })}
+                          className="min-h-[120px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <Label htmlFor="limites" className="text-base font-medium">Limites de Atuação</Label>
+                          <Textarea
+                            id="limites"
+                            placeholder="Defina os limites de atuação do agente..."
+                            value={promptData.diretrizes.limitesAtuacao}
+                            onChange={(e) => setPromptData({
+                              ...promptData,
+                              diretrizes: { ...promptData.diretrizes, limitesAtuacao: e.target.value }
+                            })}
+                            className="min-h-[100px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                          />
+                        </div>
+
+                        <div className="space-y-3">
+                          <Label htmlFor="restricoes" className="text-base font-medium">Restrições Legais ou Éticas</Label>
+                          <Textarea
+                            id="restricoes"
+                            placeholder="Liste as restrições legais ou éticas..."
+                            value={promptData.diretrizes.restricoesLegais}
+                            onChange={(e) => setPromptData({
+                              ...promptData,
+                              diretrizes: { ...promptData.diretrizes, restricoesLegais: e.target.value }
+                            })}
+                            className="min-h-[100px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label htmlFor="procedimentos" className="text-base font-medium">Procedimentos Obrigatórios</Label>
+                        <Textarea
+                          id="procedimentos"
+                          placeholder="Descreva os procedimentos obrigatórios que o agente deve seguir..."
+                          value={promptData.diretrizes.procedimentosObrigatorios}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            diretrizes: { ...promptData.diretrizes, procedimentosObrigatorios: e.target.value }
+                          })}
+                          className="min-h-[120px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label htmlFor="confidenciais" className="text-base font-medium">Informações Confidenciais ou Sensíveis (Opcional)</Label>
+                        <Textarea
+                          id="confidenciais"
+                          placeholder="Liste informações que o agente deve tratar com confidencialidade..."
+                          value={promptData.diretrizes.informacoesConfidenciais}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            diretrizes: { ...promptData.diretrizes, informacoesConfidenciais: e.target.value }
+                          })}
+                          className="min-h-[100px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* 4. Estrutura da Conversa */}
+                <AccordionItem value="estrutura" className="border-b-0">
+                  <AccordionTrigger className="px-8 py-6 hover:no-underline hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${sections[3].color} text-white shadow-lg`}>
+                        <MessageSquare className="h-5 w-5" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <h3 className="text-lg font-semibold">Estrutura da Conversa</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Passo a passo do raciocínio
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={getSectionCompletion('estrutura') * 100} className="w-16 h-2" />
+                        {getSectionCompletion('estrutura') === 1 && (
+                          <CheckCircle2 className="h-5 w-5 text-green-500 animate-scale-in" />
+                        )}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-8 pb-8 pt-0">
+                    <div className={`space-y-6 bg-gradient-to-br ${sections[3].bgColor} rounded-xl p-6 border border-gray-100 dark:border-gray-700`}>
+                      <div className="space-y-3">
+                        <Label htmlFor="estrutura" className="text-base font-medium flex items-center gap-2">
+                          Passo a Passo do Raciocínio
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Defina como o agente deve estruturar suas respostas</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Label>
+                        <Textarea
+                          id="estrutura"
+                          placeholder="Detalhe o passo a passo do raciocínio do agente:
+
+1. Primeiro passo
+   - Subtarefas
+   - Considerações importantes
+
+2. Segundo passo
+   - Subtarefas
+   - Considerações importantes
+
+[Continue com os passos necessários]"
+                          value={promptData.estruturaConversa}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            estruturaConversa: e.target.value
+                          })}
+                          className="min-h-[200px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Defina como o agente deve estruturar suas respostas e raciocínio
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* 5. FAQ */}
+                <AccordionItem value="faq" className="border-b-0">
+                  <AccordionTrigger className="px-8 py-6 hover:no-underline hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${sections[4].color} text-white shadow-lg`}>
+                        <Info className="h-5 w-5" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <h3 className="text-lg font-semibold">FAQ</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Perguntas frequentes e respostas
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={getSectionCompletion('faq') * 100} className="w-16 h-2" />
+                        {getSectionCompletion('faq') === 1 && (
+                          <CheckCircle2 className="h-5 w-5 text-green-500 animate-scale-in" />
+                        )}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-8 pb-8 pt-0">
+                    <div className={`space-y-6 bg-gradient-to-br ${sections[4].bgColor} rounded-xl p-6 border border-gray-100 dark:border-gray-700`}>
+                      <div className="space-y-3">
+                        <Label htmlFor="faq" className="text-base font-medium">Perguntas e Respostas Frequentes</Label>
+                        <Textarea
+                          id="faq"
+                          placeholder="Liste as perguntas frequentes e suas respostas:
+
+P1: [Pergunta frequente 1]
+R1: [Resposta detalhada]
+
+P2: [Pergunta frequente 2]
+R2: [Resposta detalhada]
+
+[Continue com mais perguntas relevantes]"
+                          value={promptData.faq}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            faq: e.target.value
+                          })}
+                          className="min-h-[200px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Inclua as perguntas mais comuns que os usuários podem fazer
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* 6. Exemplos de Uso */}
+                <AccordionItem value="exemplos" className="border-b-0">
+                  <AccordionTrigger className="px-8 py-6 hover:no-underline hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${sections[5].color} text-white shadow-lg`}>
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <h3 className="text-lg font-semibold">Exemplos de Uso</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Interações práticas e modelos
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={getSectionCompletion('exemplos') * 100} className="w-16 h-2" />
+                        {getSectionCompletion('exemplos') === 1 && (
+                          <CheckCircle2 className="h-5 w-5 text-green-500 animate-scale-in" />
+                        )}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-8 pb-8 pt-0">
+                    <div className={`space-y-6 bg-gradient-to-br ${sections[5].bgColor} rounded-xl p-6 border border-gray-100 dark:border-gray-700`}>
+                      <div className="space-y-3">
+                        <Label htmlFor="exemplos" className="text-base font-medium">Exemplos Práticos de Interações</Label>
+                        <Textarea
+                          id="exemplos"
+                          placeholder="Forneça exemplos práticos de interações:
+
+Exemplo 1:
+- Situação: [Descreva a situação]
+- Diálogo modelo: [Mostre a conversa]
+- Resultado esperado: [O que deve acontecer]
+
+Exemplo 2:
+- Situação: [Descreva a situação]
+- Diálogo modelo: [Mostre a conversa]
+- Resultado esperado: [O que deve acontecer]"
+                          value={promptData.exemplosUso}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            exemplosUso: e.target.value
+                          })}
+                          className="min-h-[200px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Demonstre como o agente deve se comportar em situações específicas
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* 7. Métricas de Sucesso */}
+                <AccordionItem value="metricas" className="border-b-0">
+                  <AccordionTrigger className="px-8 py-6 hover:no-underline hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${sections[6].color} text-white shadow-lg`}>
+                        <CheckCircle2 className="h-5 w-5" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <h3 className="text-lg font-semibold">Métricas de Sucesso</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Como medir o desempenho
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={getSectionCompletion('metricas') * 100} className="w-16 h-2" />
+                        {getSectionCompletion('metricas') === 1 && (
+                          <CheckCircle2 className="h-5 w-5 text-green-500 animate-scale-in" />
+                        )}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-8 pb-8 pt-0">
+                    <div className={`space-y-6 bg-gradient-to-br ${sections[6].bgColor} rounded-xl p-6 border border-gray-100 dark:border-gray-700`}>
+                      <div className="space-y-3">
+                        <Label htmlFor="indicadores" className="text-base font-medium">Indicadores de Qualidade</Label>
+                        <Textarea
+                          id="indicadores"
+                          placeholder="Defina os indicadores de qualidade para avaliar o desempenho do agente..."
+                          value={promptData.metricasSucesso.indicadoresQualidade}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            metricasSucesso: { ...promptData.metricasSucesso, indicadoresQualidade: e.target.value }
+                          })}
+                          className="min-h-[100px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label htmlFor="metricasDesempenho" className="text-base font-medium">Métricas de Desempenho</Label>
+                        <Textarea
+                          id="metricasDesempenho"
+                          placeholder="Liste as métricas de desempenho (tempo de resposta, precisão, etc.)..."
+                          value={promptData.metricasSucesso.metricasDesempenho}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            metricasSucesso: { ...promptData.metricasSucesso, metricasDesempenho: e.target.value }
+                          })}
+                          className="min-h-[100px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label htmlFor="criterios" className="text-base font-medium">Critérios de Avaliação</Label>
+                        <Textarea
+                          id="criterios"
+                          placeholder="Descreva os critérios de avaliação para determinar o sucesso..."
+                          value={promptData.metricasSucesso.criteriosAvaliacao}
+                          onChange={(e) => setPromptData({
+                            ...promptData,
+                            metricasSucesso: { ...promptData.metricasSucesso, criteriosAvaliacao: e.target.value }
+                          })}
+                          className="min-h-[100px] resize-none border-0 bg-white dark:bg-gray-800 shadow-sm focus:shadow-md transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* 8. Links de Divulgação */}
+                <AccordionItem value="links" className="border-b-0">
+                  <AccordionTrigger className="px-8 py-6 hover:no-underline hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${sections[7].color} text-white shadow-lg`}>
+                        <Plus className="h-5 w-5" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <h3 className="text-lg font-semibold">Links de Divulgação</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Links para divulgação do produto
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={getSectionCompletion('links') * 100} className="w-16 h-2" />
+                        {getSectionCompletion('links') === 1 && (
+                          <CheckCircle2 className="h-5 w-5 text-green-500 animate-scale-in" />
+                        )}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-8 pb-8 pt-0">
+                    <div className={`space-y-6 bg-gradient-to-br ${sections[7].bgColor} rounded-xl p-6 border border-gray-100 dark:border-gray-700`}>
+                      {promptData.linksPromocao.map((link, index) => (
+                        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3 border shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium flex items-center gap-2">
+                              Link {index + 1} 
+                              {index === 0 && <span className="text-red-500">*</span>}
+                              <Badge variant="outline" className="text-xs">
+                                {index === 0 ? 'Principal' : 'Adicional'}
+                              </Badge>
+                            </Label>
+                            {promptData.linksPromocao.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePromotionLink(index)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor={`link-${index}`} className="text-sm text-muted-foreground">URL do Link</Label>
+                            <Input
+                              id={`link-${index}`}
+                              placeholder="https://exemplo.com"
+                              value={link.link}
+                              onChange={(e) => updatePromotionLink(index, 'link', e.target.value)}
+                              className="border-0 bg-gray-50 dark:bg-gray-700 shadow-sm focus:shadow-md transition-all duration-200"
+                            />
+                            {index === 0 && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Link principal obrigatório para divulgação
+                              </p>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor={`desc-${index}`} className="text-sm text-muted-foreground">Descrição</Label>
+                            <Input
+                              id={`desc-${index}`}
+                              placeholder="Descrição do link"
+                              value={link.descricao}
+                              onChange={(e) => updatePromotionLink(index, 'descricao', e.target.value)}
+                              className="border-0 bg-gray-50 dark:bg-gray-700 shadow-sm focus:shadow-md transition-all duration-200"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addPromotionLink}
+                        className="w-full border-dashed border-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar novo link
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
               </Accordion>
+
+              {/* Save Button Fixed */}
+              <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t p-6 mt-8">
+                <div className="flex justify-between items-center max-w-6xl mx-auto">
+                  <div className="text-sm text-muted-foreground">
+                    {lastSaved ? (
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        Salvo em: {lastSaved.toLocaleTimeString('pt-BR')}
+                      </span>
+                    ) : (
+                      'Faça alterações para salvar automaticamente'
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate('/dashboard')}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md transition-all duration-200 hover:shadow-lg min-w-[140px]"
+                    >
+                      {isSaving ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Salvando...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Save className="h-4 w-4" />
+                          Salvar Configuração
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
