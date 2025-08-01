@@ -145,7 +145,7 @@ export const useClientManagement = () => {
         });
         
         try {
-          await fetch('https://webhook.n8nlabz.com.br/webhook/cria_usuario', {
+          await fetch('https://webhook.serverwegrowup.com.br/webhook/cria_usuario', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -197,7 +197,7 @@ export const useClientManagement = () => {
       });
       
       try {
-        await fetch('https://webhook.n8nlabz.com.br/webhook/edita_usuario', {
+        await fetch('https://webhook.serverwegrowup.com.br/webhook/edita_usuario', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ export const useClientManagement = () => {
       });
       
       try {
-        await fetch('https://webhook.n8nlabz.com.br/webhook/exclui_usuario', {
+        await fetch('https://webhook.serverwegrowup.com.br/webhook/exclui_usuario', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -300,7 +300,7 @@ export const useClientManagement = () => {
     if (!selectedContact) return;
     
     try {
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/envia_mensagem', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

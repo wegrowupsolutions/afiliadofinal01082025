@@ -367,7 +367,7 @@ export const useDocuments = () => {
 
       console.log('Enviando arquivo para o webhook:', file.name, 'categoria:', category);
       
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/envia_rag', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/envia_rag', {
         method: 'POST',
         body: formData,
       });

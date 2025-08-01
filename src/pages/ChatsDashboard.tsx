@@ -55,7 +55,7 @@ const ChatsDashboard = () => {
     try {
       setIsLoading(prev => ({ ...prev, [`pause-${selectedPhoneNumber}`]: true }));
       
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/pausa_bot', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/pausa_bot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ const ChatsDashboard = () => {
     try {
       setIsLoading(prev => ({ ...prev, [`start-${phoneNumber}`]: true }));
       
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/inicia_bot', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/inicia_bot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
