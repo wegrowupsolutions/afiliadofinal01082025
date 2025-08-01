@@ -95,11 +95,6 @@ const MetricsDashboard = () => {
         {/* Gráficos e Tabelas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <ClientGrowthChart data={monthlyCustomersData} loading={loading} />
-          
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
           <RecentClientsTable clients={recentClientsData} loading={loading} />
         </div>
       </main>
