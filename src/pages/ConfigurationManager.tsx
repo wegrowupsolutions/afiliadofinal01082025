@@ -39,20 +39,6 @@ const endpointGroups = {
     { id: 'supabaseUrl', label: 'URL do Supabase', value: import.meta.env.VITE_SUPABASE_URL || '', readOnly: true },
     { id: 'supabaseKey', label: 'Chave Anônima do Supabase', value: import.meta.env.VITE_SUPABASE_ANON_KEY || '', readOnly: true }
   ],
-  'Configuração da Agenda': [
-    { id: 'agenda', label: 'URL Base da Agenda', key: 'agenda' },
-    { id: 'agendaBanho', label: 'URL Agenda Banho', key: 'agendaBanho' },
-    { id: 'agendaVet', label: 'URL Agenda Veterinário', key: 'agendaVet' },
-    { id: 'agendaAdicionar', label: 'Adicionar Evento (Geral)', key: 'agendaAdicionar' },
-    { id: 'agendaAdicionarBanho', label: 'Adicionar Evento Banho', key: 'agendaAdicionarBanho' },
-    { id: 'agendaAdicionarVet', label: 'Adicionar Evento Veterinário', key: 'agendaAdicionarVet' },
-    { id: 'agendaAlterar', label: 'Alterar Evento (Geral)', key: 'agendaAlterar' },
-    { id: 'agendaAlterarBanho', label: 'Alterar Evento Banho', key: 'agendaAlterarBanho' },
-    { id: 'agendaAlterarVet', label: 'Alterar Evento Veterinário', key: 'agendaAlterarVet' },
-    { id: 'agendaExcluir', label: 'Excluir Evento (Geral)', key: 'agendaExcluir' },
-    { id: 'agendaExcluirBanho', label: 'Excluir Evento Banho', key: 'agendaExcluirBanho' },
-    { id: 'agendaExcluirVet', label: 'Excluir Evento Veterinário', key: 'agendaExcluirVet' }
-  ],
   'Configuração do Bot': [
     { id: 'mensagem', label: 'Enviar Mensagem', key: 'mensagem' },
     { id: 'pausaBot', label: 'Pausar Bot', key: 'pausaBot' },
