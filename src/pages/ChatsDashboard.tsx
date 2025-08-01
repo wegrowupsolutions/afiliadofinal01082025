@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatLayout from '@/components/chat/ChatLayout';
 import { useConversations } from '@/hooks/useConversations';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+
 import { useChatMessages } from '@/hooks/useChatMessages';
 import PauseDurationDialog from '@/components/PauseDurationDialog';
 
@@ -32,11 +32,6 @@ const ChatsDashboard = () => {
     handleNewMessage 
   } = useChatMessages(selectedChat);
   
-  // Set up real-time listeners for new chat messages
-  useRealtimeUpdates({ 
-    updateConversationLastMessage, 
-    fetchConversations 
-  });
 
   // Find the currently selected conversation
   const selectedConversation = conversations.find(conv => conv.id === selectedChat);
