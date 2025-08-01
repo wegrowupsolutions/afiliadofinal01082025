@@ -47,6 +47,48 @@ export type Database = {
         }
         Relationships: []
       }
+      afiliado_base_leads: {
+        Row: {
+          id: number
+          name: string | null
+          remotejid: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          id?: number
+          name?: string | null
+          remotejid?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string | null
+          remotejid?: string | null
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
+      afiliado_mensagens: {
+        Row: {
+          conversation_history: string | null
+          id: number
+          remotejid: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          conversation_history?: string | null
+          id?: number
+          remotejid?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          conversation_history?: string | null
+          id?: number
+          remotejid?: string | null
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
       audio_files: {
         Row: {
           bitrate: number | null

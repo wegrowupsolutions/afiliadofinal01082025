@@ -74,20 +74,35 @@ export function useChatMessages(selectedChat: string | null) {
           filter: `remotejid=eq.${selectedChat}`
         }, 
         (payload) => {
-          console.log('New message received in current chat via realtime:', payload);
+          console.log('🔥 NEW MESSAGE VIA REALTIME:', payload);
+          console.log('🔥 Payload new:', payload.new);
+          console.log('🔥 Selected chat:', selectedChat);
           
           // Process the new message
           const afiliadoMsg = payload.new as any;
-          console.log('New message timestamp field:', afiliadoMsg.timestamp);
+          console.log('🔥 Message remotejid:', afiliadoMsg.remotejid);
+          console.log('🔥 Message timestamp:', afiliadoMsg.timestamp);
+          console.log('🔥 Message conversation_history:', afiliadoMsg.conversation_history);
+          
           const newMessages = parseMessage(afiliadoMsg);
+          console.log('🔥 Parsed messages:', newMessages);
           
           if (newMessages.length > 0) {
-            console.log("Adding new messages from realtime:", newMessages);
-            setMessages(prevMessages => [...prevMessages, ...newMessages]);
+            console.log("🔥 Adding new messages from realtime:", newMessages);
+            setMessages(prevMessages => {
+              console.log('🔥 Previous messages count:', prevMessages.length);
+              const updated = [...prevMessages, ...newMessages];
+              console.log('🔥 Updated messages count:', updated.length);
+              return updated;
+            });
+          } else {
+            console.log('🔥 No messages parsed from realtime data');
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔥 Subscription status:', status);
+      });
     
     console.log(`Realtime subscription created for chat: ${selectedChat}`);
       
