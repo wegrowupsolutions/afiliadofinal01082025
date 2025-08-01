@@ -263,7 +263,7 @@ export const useDocuments = () => {
       toast({
         title: "Documento excluído",
         description: "O arquivo foi removido com sucesso!",
-        variant: "destructive",
+        variant: "success",
       });
     } catch (err) {
       console.error('Unexpected error deleting document:', err);
@@ -346,7 +346,7 @@ export const useDocuments = () => {
       toast({
         title: "Base de conhecimento limpa",
         description: "Todos os documentos foram removidos com sucesso!",
-        variant: "destructive",
+        variant: "success",
       });
     } catch (err) {
       console.error('Unexpected error clearing knowledge base:', err);
@@ -385,6 +385,7 @@ export const useDocuments = () => {
       toast({
         title: "Documento adicionado",
         description: `${file.name} foi adicionado com sucesso!`,
+        variant: "success",
       });
       
       return true;

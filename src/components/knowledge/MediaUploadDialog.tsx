@@ -226,6 +226,7 @@ const MediaUploadDialog: React.FC<MediaUploadDialogProps> = ({
       toast({
         title: "Upload realizado com sucesso!",
         description: `${selectedFile.name} foi adicionado à sua biblioteca`,
+        variant: "success",
       });
       
       // Reset form
