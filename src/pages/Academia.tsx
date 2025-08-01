@@ -108,15 +108,15 @@ const Academia = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg">
-                      <video.icon className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg">
+                      <video.icon className="h-5 w-5 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">{video.title}</CardTitle>
                       <p className="text-sm text-gray-500 dark:text-gray-400">{video.duration}</p>
                     </div>
                   </div>
-                  <div className="bg-orange-500 p-2 rounded-full text-white">
+                  <div className="bg-red-600 p-2 rounded-full text-white">
                     <Play className="h-4 w-4" />
                   </div>
                 </div>
@@ -132,13 +132,13 @@ const Academia = () => {
 
         {/* Call to Action */}
         <div className="mt-12 text-center">
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-8 text-white">
+          <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-lg p-8 text-white">
             <h3 className="text-2xl font-bold mb-4">Precisa de ajuda personalizada?</h3>
             <p className="mb-6">Nossa equipe está pronta para te ajudar a aproveitar ao máximo a plataforma</p>
-            <Button 
+            <Button
               variant="secondary" 
               size="lg"
-              className="bg-white text-orange-600 hover:bg-gray-100"
+              className="bg-white text-red-600 hover:bg-gray-100"
             >
               Entrar em contato
             </Button>
