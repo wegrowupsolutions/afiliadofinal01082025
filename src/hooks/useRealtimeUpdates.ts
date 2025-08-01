@@ -18,17 +18,17 @@ export function useRealtimeUpdates({
     
     // Create a single subscription for chat history updates
     const subscription = supabase
-      .channel('n8n_chat_histories_updates')
+      .channel('afiliado_mensagens_updates')
       .on('postgres_changes', 
         { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'n8n_chat_histories' 
+          table: 'afiliado_mensagens' 
         }, 
         (payload) => {
           console.log('New chat history entry detected:', payload);
           
-          const sessionId = payload.new.session_id;
+          const sessionId = (payload.new as any).remotejid;
           console.log(`Processing message for session: ${sessionId}`);
           
           // First update the last message in the conversation list

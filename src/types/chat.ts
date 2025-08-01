@@ -18,12 +18,11 @@ export interface ChatMessage {
   type?: string;
 }
 
-export interface N8nChatHistory {
+export interface AfiliadoMensagem {
   id: number;
-  session_id: string;
-  message: any; // This can be various formats, we'll parse it properly
-  data: string; // Date in string format
-  hora?: string; // This is the field containing the correct time
+  remotejid: string;
+  timestamp: string;
+  conversation_history: string;
 }
 
 export interface Conversation {

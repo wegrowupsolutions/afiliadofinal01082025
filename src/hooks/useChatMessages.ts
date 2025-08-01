@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ChatMessage, N8nChatHistory } from '@/types/chat';
+import { ChatMessage, AfiliadoMensagem } from '@/types/chat';
 import { parseMessage } from '@/utils/chatUtils';
 
 export function useChatMessages(selectedChat: string | null) {
@@ -16,9 +16,9 @@ export function useChatMessages(selectedChat: string | null) {
       console.log(`Fetching messages for conversation: ${conversationId}`);
       
       const { data: historyData, error: historyError } = await supabase
-        .from('n8n_chat_histories')
+        .from('afiliado_mensagens' as any)
         .select('*')
-        .eq('session_id', conversationId)
+        .eq('remotejid', conversationId)
         .order('id', { ascending: true });
       
       if (historyError) {
@@ -27,14 +27,14 @@ export function useChatMessages(selectedChat: string | null) {
       }
       
       console.log(`Fetched ${historyData?.length || 0} history records`);
-      console.log('Sample record with hora:', historyData && historyData.length > 0 ? historyData[0] : 'No records');
+      console.log('Sample record:', historyData && historyData.length > 0 ? historyData[0] : 'No records');
       
       let allMessages: ChatMessage[] = [];
       
       if (historyData && historyData.length > 0) {
-        historyData.forEach((chatHistory: N8nChatHistory) => {
-          console.log(`Processing message with hora: ${chatHistory.hora}`);
-          const parsedMessages = parseMessage(chatHistory);
+        historyData.forEach((afiliadoMsg: any) => {
+          console.log(`Processing message with timestamp: ${afiliadoMsg.timestamp}`);
+          const parsedMessages = parseMessage(afiliadoMsg);
           if (parsedMessages.length > 0) {
             allMessages = [...allMessages, ...parsedMessages];
           }
@@ -70,16 +70,16 @@ export function useChatMessages(selectedChat: string | null) {
         { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'n8n_chat_histories',
-          filter: `session_id=eq.${selectedChat}`
+          table: 'afiliado_mensagens',
+          filter: `remotejid=eq.${selectedChat}`
         }, 
         (payload) => {
           console.log('New message received in current chat via realtime:', payload);
           
           // Process the new message
-          const chatHistory = payload.new as N8nChatHistory;
-          console.log('New message hora field:', chatHistory.hora);
-          const newMessages = parseMessage(chatHistory);
+          const afiliadoMsg = payload.new as any;
+          console.log('New message timestamp field:', afiliadoMsg.timestamp);
+          const newMessages = parseMessage(afiliadoMsg);
           
           if (newMessages.length > 0) {
             console.log("Adding new messages from realtime:", newMessages);
