@@ -89,35 +89,17 @@ const MetricsDashboard = () => {
             iconTextClass="text-purple-600 dark:text-purple-400"
           />
           
-          <StatCard 
-            title="Total de Pets"
-            value={stats.totalPets}
-            icon={<PawPrint />}
-            trend={`Média de ${(stats.totalPets / (stats.totalClients || 1)).toFixed(1)} pets por cliente`}
-            loading={loading}
-            iconBgClass="bg-pink-100 dark:bg-pink-900/30"
-            iconTextClass="text-pink-600 dark:text-pink-400"
-          />
           
-          <StatCard 
-            title="Novos Clientes (Mês)"
-            value={stats.newClientsThisMonth}
-            icon={<Smartphone />}
-            trend={`+${stats.newClientsThisMonth} comparado ao mês anterior`}
-            loading={loading}
-            iconBgClass="bg-blue-100 dark:bg-blue-900/30"
-            iconTextClass="text-blue-600 dark:text-blue-400"
-          />
         </div>
         
         {/* Gráficos e Tabelas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <ClientGrowthChart data={monthlyCustomersData} loading={loading} />
-          <PetTypesChart data={petBreedsData} loading={loading} />
+          
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ServicesBarChart data={petServicesData} />
+          
           <RecentClientsTable clients={recentClientsData} loading={loading} />
         </div>
       </main>
