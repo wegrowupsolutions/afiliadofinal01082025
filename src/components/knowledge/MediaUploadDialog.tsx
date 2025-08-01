@@ -55,33 +55,35 @@ const MediaUploadDialog: React.FC<MediaUploadDialogProps> = ({
   const [category, setCategory] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
+  const getUserBucket = (userId: string) => `user-${userId.split('-')[0]}`;
+
   const mediaTypes: Record<MediaType, MediaTypeConfig> = {
     documentos: {
       label: 'Documentos',
       icon: <FileText className="h-5 w-5" />,
       acceptedTypes: ['.pdf', '.doc', '.docx', '.txt', '.rtf'],
-      bucket: 'documents',
+      bucket: user ? getUserBucket(user.id) : 'documents',
       maxSize: 50
     },
     videos: {
       label: 'Vídeos',
       icon: <Video className="h-5 w-5" />,
       acceptedTypes: ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'],
-      bucket: 'videos',
+      bucket: user ? getUserBucket(user.id) : 'videos',
       maxSize: 500
     },
     audio: {
       label: 'Áudio',
       icon: <Music className="h-5 w-5" />,
       acceptedTypes: ['.mp3', '.wav', '.ogg', '.m4a', '.aac'],
-      bucket: 'audio',
+      bucket: user ? getUserBucket(user.id) : 'audio',
       maxSize: 100
     },
     tabela: {
       label: 'Tabela',
       icon: <Table className="h-5 w-5" />,
       acceptedTypes: ['.xls', '.xlsx', '.csv', '.ods'],
-      bucket: 'documents',
+      bucket: user ? getUserBucket(user.id) : 'documents',
       maxSize: 25
     }
   };
@@ -137,7 +139,7 @@ const MediaUploadDialog: React.FC<MediaUploadDialogProps> = ({
     
     const config = mediaTypes[selectedMediaType];
     const fileExtension = file.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}-${file.name}`;
+    const fileName = `${selectedMediaType}/${Date.now()}-${file.name}`;
     
     // Upload para o bucket apropriado
     const { data, error } = await supabase.storage
