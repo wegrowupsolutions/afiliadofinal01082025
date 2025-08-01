@@ -238,7 +238,9 @@ const AgentConfiguration = () => {
   };
 
   const generateMarkdownPrompt = (): string => {
-    return `## 1. CONTEXTO
+    return `Haja como um especialista em engenharia de prompts com base na técnica COT (Chain of Thought) e me ajude a criar um prompt de engenharia seguindo o framework abaixo:
+
+## 1. CONTEXTO
 [Descreva aqui o cenário específico e objetivo do prompt]
 ${promptData.contexto.cenarioEspecifico || '- Qual é o problema que precisa ser resolvido?'}
 ${promptData.contexto.problemaResolver || '- Qual é o resultado esperado?'}
@@ -304,7 +306,11 @@ ${promptData.linksPromocao.filter(link => link.link.trim() !== '').length > 0 ? 
 ${promptData.linksPromocao.filter(link => link.link.trim() !== '').map((link, index) => `
 Link ${index + 1}: ${link.link}
 Descrição: ${link.descricao || 'Sem descrição'}
-`).join('')}` : ''}`;
+`).join('')}` : ''}
+
+---
+
+Com base nas informações acima, gere um prompt completo que atenda aos requisitos especificados. Gere no formato markdown.`;
   };
 
   const handleAutoSave = async () => {
