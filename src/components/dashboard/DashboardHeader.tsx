@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, PawPrint } from 'lucide-react';
+import { LogOut, Bot } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -13,7 +13,7 @@ const DashboardHeader = () => {
     <header className="bg-petshop-blue dark:bg-gray-800 text-white shadow-md transition-colors duration-300">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <PawPrint className="h-8 w-8 text-petshop-gold" />
+          <Bot className="h-8 w-8 text-petshop-gold" />
           <h1 className="text-2xl font-bold">Afiliado IA</h1>
         </div>
         <div className="flex items-center gap-4">
