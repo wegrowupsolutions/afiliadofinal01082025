@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, LogOut, PawPrint } from 'lucide-react';
+import { ArrowLeft, LogOut, Bot } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface ChatHeaderProps {
@@ -31,7 +31,7 @@ const ChatHeader = ({ signOut }: ChatHeaderProps) => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <PawPrint className="h-8 w-8 text-petshop-gold" />
+          <Bot className="h-8 w-8 text-petshop-gold" />
           <h1 className="text-2xl font-bold">Chats</h1>
         </div>
         <div className="flex items-center gap-4">
