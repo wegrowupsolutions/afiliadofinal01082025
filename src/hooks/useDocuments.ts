@@ -40,50 +40,85 @@ export const useDocuments = () => {
         return;
       }
 
-      // Get user's bucket name
+      // Get user's bucket name (consistent with MediaUploadDialog)
       const bucketName = `user-${user.email?.replace(/[@.]/g, '-')}`;
       
-      // List files from user's bucket
-      const { data: files, error } = await supabase.storage
+      // List files from user's bucket recursively
+      const allFiles: any[] = [];
+      
+      // First, get the user folder
+      const { data: userFolder, error: folderError } = await supabase.storage
         .from(bucketName)
-        .list('', {
+        .list(user.id, {
           limit: 100,
           offset: 0,
         });
 
-      if (error) {
-        console.error('Error fetching files from bucket:', error);
+      if (folderError) {
+        console.error('Error fetching user folder:', folderError);
         toast({
           title: "Erro ao carregar arquivos",
-          description: error.message,
+          description: folderError.message,
           variant: "destructive",
         });
         return;
       }
 
+      // For each subfolder, get the files
+      if (userFolder && userFolder.length > 0) {
+        for (const folder of userFolder) {
+          if (folder.name) {
+            const { data: subFiles, error: subError } = await supabase.storage
+              .from(bucketName)
+              .list(`${user.id}/${folder.name}`, {
+                limit: 100,
+                offset: 0,
+              });
+
+            if (!subError && subFiles) {
+              // Add folder path to each file
+              const filesWithPath = subFiles.map(file => ({
+                ...file,
+                fullPath: `${user.id}/${folder.name}/${file.name}`,
+                folder: folder.name
+              }));
+              allFiles.push(...filesWithPath);
+            }
+          }
+        }
+      }
+
       // Transform storage files to Document interface
-      const formattedDocs: Document[] = files
-        .filter(file => file.name && !file.name.startsWith('.')) // Filter out hidden files
+      const formattedDocs: Document[] = allFiles
+        .filter(file => file.name && !file.name.startsWith('.') && file.name !== '.emptyFolderPlaceholder') // Filter out hidden files and folder placeholders
         .map((file, index) => {
           const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
           const fileSize = file.metadata?.size ? `${(file.metadata.size / 1024).toFixed(1)} KB` : 'Unknown';
           
-          // Determine file type and category
+          // Determine file type and category based on folder
           let type = 'unknown';
           let category = 'Documento';
           
-          if (['pdf'].includes(fileExtension)) {
-            type = 'pdf';
-            category = 'PDF';
-          } else if (['doc', 'docx'].includes(fileExtension)) {
-            type = 'document';
-            category = 'Documento';
-          } else if (['txt'].includes(fileExtension)) {
-            type = 'text';
-            category = 'Texto';
-          } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
-            type = 'image';
-            category = 'Imagem';
+          if (file.folder === 'documentos' || file.folder === 'tabela') {
+            if (['pdf'].includes(fileExtension)) {
+              type = 'pdf';
+              category = 'PDF';
+            } else if (['doc', 'docx'].includes(fileExtension)) {
+              type = 'document';
+              category = 'Documento';
+            } else if (['txt'].includes(fileExtension)) {
+              type = 'text';
+              category = 'Texto';
+            } else if (['xls', 'xlsx', 'csv'].includes(fileExtension)) {
+              type = 'spreadsheet';
+              category = 'Planilha';
+            }
+          } else if (file.folder === 'videos') {
+            type = 'video';
+            category = 'Vídeo';
+          } else if (file.folder === 'audio') {
+            type = 'audio';
+            category = 'Áudio';
           }
 
           return {
@@ -92,7 +127,7 @@ export const useDocuments = () => {
             type,
             size: fileSize,
             category,
-            uploadedAt: file.created_at ? new Date(file.created_at).toLocaleDateString('pt-BR') : 'Unknown',
+            uploadedAt: file.created_at ? new Date(file.created_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
             titulo: file.name,
             metadata: file.metadata,
           };
