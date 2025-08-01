@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MetricsCard from '@/components/dashboard/MetricsCard';
 import ChatsCard from '@/components/dashboard/ChatsCard';
@@ -14,6 +15,7 @@ import ConfigCard from '@/components/dashboard/ConfigCard';
 
 const Dashboard = () => {
   const { user, isLoading } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   
   // Initialize real-time updates for the dashboard
@@ -49,7 +51,7 @@ const Dashboard = () => {
           <ClientsCard />
           <EvolutionCard />
           <AcademiaCard />
-          <ConfigCard />
+          {isAdmin && <ConfigCard />}
         </div>
       </main>
     </div>
