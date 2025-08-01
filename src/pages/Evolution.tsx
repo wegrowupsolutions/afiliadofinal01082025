@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
-import { EvolutionEndpointsStatus } from '@/components/evolution/EvolutionEndpointsStatus';
+
 
 const Evolution = () => {
   const navigate = useNavigate();
@@ -237,10 +237,6 @@ const Evolution = () => {
           </h2>
         </div>
         
-        {/* Status dos Endpoints */}
-        <div className="mb-6">
-          <EvolutionEndpointsStatus />
-        </div>
         
         <div className="max-w-xl mx-auto">
           <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
