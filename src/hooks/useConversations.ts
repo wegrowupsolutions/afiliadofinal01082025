@@ -27,14 +27,14 @@ export function useConversations() {
         setConversations(currentConversations => {
           return currentConversations.map(conv => {
             if (conv.id === sessionId) {
-              let lastMessageContent = '';
+              let lastMessageContent = 'Sem mensagem';
               
               if (afiliadoMsg.conversation_history) {
                 try {
                   const conversation = JSON.parse(afiliadoMsg.conversation_history);
                   if (Array.isArray(conversation) && conversation.length > 0) {
                     const lastMsg = conversation[conversation.length - 1];
-                    lastMessageContent = lastMsg?.content || '';
+                    lastMessageContent = lastMsg?.content || 'Sem mensagem';
                   } else if (conversation.content) {
                     lastMessageContent = conversation.content;
                   }
@@ -49,7 +49,7 @@ export function useConversations() {
                 
               return {
                 ...conv,
-                lastMessage: lastMessageContent,
+                lastMessage: lastMessageContent || 'Sem mensagem',
                 time: formatMessageTime(messageDate),
                 unread: conv.unread + 1
               };
@@ -121,13 +121,13 @@ export function useConversations() {
           if (!historyError && historyData && historyData.length > 0) {
             const afiliadoMsg = historyData[0] as any;
             
-            let lastMessageContent = '';
+            let lastMessageContent = 'Sem mensagem';
             if (afiliadoMsg.conversation_history) {
               try {
                 const conversation = JSON.parse(afiliadoMsg.conversation_history);
                 if (Array.isArray(conversation) && conversation.length > 0) {
                   const lastMsg = conversation[conversation.length - 1];
-                  lastMessageContent = lastMsg?.content || '';
+                  lastMessageContent = lastMsg?.content || 'Sem mensagem';
                 } else if (conversation.content) {
                   lastMessageContent = conversation.content;
                 }
@@ -136,7 +136,7 @@ export function useConversations() {
               }
             }
             
-            conversation.lastMessage = lastMessageContent;
+            conversation.lastMessage = lastMessageContent || 'Sem mensagem';
             
             const messageDate = afiliadoMsg.timestamp 
               ? new Date(afiliadoMsg.timestamp) 
