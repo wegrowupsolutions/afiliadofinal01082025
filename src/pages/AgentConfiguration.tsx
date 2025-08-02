@@ -443,7 +443,7 @@ Data e hora atual:
                 <div className="h-6 w-px bg-border"></div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg">
-                    <img src="/lovable-uploads/5ecd481b-02e3-4b8e-9e3a-bed1faf18ab6.png" alt="Robot" className="h-5 w-5" />
+                    <Bot className="h-5 w-5" />
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-foreground">
