@@ -258,7 +258,7 @@ const MediaUploadDialog: React.FC<MediaUploadDialogProps> = ({
       if (!open) resetDialog();
       onOpenChange(open);
     }}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-6">
         <DialogHeader>
           <DialogTitle>Adicionar Novo Documento</DialogTitle>
           <DialogDescription>
@@ -266,7 +266,7 @@ const MediaUploadDialog: React.FC<MediaUploadDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
           {/* Seletor de tipo de mídia */}
           <div>
             <label className="block text-sm font-medium mb-3">Tipo de Mídia</label>
@@ -287,7 +287,7 @@ const MediaUploadDialog: React.FC<MediaUploadDialogProps> = ({
 
           {/* Área de upload */}
           <div
-            className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center transition-colors hover:border-gray-400 dark:hover:border-gray-500"
+            className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 sm:p-8 text-center transition-colors hover:border-gray-400 dark:hover:border-gray-500"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
