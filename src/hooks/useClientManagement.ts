@@ -43,7 +43,7 @@ export const useClientManagement = () => {
       }
       
       const { data, error } = await supabase
-        .from('dados_cliente')
+        .from('afiliado_base_leads')
         .select('*')
         .eq('user_id', user.id);
       
@@ -53,29 +53,29 @@ export const useClientManagement = () => {
       }
       
       if (data) {
-        const formattedContacts: Contact[] = data.map(client => ({
-          id: client.id.toString(),
-          name: client.nome || 'Cliente sem nome',
-          email: client.email,
-          phone: client.telefone,
-          petName: client.nome_pet,
-          petSize: client.porte_pet,
-          petBreed: client.raca_pet,
-          cpfCnpj: client.cpf_cnpj,
-          asaasCustomerId: client.asaas_customer_id,
-          payments: client.payments,
+        const formattedContacts: Contact[] = data.map(lead => ({
+          id: lead.id.toString(),
+          name: lead.name || 'Lead sem nome',
+          email: '', // afiliado_base_leads não tem campo email
+          phone: lead.remotejid?.replace('@s.whatsapp.net', '') || '',
+          petName: '',
+          petSize: '',
+          petBreed: '',
+          cpfCnpj: '',
+          asaasCustomerId: '',
+          payments: null,
           status: 'Active',
           notes: '',
-          lastContact: client.created_at ? new Date(client.created_at).toLocaleDateString('pt-BR') : 'Desconhecido'
+          lastContact: lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('pt-BR') : 'Desconhecido'
         }));
         
         setContacts(formattedContacts);
       }
     } catch (error) {
-      console.error('Error fetching clients:', error);
+      console.error('Error fetching leads:', error);
       toast({
-        title: "Erro ao carregar clientes",
-        description: "Ocorreu um erro ao buscar os clientes do banco de dados.",
+        title: "Erro ao carregar leads",
+        description: "Ocorreu um erro ao buscar os leads do banco de dados.",
         variant: "destructive"
       });
     } finally {
@@ -121,18 +121,12 @@ export const useClientManagement = () => {
       }
       
       const { data, error } = await supabase
-        .from('dados_cliente')
+        .from('afiliado_base_leads')
         .insert([
           {
-            nome: newContact.name,
-            email: newContact.email,
-            telefone: newContact.phone,
-            nome_pet: newContact.petName,
-            porte_pet: newContact.petSize,
-            raca_pet: newContact.petBreed,
-            cpf_cnpj: newContact.cpfCnpj,
-            asaas_customer_id: newContact.asaasCustomerId,
-            payments: newContact.payments || null,
+            name: newContact.name,
+            remotejid: newContact.phone ? `${newContact.phone}@s.whatsapp.net` : '',
+            timestamp: new Date().toISOString(),
             user_id: user.id
           }
         ])
@@ -193,17 +187,11 @@ export const useClientManagement = () => {
     
     try {
       const { error } = await supabase
-        .from('dados_cliente')
+        .from('afiliado_base_leads')
         .update({
-          nome: newContact.name,
-          email: newContact.email,
-          telefone: newContact.phone,
-          nome_pet: newContact.petName,
-          porte_pet: newContact.petSize,
-          raca_pet: newContact.petBreed,
-          cpf_cnpj: newContact.cpfCnpj,
-          asaas_customer_id: newContact.asaasCustomerId,
-          payments: newContact.payments
+          name: newContact.name,
+          remotejid: newContact.phone ? `${newContact.phone}@s.whatsapp.net` : '',
+          timestamp: new Date().toISOString()
         })
         .eq('id', parseInt(selectedContact.id));
       
@@ -247,7 +235,7 @@ export const useClientManagement = () => {
     
     try {
       const { error } = await supabase
-        .from('dados_cliente')
+        .from('afiliado_base_leads')
         .delete()
         .eq('id', parseInt(selectedContact.id));
       
