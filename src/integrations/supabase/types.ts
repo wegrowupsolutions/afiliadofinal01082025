@@ -53,21 +53,21 @@ export type Database = {
           name: string | null
           remotejid: string | null
           timestamp: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           id?: number
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           id?: number
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
