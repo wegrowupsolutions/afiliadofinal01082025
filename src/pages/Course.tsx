@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import VideoModal from '@/components/VideoModal';
+import plataformaBackground from '@/assets/plataforma-background.jpg';
 
 const Course = () => {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const Course = () => {
     'plataforma-completa': {
       title: "Plataforma Completa",
       description: "Aprenda a usar todas as funcionalidades da plataforma",
-      image: "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=800&h=400&fit=crop",
+      image: plataformaBackground,
       modules: [
         {
           id: 1,
