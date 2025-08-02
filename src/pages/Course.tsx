@@ -87,62 +87,70 @@ const Course = () => {
       modules: [
         {
           id: 1,
-          title: "Fundamentos do Facebook Ads",
-          description: "Base teórica e conceitos essenciais",
+          title: "Fundamentos e Conceitos",
+          description: "Base teórica essencial para Facebook Ads",
           lessons: [
-            { id: 1, title: "Introdução ao Facebook Ads", duration: "10:30", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Estrutura de Campanhas", duration: "8:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Tipos de Objetivos", duration: "7:45", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "O que é persona", duration: "15:00", videoId: "vJoEZuRlOe0", completed: false },
+            { id: 2, title: "O que é nicho", duration: "12:00", videoId: "GqJifrRfnR0", completed: false },
+            { id: 3, title: "Público Alvo", duration: "14:00", videoId: "eGIYx7bXbJc", completed: false },
+            { id: 4, title: "Neuromarketing", duration: "18:00", videoId: "8u43fs-FkyI", completed: false },
+            { id: 5, title: "Criativo", duration: "16:00", videoId: "DA7VmdJrWjs", completed: false },
+            { id: 6, title: "Nível de consciência", duration: "13:00", videoId: "AJoOS_eiggI", completed: false }
           ]
         },
         {
           id: 2,
-          title: "Pixel e Configurações",
-          description: "Instalação e configuração do Pixel",
+          title: "Estratégias de Marketing",
+          description: "Diferentes abordagens e mercados",
           lessons: [
-            { id: 1, title: "Instalação do Pixel", duration: "9:15", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Eventos Personalizados", duration: "11:50", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Verificação e Testes", duration: "6:30", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Growth Marketing", duration: "20:00", videoId: "EOUNv8EZ97Y", completed: false },
+            { id: 2, title: "Dropshipping", duration: "17:00", videoId: "FVkv2bCTxow", completed: false },
+            { id: 3, title: "Mercado de Afiliados", duration: "19:00", videoId: "VdvqRPF3mr8", completed: false },
+            { id: 4, title: "Mercado de Lançamentos", duration: "16:00", videoId: "Vc27vPwnGEU", completed: false },
+            { id: 5, title: "Funil de Vendas", duration: "22:00", videoId: "7bozIFULoUo", completed: false }
           ]
         },
         {
           id: 3,
-          title: "Segmentação de Audiências",
-          description: "Como criar e otimizar audiências",
+          title: "Configuração e Setup",
+          description: "Preparação técnica da conta",
           lessons: [
-            { id: 1, title: "Audiências Salvas", duration: "12:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Audiências Similares", duration: "10:10", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Retargeting Avançado", duration: "14:40", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Fanpage", duration: "14:00", videoId: "mobWDc8HYW8", completed: false },
+            { id: 2, title: "Gerenciador de negócios", duration: "18:00", videoId: "oXHrbAopVy0", completed: false },
+            { id: 3, title: "Espionar Concorrentes", duration: "16:00", videoId: "gLTde8ZY0-4", completed: false },
+            { id: 4, title: "Pagamentos", duration: "12:00", videoId: "_zUiw_dhILY", completed: false }
           ]
         },
         {
           id: 4,
-          title: "Criação de Anúncios",
-          description: "Design e copywriting para conversão",
+          title: "Criação de Campanhas",
+          description: "Do básico ao avançado em campanhas",
           lessons: [
-            { id: 1, title: "Criação de Criativos", duration: "15:30", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Copy que Converte", duration: "13:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Testes A/B", duration: "11:45", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Sua primeira campanha", duration: "25:00", videoId: "_twEFzCKBxc", completed: false },
+            { id: 2, title: "Objetivos de Campanha", duration: "15:00", videoId: "pdWwF7IibjA", completed: false },
+            { id: 3, title: "Criando Públicos", duration: "20:00", videoId: "JOCmlKRvmds", completed: false },
+            { id: 4, title: "CBO X ABO", duration: "17:00", videoId: "4IJfaOR5KRI", completed: false },
+            { id: 5, title: "Panfleteiro Digital", duration: "13:00", videoId: "kUjcrQrAUGg", completed: false }
           ]
         },
         {
           id: 5,
-          title: "Otimização e Escalabilidade",
-          description: "Como otimizar e escalar campanhas",
+          title: "Análise e Otimização",
+          description: "Métricas e escalabilidade",
           lessons: [
-            { id: 1, title: "Análise de Métricas", duration: "16:15", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Estratégias de Escalabilidade", duration: "14:50", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Troubleshooting", duration: "12:30", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Análise de Métricas", duration: "21:00", videoId: "KZC3vUC6naA", completed: false },
+            { id: 2, title: "Como identificar o anúncio campeão", duration: "18:00", videoId: "zBdh75WQCV0", completed: false },
+            { id: 3, title: "A hora certa de escalar", duration: "19:00", videoId: "J5X7N_wGsgQ", completed: false }
           ]
         },
         {
           id: 6,
-          title: "Casos Práticos",
-          description: "Exemplos reais e estudos de caso",
+          title: "Estratégias Complementares",
+          description: "Outras plataformas e automações",
           lessons: [
-            { id: 1, title: "E-commerce", duration: "18:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Infoprodutos", duration: "16:10", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Serviços Locais", duration: "14:40", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Crescer no Instagram", duration: "16:00", videoId: "w_-cS2L6xEc", completed: false },
+            { id: 2, title: "Mais clientes no whatsapp", duration: "14:00", videoId: "kpscSWkz3KY", completed: false },
+            { id: 3, title: "Programar Horários", duration: "12:00", videoId: "te3vNQq2H1U", completed: false }
           ]
         }
       ]
