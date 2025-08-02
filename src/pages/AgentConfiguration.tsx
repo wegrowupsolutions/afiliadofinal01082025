@@ -442,7 +442,7 @@ Data e hora atual:
                 </Button>
                 <div className="h-6 w-px bg-border"></div>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg">
                     <Bot className="h-5 w-5" />
                   </div>
                   <div>
