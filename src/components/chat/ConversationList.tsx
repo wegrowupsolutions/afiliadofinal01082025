@@ -64,12 +64,12 @@ const ConversationList = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-medium truncate">{conv.name}</h3>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 whitespace-nowrap">
+                    <h3 className="font-medium truncate text-gray-900 dark:text-white">{conv.name}</h3>
+                    <span className="text-xs text-gray-500 dark:text-gray-300 ml-2 whitespace-nowrap">
                       {conv.time}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                  <p className="text-sm text-gray-500 dark:text-gray-300 truncate">
                     {conv.lastMessage}
                   </p>
                   
