@@ -104,10 +104,10 @@ const MetricsDashboard = () => {
           <RecentClientsTable clients={recentLeadsData} loading={leadsLoading} />
         </div>
         
-        {/* Mapa do Brasil */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
+        {/* Mapa do Brasil - Oculto */}
+        {/* <div className="grid grid-cols-1 gap-6 mb-8">
           <BrazilMapChart leadsByState={leadsByState} loading={stateLoading} />
-        </div>
+        </div> */}
       </main>
     </div>
   );
