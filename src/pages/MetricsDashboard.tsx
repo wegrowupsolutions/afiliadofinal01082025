@@ -1,12 +1,14 @@
 
 import React, { useEffect } from 'react';
-import { LineChart, Users, Smartphone, PawPrint } from 'lucide-react';
+import { LineChart, Users, Smartphone, PawPrint, TrendingUp } from 'lucide-react';
 import { useClientStats } from '@/hooks/useClientStats';
+import { useLeadsStats } from '@/hooks/useLeadsStats';
 import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
 
 // Import components
 import DashboardHeader from '@/components/metrics/DashboardHeader';
 import StatCard from '@/components/metrics/StatCard';
+import LeadsGrowthChart from '@/components/metrics/LeadsGrowthChart';
 import ClientGrowthChart from '@/components/metrics/ClientGrowthChart';
 import PetTypesChart from '@/components/metrics/PetTypesChart';
 import ServicesBarChart from '@/components/metrics/ServicesBarChart';
@@ -14,6 +16,7 @@ import RecentClientsTable from '@/components/metrics/RecentClientsTable';
 
 const MetricsDashboard = () => {
   const { stats, loading, refetchStats } = useClientStats();
+  const { stats: leadsStats, loading: leadsLoading, refetchStats: refetchLeadsStats } = useLeadsStats();
   
   // Initialize real-time updates for the metrics dashboard
   useDashboardRealtime();
@@ -21,24 +24,25 @@ const MetricsDashboard = () => {
   // Fetch data when component mounts
   useEffect(() => {
     refetchStats();
-  }, [refetchStats]);
+    refetchLeadsStats();
+  }, [refetchStats, refetchLeadsStats]);
   
-  // Use real data for monthly customers growth
-  const monthlyCustomersData = stats.monthlyGrowth?.length > 0 
-    ? stats.monthlyGrowth 
+  // Use real data for monthly leads growth
+  const monthlyLeadsData = leadsStats.monthlyLeadsGrowth?.length > 0 
+    ? leadsStats.monthlyLeadsGrowth 
     : [
-        { month: 'Jan', clients: 0 },
-        { month: 'Fev', clients: 0 },
-        { month: 'Mar', clients: 0 },
-        { month: 'Abr', clients: 0 },
-        { month: 'Mai', clients: 0 },
-        { month: 'Jun', clients: 0 },
-        { month: 'Jul', clients: 0 },
-        { month: 'Ago', clients: 0 },
-        { month: 'Set', clients: 0 },
-        { month: 'Out', clients: 0 },
-        { month: 'Nov', clients: 0 },
-        { month: 'Dez', clients: 0 }
+        { month: 'Jan', leads: 0 },
+        { month: 'Fev', leads: 0 },
+        { month: 'Mar', leads: 0 },
+        { month: 'Abr', leads: 0 },
+        { month: 'Mai', leads: 0 },
+        { month: 'Jun', leads: 0 },
+        { month: 'Jul', leads: 0 },
+        { month: 'Ago', leads: 0 },
+        { month: 'Set', leads: 0 },
+        { month: 'Out', leads: 0 },
+        { month: 'Nov', leads: 0 },
+        { month: 'Dez', leads: 0 }
       ];
   
   // Use pet breed data from the API instead of hardcoded data
@@ -56,9 +60,9 @@ const MetricsDashboard = () => {
     { name: 'Compras', value: 25 },
   ];
   
-  // Use real client data from the database
-  const recentClientsData = stats.recentClients?.length > 0
-    ? stats.recentClients
+  // Use real leads data from the database
+  const recentLeadsData = leadsStats.recentLeads?.length > 0
+    ? leadsStats.recentLeads
     : [
         { id: 1, name: 'Carregando...', phone: '...', pets: 0, lastVisit: '...' }
       ];
@@ -89,13 +93,21 @@ const MetricsDashboard = () => {
             iconTextClass="text-purple-600 dark:text-purple-400"
           />
           
-          
+          <StatCard 
+            title="Total de Leads"
+            value={leadsStats.totalLeads}
+            icon={<TrendingUp />}
+            trend={`${leadsStats.newLeadsThisMonth} novos este mês`}
+            loading={leadsLoading}
+            iconBgClass="bg-blue-100 dark:bg-blue-900/30"
+            iconTextClass="text-blue-600 dark:text-blue-400"
+          />
         </div>
         
         {/* Gráficos e Tabelas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <ClientGrowthChart data={monthlyCustomersData} loading={loading} />
-          <RecentClientsTable clients={recentClientsData} loading={loading} />
+          <LeadsGrowthChart data={monthlyLeadsData} loading={leadsLoading} />
+          <RecentClientsTable clients={recentLeadsData} loading={leadsLoading} />
         </div>
       </main>
     </div>
