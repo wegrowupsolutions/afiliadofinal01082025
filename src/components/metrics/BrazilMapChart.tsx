@@ -23,20 +23,30 @@ const BrazilMapChart: React.FC<BrazilMapChartProps> = ({ leadsByState, loading =
 
   const handleMouseEnter = (state: string, event: React.MouseEvent) => {
     setHoveredState(state);
+    const mapContainer = event.currentTarget.closest('.relative');
+    const mapRect = mapContainer?.getBoundingClientRect();
     const rect = event.currentTarget.getBoundingClientRect();
-    setMousePosition({ 
-      x: rect.left + rect.width / 2, 
-      y: rect.top 
-    });
+    
+    if (mapRect) {
+      setMousePosition({ 
+        x: rect.left - mapRect.left + rect.width / 2, 
+        y: rect.top - mapRect.top - 10
+      });
+    }
   };
 
   const handleMouseMove = (state: string, event: React.MouseEvent) => {
     if (hoveredState === state) {
+      const mapContainer = event.currentTarget.closest('.relative');
+      const mapRect = mapContainer?.getBoundingClientRect();
       const rect = event.currentTarget.getBoundingClientRect();
-      setMousePosition({ 
-        x: rect.left + rect.width / 2, 
-        y: rect.top 
-      });
+      
+      if (mapRect) {
+        setMousePosition({ 
+          x: rect.left - mapRect.left + rect.width / 2, 
+          y: rect.top - mapRect.top - 10
+        });
+      }
     }
   };
 
@@ -213,11 +223,12 @@ const BrazilMapChart: React.FC<BrazilMapChartProps> = ({ leadsByState, loading =
             {/* Tooltip */}
             {hoveredState && (
               <div 
-                className="fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border p-3 pointer-events-none"
+                className="absolute z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border p-3 pointer-events-none whitespace-nowrap"
                 style={{
-                  left: mousePosition.x + 10,
-                  top: mousePosition.y - 50,
-                  transform: 'translateY(-100%)'
+                  left: `${mousePosition.x}px`,
+                  top: `${mousePosition.y}px`,
+                  transform: 'translateX(-50%)',
+                  maxWidth: '200px'
                 }}
               >
                 <div className="text-sm font-semibold text-gray-800 dark:text-white">
