@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 export function useClientStats() {
   const [stats, setStats] = useState({
@@ -13,30 +14,35 @@ export function useClientStats() {
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const refetchStats = useCallback(async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       
-      // Fetch total clients
+      // Fetch total clients for current user only
       const { count: totalClients } = await supabase
         .from('dados_cliente')
-        .select('*', { count: 'exact' });
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id);
 
-      // Fetch total pets (assuming each client has at least one pet)
+      // Fetch total pets for current user only
       const { count: totalPets } = await supabase
         .from('dados_cliente')
         .select('*', { count: 'exact' })
+        .eq('user_id', user.id)
         .not('nome_pet', 'is', null);
 
-      // Fetch new clients this month (from 1st of current month to today)
+      // Fetch new clients this month
       const today = new Date();
       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       
       const { count: newClientsThisMonth } = await supabase
         .from('dados_cliente')
         .select('*', { count: 'exact' })
+        .eq('user_id', user.id)
         .gte('created_at', firstDayOfMonth.toISOString())
         .lte('created_at', today.toISOString());
 
@@ -51,6 +57,7 @@ export function useClientStats() {
         const { count } = await supabase
           .from('dados_cliente')
           .select('*', { count: 'exact' })
+          .eq('user_id', user.id)
           .gte('created_at', startOfMonth.toISOString())
           .lte('created_at', endOfMonth.toISOString());
         
@@ -61,10 +68,11 @@ export function useClientStats() {
         });
       }
 
-      // Fetch pet breeds data
+      // Fetch pet breeds data for current user only
       const { data: petsData } = await supabase
         .from('dados_cliente')
         .select('raca_pet')
+        .eq('user_id', user.id)
         .not('raca_pet', 'is', null);
 
       const breedCounts = {};
@@ -86,10 +94,11 @@ export function useClientStats() {
         color: colors[index % colors.length]
       }));
 
-      // Fetch recent clients
+      // Fetch recent clients for current user only
       const { data: recentClientsData } = await supabase
         .from('dados_cliente')
         .select('id, nome, telefone, nome_pet, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -121,7 +130,7 @@ export function useClientStats() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, user]);
 
   return { stats, loading, refetchStats };
 }

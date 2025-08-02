@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 export function useLeadsStats() {
   const [stats, setStats] = useState({
@@ -11,15 +12,19 @@ export function useLeadsStats() {
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const refetchStats = useCallback(async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       
-      // Fetch total leads for current user (RLS will automatically filter)
+      // Fetch total leads for current user only
       const { count: totalLeads } = await supabase
         .from('afiliado_base_leads')
-        .select('*', { count: 'exact' });
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id);
 
       // Fetch new leads this month
       const today = new Date();
@@ -28,6 +33,7 @@ export function useLeadsStats() {
       const { count: newLeadsThisMonth } = await supabase
         .from('afiliado_base_leads')
         .select('*', { count: 'exact' })
+        .eq('user_id', user.id)
         .gte('timestamp', firstDayOfMonth.toISOString())
         .lte('timestamp', today.toISOString());
 
@@ -42,6 +48,7 @@ export function useLeadsStats() {
         const { count } = await supabase
           .from('afiliado_base_leads')
           .select('*', { count: 'exact' })
+          .eq('user_id', user.id)
           .gte('timestamp', startOfMonth.toISOString())
           .lte('timestamp', endOfMonth.toISOString());
         
@@ -56,6 +63,7 @@ export function useLeadsStats() {
       const { data: recentLeadsData } = await supabase
         .from('afiliado_base_leads')
         .select('id, name, remotejid, timestamp')
+        .eq('user_id', user.id)
         .order('timestamp', { ascending: false })
         .limit(5);
 
@@ -85,7 +93,7 @@ export function useLeadsStats() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, user]);
 
   return { stats, loading, refetchStats };
 }

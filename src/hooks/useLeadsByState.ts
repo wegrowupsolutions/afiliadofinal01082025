@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 // Mapeamento de DDD para estados
 const dddToState = {
@@ -59,15 +60,19 @@ export function useLeadsByState() {
   const [leadsByState, setLeadsByState] = useState({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchLeadsByState = useCallback(async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       
-      // Buscar todos os leads do usuário atual (RLS aplicará o filtro automaticamente)
+      // Buscar todos os leads do usuário atual apenas
       const { data: leads, error } = await supabase
         .from('afiliado_base_leads')
         .select('remotejid, timestamp')
+        .eq('user_id', user.id)
         .not('remotejid', 'is', null);
 
       if (error) {
@@ -107,7 +112,7 @@ export function useLeadsByState() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, user]);
 
   return { leadsByState, loading, fetchLeadsByState };
 }
