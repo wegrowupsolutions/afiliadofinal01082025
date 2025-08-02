@@ -442,7 +442,7 @@ Data e hora atual:
                 </Button>
                 <div className="h-6 w-px bg-border"></div>
                 <div className="flex items-center gap-3">
-                  <Bot className="h-6 w-6 text-primary" />
+                  <Bot className="h-6 w-6 text-petshop-gold" />
                   <div>
                     <h1 className="text-xl font-bold text-foreground">
                       Configuração do Agente
