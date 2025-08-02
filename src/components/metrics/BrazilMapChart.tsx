@@ -23,11 +23,21 @@ const BrazilMapChart: React.FC<BrazilMapChartProps> = ({ leadsByState, loading =
 
   const handleMouseEnter = (state: string, event: React.MouseEvent) => {
     setHoveredState(state);
-    setMousePosition({ x: event.clientX, y: event.clientY });
+    const rect = event.currentTarget.getBoundingClientRect();
+    setMousePosition({ 
+      x: rect.left + rect.width / 2, 
+      y: rect.top 
+    });
   };
 
-  const handleMouseMove = (event: React.MouseEvent) => {
-    setMousePosition({ x: event.clientX, y: event.clientY });
+  const handleMouseMove = (state: string, event: React.MouseEvent) => {
+    if (hoveredState === state) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setMousePosition({ 
+        x: rect.left + rect.width / 2, 
+        y: rect.top 
+      });
+    }
   };
 
   const handleMouseLeave = () => {
@@ -70,205 +80,133 @@ const BrazilMapChart: React.FC<BrazilMapChartProps> = ({ leadsByState, loading =
               />
               
               {/* Overlay invisível com áreas clicáveis dos estados */}
-              <div className="absolute inset-0" onMouseMove={handleMouseMove}>
+              <div className="absolute inset-0">
                 {/* Região Norte */}
                 <div 
-                  className="absolute cursor-pointer"
+                  className="absolute cursor-pointer hover:bg-blue-200 hover:bg-opacity-20 transition-colors"
                   style={{ top: '15%', left: '8%', width: '12%', height: '15%' }}
                   onMouseEnter={(e) => handleMouseEnter('AC', e)}
+                  onMouseMove={(e) => handleMouseMove('AC', e)}
                   onMouseLeave={handleMouseLeave}
                   title="Acre"
                 />
                 <div 
-                  className="absolute cursor-pointer"
+                  className="absolute cursor-pointer hover:bg-blue-200 hover:bg-opacity-20 transition-colors"
                   style={{ top: '20%', left: '15%', width: '20%', height: '20%' }}
                   onMouseEnter={(e) => handleMouseEnter('AM', e)}
+                  onMouseMove={(e) => handleMouseMove('AM', e)}
                   onMouseLeave={handleMouseLeave}
                   title="Amazonas"
                 />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '5%', left: '20%', width: '8%', height: '10%' }}
-                  onMouseEnter={(e) => handleMouseEnter('RR', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Roraima"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '8%', left: '28%', width: '18%', height: '18%' }}
-                  onMouseEnter={(e) => handleMouseEnter('PA', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Pará"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '2%', left: '45%', width: '6%', height: '8%' }}
-                  onMouseEnter={(e) => handleMouseEnter('AP', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Amapá"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '18%', left: '20%', width: '10%', height: '12%' }}
-                  onMouseEnter={(e) => handleMouseEnter('RO', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Rondônia"
-                />
+                {/* Estados restantes da Região Norte */}
+                {['RR', 'PA', 'AP', 'RO'].map(state => {
+                  const coords = {
+                    'RR': { top: '5%', left: '20%', width: '8%', height: '10%' },
+                    'PA': { top: '8%', left: '28%', width: '18%', height: '18%' },
+                    'AP': { top: '2%', left: '45%', width: '6%', height: '8%' },
+                    'RO': { top: '18%', left: '20%', width: '10%', height: '12%' }
+                  };
+                  return (
+                    <div 
+                      key={state}
+                      className="absolute cursor-pointer hover:bg-blue-200 hover:bg-opacity-20 transition-colors"
+                      style={coords[state]}
+                      onMouseEnter={(e) => handleMouseEnter(state, e)}
+                      onMouseMove={(e) => handleMouseMove(state, e)}
+                      onMouseLeave={handleMouseLeave}
+                      title={stateNames[state]}
+                    />
+                  );
+                })}
                 
                 {/* Região Nordeste */}
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '15%', left: '45%', width: '12%', height: '10%' }}
-                  onMouseEnter={(e) => handleMouseEnter('MA', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Maranhão"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '22%', left: '52%', width: '8%', height: '12%' }}
-                  onMouseEnter={(e) => handleMouseEnter('PI', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Piauí"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '12%', left: '58%', width: '12%', height: '10%' }}
-                  onMouseEnter={(e) => handleMouseEnter('CE', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Ceará"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '18%', left: '70%', width: '8%', height: '6%' }}
-                  onMouseEnter={(e) => handleMouseEnter('RN', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Rio Grande do Norte"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '22%', left: '72%', width: '6%', height: '6%' }}
-                  onMouseEnter={(e) => handleMouseEnter('PB', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Paraíba"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '25%', left: '65%', width: '12%', height: '10%' }}
-                  onMouseEnter={(e) => handleMouseEnter('PE', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Pernambuco"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '32%', left: '74%', width: '6%', height: '6%' }}
-                  onMouseEnter={(e) => handleMouseEnter('AL', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Alagoas"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '35%', left: '72%', width: '6%', height: '6%' }}
-                  onMouseEnter={(e) => handleMouseEnter('SE', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Sergipe"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '30%', left: '55%', width: '15%', height: '18%' }}
-                  onMouseEnter={(e) => handleMouseEnter('BA', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Bahia"
-                />
+                {['MA', 'PI', 'CE', 'RN', 'PB', 'PE', 'AL', 'SE', 'BA'].map(state => {
+                  const coords = {
+                    'MA': { top: '15%', left: '45%', width: '12%', height: '10%' },
+                    'PI': { top: '22%', left: '52%', width: '8%', height: '12%' },
+                    'CE': { top: '12%', left: '58%', width: '12%', height: '10%' },
+                    'RN': { top: '18%', left: '70%', width: '8%', height: '6%' },
+                    'PB': { top: '22%', left: '72%', width: '6%', height: '6%' },
+                    'PE': { top: '25%', left: '65%', width: '12%', height: '10%' },
+                    'AL': { top: '32%', left: '74%', width: '6%', height: '6%' },
+                    'SE': { top: '35%', left: '72%', width: '6%', height: '6%' },
+                    'BA': { top: '30%', left: '55%', width: '15%', height: '18%' }
+                  };
+                  return (
+                    <div 
+                      key={state}
+                      className="absolute cursor-pointer hover:bg-blue-200 hover:bg-opacity-20 transition-colors"
+                      style={coords[state]}
+                      onMouseEnter={(e) => handleMouseEnter(state, e)}
+                      onMouseMove={(e) => handleMouseMove(state, e)}
+                      onMouseLeave={handleMouseLeave}
+                      title={stateNames[state]}
+                    />
+                  );
+                })}
                 
                 {/* Região Centro-Oeste */}
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '25%', left: '45%', width: '10%', height: '12%' }}
-                  onMouseEnter={(e) => handleMouseEnter('TO', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Tocantins"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '30%', left: '35%', width: '15%', height: '20%' }}
-                  onMouseEnter={(e) => handleMouseEnter('MT', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Mato Grosso"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '48%', left: '38%', width: '12%', height: '15%' }}
-                  onMouseEnter={(e) => handleMouseEnter('MS', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Mato Grosso do Sul"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '42%', left: '48%', width: '12%', height: '15%' }}
-                  onMouseEnter={(e) => handleMouseEnter('GO', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Goiás"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '50%', left: '52%', width: '3%', height: '3%' }}
-                  onMouseEnter={(e) => handleMouseEnter('DF', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Distrito Federal"
-                />
+                {['TO', 'MT', 'MS', 'GO', 'DF'].map(state => {
+                  const coords = {
+                    'TO': { top: '25%', left: '45%', width: '10%', height: '12%' },
+                    'MT': { top: '30%', left: '35%', width: '15%', height: '20%' },
+                    'MS': { top: '48%', left: '38%', width: '12%', height: '15%' },
+                    'GO': { top: '42%', left: '48%', width: '12%', height: '15%' },
+                    'DF': { top: '50%', left: '52%', width: '3%', height: '3%' }
+                  };
+                  return (
+                    <div 
+                      key={state}
+                      className="absolute cursor-pointer hover:bg-blue-200 hover:bg-opacity-20 transition-colors"
+                      style={coords[state]}
+                      onMouseEnter={(e) => handleMouseEnter(state, e)}
+                      onMouseMove={(e) => handleMouseMove(state, e)}
+                      onMouseLeave={handleMouseLeave}
+                      title={stateNames[state]}
+                    />
+                  );
+                })}
                 
                 {/* Região Sudeste */}
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '48%', left: '58%', width: '15%', height: '18%' }}
-                  onMouseEnter={(e) => handleMouseEnter('MG', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Minas Gerais"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '55%', left: '72%', width: '6%', height: '8%' }}
-                  onMouseEnter={(e) => handleMouseEnter('ES', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Espírito Santo"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '62%', left: '70%', width: '8%', height: '8%' }}
-                  onMouseEnter={(e) => handleMouseEnter('RJ', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Rio de Janeiro"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '60%', left: '58%', width: '12%', height: '12%' }}
-                  onMouseEnter={(e) => handleMouseEnter('SP', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="São Paulo"
-                />
+                {['MG', 'ES', 'RJ', 'SP'].map(state => {
+                  const coords = {
+                    'MG': { top: '48%', left: '58%', width: '15%', height: '18%' },
+                    'ES': { top: '55%', left: '72%', width: '6%', height: '8%' },
+                    'RJ': { top: '62%', left: '70%', width: '8%', height: '8%' },
+                    'SP': { top: '60%', left: '58%', width: '12%', height: '12%' }
+                  };
+                  return (
+                    <div 
+                      key={state}
+                      className="absolute cursor-pointer hover:bg-blue-200 hover:bg-opacity-20 transition-colors"
+                      style={coords[state]}
+                      onMouseEnter={(e) => handleMouseEnter(state, e)}
+                      onMouseMove={(e) => handleMouseMove(state, e)}
+                      onMouseLeave={handleMouseLeave}
+                      title={stateNames[state]}
+                    />
+                  );
+                })}
                 
                 {/* Região Sul */}
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '68%', left: '50%', width: '12%', height: '10%' }}
-                  onMouseEnter={(e) => handleMouseEnter('PR', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Paraná"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '75%', left: '52%', width: '10%', height: '8%' }}
-                  onMouseEnter={(e) => handleMouseEnter('SC', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Santa Catarina"
-                />
-                <div 
-                  className="absolute cursor-pointer"
-                  style={{ top: '80%', left: '45%', width: '12%', height: '15%' }}
-                  onMouseEnter={(e) => handleMouseEnter('RS', e)}
-                  onMouseLeave={handleMouseLeave}
-                  title="Rio Grande do Sul"
-                />
+                {['PR', 'SC', 'RS'].map(state => {
+                  const coords = {
+                    'PR': { top: '68%', left: '50%', width: '12%', height: '10%' },
+                    'SC': { top: '75%', left: '52%', width: '10%', height: '8%' },
+                    'RS': { top: '80%', left: '45%', width: '12%', height: '15%' }
+                  };
+                  return (
+                    <div 
+                      key={state}
+                      className="absolute cursor-pointer hover:bg-blue-200 hover:bg-opacity-20 transition-colors"
+                      style={coords[state]}
+                      onMouseEnter={(e) => handleMouseEnter(state, e)}
+                      onMouseMove={(e) => handleMouseMove(state, e)}
+                      onMouseLeave={handleMouseLeave}
+                      title={stateNames[state]}
+                    />
+                  );
+                })}
               </div>
             </div>
             
