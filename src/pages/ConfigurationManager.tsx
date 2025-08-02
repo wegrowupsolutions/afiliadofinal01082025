@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { Loader2, Shield } from 'lucide-react';
 
 // Default webhook base URL
 const DEFAULT_WEBHOOK_BASE = "https://webhook.serverwegrowup.com.br/webhook";
@@ -48,6 +50,7 @@ const endpointGroups = {
 };
 
 const ConfigurationManager = () => {
+  const { isAdmin, loading } = useIsAdmin();
   const [endpoints, setEndpoints] = React.useState(() => {
     const savedEndpoints = localStorage.getItem('webhookEndpoints');
     return savedEndpoints ? JSON.parse(savedEndpoints) : defaultEndpoints;
@@ -55,6 +58,13 @@ const ConfigurationManager = () => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect non-admins to dashboard
+  React.useEffect(() => {
+    if (!loading && !isAdmin) {
+      navigate('/dashboard');
+    }
+  }, [isAdmin, loading, navigate]);
 
   const handleEndpointChange = (key: string, value: string) => {
     setEndpoints(prev => ({ ...prev, [key]: value }));
@@ -68,6 +78,37 @@ const ConfigurationManager = () => {
     });
     navigate('/dashboard');
   };
+
+  // Show loading spinner while checking admin status
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verificando permissões...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied for non-admins
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Shield className="h-16 w-16 text-destructive" />
+          <div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Acesso Negado</h1>
+            <p className="text-muted-foreground">Você não tem permissão para acessar esta página.</p>
+            <p className="text-sm text-muted-foreground mt-2">Apenas administradores podem gerenciar configurações do sistema.</p>
+          </div>
+          <Button onClick={() => navigate('/dashboard')} variant="outline">
+            Voltar ao Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

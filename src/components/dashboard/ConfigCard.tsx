@@ -4,13 +4,20 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Settings2 } from 'lucide-react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 const ConfigCard = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   
   const handleClick = () => {
     navigate('/configuration-manager');
   };
+
+  // Only render for admins
+  if (!isAdmin) {
+    return null;
+  }
   
   return (
     <Card 
