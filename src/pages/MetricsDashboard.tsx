@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { LineChart, Users, Smartphone, PawPrint, TrendingUp } from 'lucide-react';
 import { useClientStats } from '@/hooks/useClientStats';
 import { useLeadsStats } from '@/hooks/useLeadsStats';
+import { useLeadsByState } from '@/hooks/useLeadsByState';
 import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
 
 // Import components
@@ -13,10 +14,12 @@ import ClientGrowthChart from '@/components/metrics/ClientGrowthChart';
 import PetTypesChart from '@/components/metrics/PetTypesChart';
 import ServicesBarChart from '@/components/metrics/ServicesBarChart';
 import RecentClientsTable from '@/components/metrics/RecentClientsTable';
+import BrazilMapChart from '@/components/metrics/BrazilMapChart';
 
 const MetricsDashboard = () => {
   const { stats, loading, refetchStats } = useClientStats();
   const { stats: leadsStats, loading: leadsLoading, refetchStats: refetchLeadsStats } = useLeadsStats();
+  const { leadsByState, loading: stateLoading, fetchLeadsByState } = useLeadsByState();
   
   // Initialize real-time updates for the metrics dashboard
   useDashboardRealtime();
@@ -25,7 +28,8 @@ const MetricsDashboard = () => {
   useEffect(() => {
     refetchStats();
     refetchLeadsStats();
-  }, [refetchStats, refetchLeadsStats]);
+    fetchLeadsByState();
+  }, [refetchStats, refetchLeadsStats, fetchLeadsByState]);
   
   // Use real data for monthly leads growth
   const monthlyLeadsData = leadsStats.monthlyLeadsGrowth?.length > 0 
@@ -98,6 +102,11 @@ const MetricsDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <LeadsGrowthChart data={monthlyLeadsData} loading={leadsLoading} />
           <RecentClientsTable clients={recentLeadsData} loading={leadsLoading} />
+        </div>
+        
+        {/* Mapa do Brasil */}
+        <div className="grid grid-cols-1 gap-6 mb-8">
+          <BrazilMapChart leadsByState={leadsByState} loading={stateLoading} />
         </div>
       </main>
     </div>
