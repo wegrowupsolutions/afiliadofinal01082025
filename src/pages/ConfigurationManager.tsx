@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Loader2, Shield } from 'lucide-react';
+import { EndpointsStatusChecker } from '@/components/configuration/EndpointsStatusChecker';
 
 // Default webhook base URL
 const DEFAULT_WEBHOOK_BASE = "https://webhook.serverwegrowup.com.br/webhook";
@@ -121,6 +122,10 @@ const ConfigurationManager = () => {
         </div>
 
         <div className="grid gap-6">
+          {/* Status das Conexões */}
+          <EndpointsStatusChecker endpoints={endpoints} />
+          
+          {/* Configuração dos Endpoints */}
           {Object.entries(endpointGroups).map(([groupTitle, fields]) => (
             <Card key={groupTitle} className="w-full bg-card border-border">
               <CardContent className="pt-6">
