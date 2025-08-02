@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Play, MessageSquare, Users, BookOpen, BarChart3, Settings, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import VideoModal from '@/components/VideoModal';
 
 const Academia = () => {
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<{ videoId: string; title: string } | null>(null);
 
   const videoCards = [
     {
@@ -59,8 +62,13 @@ const Academia = () => {
   ];
 
   const handleVideoClick = (videoId: string, title: string) => {
-    // Abrir vídeo do YouTube em nova aba
-    window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+    setSelectedVideo({ videoId, title });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedVideo(null);
   };
 
   return (
@@ -145,6 +153,16 @@ const Academia = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <VideoModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          videoId={selectedVideo.videoId}
+          title={selectedVideo.title}
+        />
+      )}
     </div>
   );
 };
