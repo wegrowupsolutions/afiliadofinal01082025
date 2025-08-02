@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Bot, LogOut, ArrowLeft } from 'lucide-react';
+import { Bot, LogOut, ArrowLeft, ChevronLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +55,10 @@ const KnowledgeManager = () => {
       <header className="bg-petshop-blue dark:bg-gray-800 text-white shadow-md transition-colors duration-300">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
+            <ChevronLeft 
+              className="h-6 w-6 text-petshop-gold cursor-pointer hover:text-yellow-300 transition-colors" 
+              onClick={handleBackToDashboard}
+            />
             <Bot className="h-8 w-8 text-petshop-gold" />
             <h1 className="text-2xl font-bold">Afiliado IA</h1>
           </div>
@@ -72,16 +76,7 @@ const KnowledgeManager = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleBackToDashboard}
-            className="mr-4 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
+        <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
             Gerenciador de Conhecimento
           </h2>
