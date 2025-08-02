@@ -34,11 +34,21 @@ export const useClientManagement = () => {
     try {
       setLoadingContacts(true);
       
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('Usuário não autenticado');
+        setContacts([]);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('dados_cliente')
-        .select('*');
+        .select('*')
+        .eq('user_id', user.id);
       
       if (error) {
+        console.error('Erro na consulta:', error);
         throw error;
       }
       
@@ -99,6 +109,17 @@ export const useClientManagement = () => {
     }
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('dados_cliente')
         .insert([
@@ -111,7 +132,8 @@ export const useClientManagement = () => {
             raca_pet: newContact.petBreed,
             cpf_cnpj: newContact.cpfCnpj,
             asaas_customer_id: newContact.asaasCustomerId,
-            payments: newContact.payments || null
+            payments: newContact.payments || null,
+            user_id: user.id
           }
         ])
         .select();
