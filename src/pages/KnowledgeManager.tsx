@@ -77,7 +77,7 @@ const KnowledgeManager = () => {
             variant="outline" 
             size="sm" 
             onClick={handleBackToDashboard}
-            className="mr-4"
+            className="mr-4 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
