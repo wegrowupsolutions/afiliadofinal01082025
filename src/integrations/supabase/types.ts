@@ -531,6 +531,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_by_phone_number: {
+        Args: { input_phone_number: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _user_id: string
