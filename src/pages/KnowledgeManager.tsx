@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Bot, LogOut, ArrowLeft, ChevronLeft } from 'lucide-react';
+import { Bot, LogOut, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useToast } from '@/hooks/use-toast';
@@ -55,8 +55,8 @@ const KnowledgeManager = () => {
       <header className="bg-petshop-blue dark:bg-gray-800 text-white shadow-md transition-colors duration-300">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <ChevronLeft 
-              className="h-6 w-6 text-petshop-gold cursor-pointer hover:text-yellow-300 transition-colors" 
+            <ArrowLeft 
+              className="h-5 w-5 text-white cursor-pointer hover:bg-blue-700 dark:hover:bg-gray-700 p-1 rounded transition-colors" 
               onClick={handleBackToDashboard}
             />
             <Bot className="h-8 w-8 text-petshop-gold" />
