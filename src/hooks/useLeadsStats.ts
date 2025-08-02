@@ -16,7 +16,7 @@ export function useLeadsStats() {
     try {
       setLoading(true);
       
-      // Fetch total leads
+      // Fetch total leads for current user (RLS will automatically filter)
       const { count: totalLeads } = await supabase
         .from('afiliado_base_leads')
         .select('*', { count: 'exact' });
