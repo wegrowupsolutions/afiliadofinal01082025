@@ -15,7 +15,7 @@ const ChatConversationHeader = ({ selectedConversation }: ChatConversationHeader
         {selectedConversation?.avatar}
       </div>
       <div className="flex-1">
-        <h3 className="font-medium">{selectedConversation?.name}</h3>
+        <h3 className="font-medium text-gray-900 dark:text-white">{selectedConversation?.name}</h3>
         <p className="text-xs text-gray-500 dark:text-gray-400">Online</p>
       </div>
       <div className="flex items-center gap-3">
