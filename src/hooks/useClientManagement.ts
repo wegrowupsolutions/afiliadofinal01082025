@@ -42,10 +42,11 @@ export const useClientManagement = () => {
         return;
       }
       
+      // SEGURANÇA CRÍTICA: Sempre filtrar por user_id do usuário autenticado
       const { data, error } = await supabase
         .from('afiliado_base_leads')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id); // RLS também garante isso, mas dupla proteção
       
       if (error) {
         console.error('Erro na consulta:', error);
@@ -53,7 +54,15 @@ export const useClientManagement = () => {
       }
       
       if (data) {
-        const formattedContacts: Contact[] = data.map(lead => ({
+        // VALIDAÇÃO EXTRA: Garantir que todos os leads retornados pertencem ao usuário atual
+        const validatedData = data.filter(lead => lead.user_id === user.id);
+        
+        if (validatedData.length !== data.length) {
+          console.error('ALERTA DE SEGURANÇA: Dados de outros usuários foram retornados!');
+          // Em produção, você pode querer logar isso para auditoria
+        }
+        
+        const formattedContacts: Contact[] = validatedData.map(lead => ({
           id: lead.id.toString(),
           name: lead.name || 'Lead sem nome',
           email: '', // afiliado_base_leads não tem campo email
@@ -186,6 +195,18 @@ export const useClientManagement = () => {
     if (!selectedContact) return;
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // SEGURANÇA: Só permite editar leads do próprio usuário
       const { error } = await supabase
         .from('afiliado_base_leads')
         .update({
@@ -193,7 +214,8 @@ export const useClientManagement = () => {
           remotejid: newContact.phone ? `${newContact.phone}@s.whatsapp.net` : '',
           timestamp: new Date().toISOString()
         })
-        .eq('id', parseInt(selectedContact.id));
+        .eq('id', parseInt(selectedContact.id))
+        .eq('user_id', user.id); // Dupla proteção: ID do lead E user_id
       
       if (error) throw error;
       
@@ -234,10 +256,23 @@ export const useClientManagement = () => {
     if (!selectedContact) return;
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Usuário não autenticado.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // SEGURANÇA: Só permite excluir leads do próprio usuário
       const { error } = await supabase
         .from('afiliado_base_leads')
         .delete()
-        .eq('id', parseInt(selectedContact.id));
+        .eq('id', parseInt(selectedContact.id))
+        .eq('user_id', user.id); // Dupla proteção: ID do lead E user_id
       
       if (error) throw error;
       
