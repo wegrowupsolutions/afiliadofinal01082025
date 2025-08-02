@@ -79,12 +79,11 @@ const Academia = () => {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
+              className="flex items-center"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar ao Dashboard
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Academia</h1>
