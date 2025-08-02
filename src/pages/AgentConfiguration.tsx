@@ -438,8 +438,7 @@ Data e hora atual:
                   onClick={() => navigate('/dashboard')}
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div className="h-6 w-px bg-border"></div>
                 <div className="flex items-center gap-3">
