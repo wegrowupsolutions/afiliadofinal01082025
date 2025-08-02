@@ -3,6 +3,7 @@ import { ArrowLeft, Play, MessageSquare, Users, BookOpen, BarChart3, Settings, C
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import VideoModal from '@/components/VideoModal';
 
 const Academia = () => {
@@ -76,19 +77,22 @@ const Academia = () => {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Academia</h1>
-              <p className="text-gray-600 dark:text-gray-400">Vídeos explicativos da plataforma</p>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Academia</h1>
+                <p className="text-gray-600 dark:text-gray-400">Vídeos explicativos da plataforma</p>
+              </div>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </div>
