@@ -39,7 +39,7 @@ const RecentClientsTable: React.FC<RecentClientsTableProps> = ({ clients, loadin
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
           <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
-          Clientes Recentes
+          Leads Recentes
         </CardTitle>
       </CardHeader>
       <CardContent>
