@@ -15,7 +15,7 @@ const ClientGrowthChart: React.FC<ClientGrowthChartProps> = ({ data, loading = f
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-white">
           <LineChart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-          Crescimento de Clientes ({new Date().getFullYear()})
+          Crescimento de Leads ({new Date().getFullYear()})
         </CardTitle>
       </CardHeader>
       <CardContent>
