@@ -178,7 +178,7 @@ const Course = () => {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Curso não encontrado</h1>
+          <h1 className="text-2xl font-bold mb-4 text-foreground">Curso não encontrado</h1>
           <Button onClick={() => navigate('/academia')}>
             Voltar para Academia
           </Button>
@@ -215,7 +215,7 @@ const Course = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{currentCourse.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{currentCourse.title}</h1>
                 <p className="text-gray-600 dark:text-gray-400">{currentCourse.description}</p>
               </div>
             </div>
@@ -251,7 +251,7 @@ const Course = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             Módulos do Curso
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
@@ -266,7 +266,7 @@ const Course = () => {
               <AccordionTrigger className="px-6 py-4 hover:no-underline">
                 <div className="flex items-center justify-between w-full mr-4">
                   <div className="text-left">
-                    <h3 className="text-lg font-semibold">{module.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{module.title}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{module.description}</p>
                   </div>
                   <Badge variant="secondary">
@@ -289,7 +289,7 @@ const Course = () => {
                               <Play className="h-4 w-4 text-red-600 dark:text-red-400" />
                             </div>
                             <div>
-                              <h4 className="font-medium">{lesson.title}</h4>
+                              <h4 className="font-medium text-foreground">{lesson.title}</h4>
                               <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                 <Clock className="h-3 w-3" />
                                 <span>{lesson.duration}</span>
