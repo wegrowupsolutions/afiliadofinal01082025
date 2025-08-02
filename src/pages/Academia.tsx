@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import plataformaBackground from '@/assets/plataforma-background.jpg';
 
 const Academia = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const Academia = () => {
       id: 1,
       title: "Plataforma Completa",
       description: "Aprenda a usar todas as funcionalidades da plataforma",
-      image: "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=400&h=250&fit=crop",
+      image: plataformaBackground,
       totalModules: 7,
       totalLessons: 7,
       category: "Plataforma",
