@@ -100,7 +100,7 @@ const ClientsDashboard = () => {
           </CardContent>
           <CardFooter className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800">
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Total de clientes: {contacts.filter(contact =>
+              Total de leads: {contacts.filter(contact =>
                 contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (contact.email && contact.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
                 (contact.petName && contact.petName.toLowerCase().includes(searchTerm.toLowerCase())) ||

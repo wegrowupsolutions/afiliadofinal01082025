@@ -89,7 +89,7 @@ export const useClientManagement = () => {
     fetchClients();
     toast({
       title: "Atualizando dados",
-      description: "Os dados da tabela estão sendo atualizados.",
+      description: "Os dados dos leads estão sendo atualizados.",
     });
   };
 
