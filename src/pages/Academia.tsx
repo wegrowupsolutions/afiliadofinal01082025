@@ -15,8 +15,8 @@ const Academia = () => {
       title: "Plataforma Completa",
       description: "Aprenda a usar todas as funcionalidades da plataforma",
       image: "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=400&h=250&fit=crop",
-      totalModules: 8,
-      totalLessons: 24,
+      totalModules: 7,
+      totalLessons: 7,
       category: "Plataforma",
       slug: "plataforma-completa"
     },

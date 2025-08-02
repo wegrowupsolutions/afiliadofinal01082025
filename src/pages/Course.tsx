@@ -23,82 +23,58 @@ const Course = () => {
       modules: [
         {
           id: 1,
-          title: "Dashboard",
-          description: "Entenda o painel principal",
+          title: "Bem vindos",
+          description: "Introdução à plataforma e primeiros passos",
           lessons: [
-            { id: 1, title: "Visão Geral do Dashboard", duration: "5:30", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Métricas e Indicadores", duration: "4:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Personalização do Dashboard", duration: "3:45", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Bem vindos", duration: "10:00", videoId: "dQw4w9WgXcQ", completed: false }
           ]
         },
         {
           id: 2,
-          title: "Gerenciamento de Clientes",
-          description: "Como organizar e gerenciar seus clientes",
+          title: "Métricas",
+          description: "Como acompanhar e analisar as métricas da plataforma",
           lessons: [
-            { id: 1, title: "Adicionando Novos Clientes", duration: "6:15", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Editando Informações", duration: "4:50", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Histórico de Interações", duration: "5:30", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Métricas", duration: "12:00", videoId: "dQw4w9WgXcQ", completed: false }
           ]
         },
         {
           id: 3,
-          title: "Sistema de Chat",
-          description: "Utilizando o chat inteligente com IA",
+          title: "Chat",
+          description: "Utilizando o sistema de chat inteligente",
           lessons: [
-            { id: 1, title: "Configuração do Chat", duration: "7:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Respostas Automáticas", duration: "8:10", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Integração com WhatsApp", duration: "6:40", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Chat", duration: "15:00", videoId: "dQw4w9WgXcQ", completed: false }
           ]
         },
         {
           id: 4,
-          title: "Base de Conhecimento",
-          description: "Organizando documentos e informações",
+          title: "Gerenciamento de conhecimento",
+          description: "Organizando e gerenciando a base de conhecimento",
           lessons: [
-            { id: 1, title: "Upload de Documentos", duration: "5:15", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Organização por Categorias", duration: "4:30", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Busca Inteligente", duration: "3:50", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Gerenciamento de conhecimento", duration: "18:00", videoId: "dQw4w9WgXcQ", completed: false }
           ]
         },
         {
           id: 5,
-          title: "Agenda e Compromissos",
-          description: "Organizando sua agenda de atendimentos",
+          title: "Leads",
+          description: "Como gerenciar e organizar seus leads",
           lessons: [
-            { id: 1, title: "Criando Eventos", duration: "6:30", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Lembretes Automáticos", duration: "4:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Sincronização de Calendários", duration: "5:40", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Leads", duration: "14:00", videoId: "dQw4w9WgXcQ", completed: false }
           ]
         },
         {
           id: 6,
-          title: "Métricas e Relatórios",
-          description: "Acompanhando o desempenho",
+          title: "Conectar Whatsapp",
+          description: "Integração e configuração do WhatsApp",
           lessons: [
-            { id: 1, title: "Relatórios de Performance", duration: "7:15", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Análise de Dados", duration: "8:30", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Exportação de Relatórios", duration: "4:45", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Conectar Whatsapp", duration: "20:00", videoId: "dQw4w9WgXcQ", completed: false }
           ]
         },
         {
           id: 7,
-          title: "Configurações Avançadas",
-          description: "Personalizando a plataforma",
+          title: "Configuração do Agente",
+          description: "Como configurar e personalizar seu agente de IA",
           lessons: [
-            { id: 1, title: "Configurações de Usuário", duration: "5:20", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Integrações Externas", duration: "9:10", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Backup e Segurança", duration: "6:50", videoId: "dQw4w9WgXcQ", completed: false }
-          ]
-        },
-        {
-          id: 8,
-          title: "Evolution API",
-          description: "Integração e configuração da Evolution API",
-          lessons: [
-            { id: 1, title: "Configuração Inicial", duration: "8:45", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 2, title: "Endpoints e Webhooks", duration: "7:30", videoId: "dQw4w9WgXcQ", completed: false },
-            { id: 3, title: "Troubleshooting", duration: "6:20", videoId: "dQw4w9WgXcQ", completed: false }
+            { id: 1, title: "Configuração do Agente", duration: "16:00", videoId: "dQw4w9WgXcQ", completed: false }
           ]
         }
       ]
