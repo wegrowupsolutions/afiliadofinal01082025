@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-
+import ChatHeader from '@/components/chat/ChatHeader';
 import ChatLayout from '@/components/chat/ChatLayout';
 import { useConversations } from '@/hooks/useConversations';
 
@@ -130,7 +130,9 @@ const ChatsDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+      <ChatHeader signOut={signOut} />
+      
       <PauseDurationDialog 
         isOpen={pauseDialogOpen}
         onClose={closePauseDialog}
@@ -139,7 +141,7 @@ const ChatsDashboard = () => {
       />
 
       <div className="flex-1 overflow-hidden">
-        <ChatLayout
+        <ChatLayout 
           conversations={conversations}
           selectedChat={selectedChat}
           setSelectedChat={setSelectedChat}

@@ -19,7 +19,6 @@ import ConfigurationManager from "./pages/ConfigurationManager";
 import AgentConfiguration from "./pages/AgentConfiguration";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { AppLayout } from "./components/navigation/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -33,19 +32,17 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route element={<AppLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/metrics" element={<MetricsDashboard />} />
-                <Route path="/chats" element={<ChatsDashboard />} />
-                <Route path="/knowledge" element={<KnowledgeManager />} />
-                <Route path="/clients" element={<ClientsDashboard />} />
-                <Route path="/evolution" element={<Evolution />} />
-                <Route path="/schedule" element={<Schedule />} />
-                <Route path="/academia" element={<Academia />} />
-                <Route path="/academia/:courseSlug" element={<Course />} />
-                <Route path="/configuration-manager" element={<ConfigurationManager />} />
-                <Route path="/agent-configuration" element={<AgentConfiguration />} />
-              </Route>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/metrics" element={<MetricsDashboard />} />
+              <Route path="/chats" element={<ChatsDashboard />} />
+              <Route path="/knowledge" element={<KnowledgeManager />} />
+              <Route path="/clients" element={<ClientsDashboard />} />
+              <Route path="/evolution" element={<Evolution />} />
+              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/academia" element={<Academia />} />
+              <Route path="/academia/:courseSlug" element={<Course />} />
+              <Route path="/configuration-manager" element={<ConfigurationManager />} />
+              <Route path="/agent-configuration" element={<AgentConfiguration />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

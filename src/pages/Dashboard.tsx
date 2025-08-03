@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MetricsCard from '@/components/dashboard/MetricsCard';
 import ChatsCard from '@/components/dashboard/ChatsCard';
 import KnowledgeCard from '@/components/dashboard/KnowledgeCard';
@@ -36,22 +37,25 @@ const Dashboard = () => {
   }
   
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
-        <p className="text-muted-foreground mt-2">Gerencie todos os aspectos da sua plataforma</p>
-      </div>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+      <DashboardHeader />
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <MetricsCard />
-        <ChatsCard />
-        <KnowledgeCard />
-        <ClientsCard />
-        <EvolutionCard />
-        <AcademiaCard />
-        <AgentConfigCard />
-        {isAdmin && <ConfigCard />}
-      </div>
+      <main className="container mx-auto px-4 py-12">
+        <h2 className="text-2xl font-bold text-center mb-10 text-gray-800 dark:text-gray-100 transition-colors duration-300">
+          Painel Administrativo
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <MetricsCard />
+          <ChatsCard />
+          <KnowledgeCard />
+          <ClientsCard />
+          <EvolutionCard />
+          <AcademiaCard />
+          <AgentConfigCard />
+          {isAdmin && <ConfigCard />}
+        </div>
+      </main>
     </div>
   );
 };

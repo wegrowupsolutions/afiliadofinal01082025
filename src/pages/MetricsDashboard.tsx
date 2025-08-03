@@ -7,7 +7,7 @@ import { useLeadsByState } from '@/hooks/useLeadsByState';
 import { useDashboardRealtime } from '@/hooks/useDashboardRealtime';
 
 // Import components
-
+import DashboardHeader from '@/components/metrics/DashboardHeader';
 import StatCard from '@/components/metrics/StatCard';
 import LeadsGrowthChart from '@/components/metrics/LeadsGrowthChart';
 import ClientGrowthChart from '@/components/metrics/ClientGrowthChart';
@@ -72,14 +72,18 @@ const MetricsDashboard = () => {
       ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-2 text-foreground">
-          <LineChart className="h-6 w-6 text-primary" />
-          Dashboard de Métricas
-        </h1>
-        <p className="text-muted-foreground mt-2">Acompanhe o desempenho dos seus leads e clientes</p>
-      </div>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+      {/* Header */}
+      <DashboardHeader />
+      
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold flex items-center gap-2 text-gray-800 dark:text-white">
+            <LineChart className="h-6 w-6 text-petshop-blue dark:text-blue-400" />
+            Dashboard de Métricas
+          </h2>
+        </div>
         
         {/* Estatísticas em Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -104,6 +108,7 @@ const MetricsDashboard = () => {
         {/* <div className="grid grid-cols-1 gap-6 mb-8">
           <BrazilMapChart leadsByState={leadsByState} loading={stateLoading} />
         </div> */}
+      </main>
     </div>
   );
 };

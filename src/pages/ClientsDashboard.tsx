@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-
+import ClientsHeader from '@/components/clients/ClientsHeader';
 import ClientSearchBar from '@/components/clients/ClientSearchBar';
 import ClientsTable from '@/components/clients/ClientsTable';
 import AddClientDialog from '@/components/clients/AddClientDialog';
@@ -61,11 +61,10 @@ const ClientsDashboard = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Gerenciamento de Leads</h1>
-        <p className="text-muted-foreground mt-2">Visualize, adicione e edite seus clientes</p>
-      </div>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+      <ClientsHeader />
+      
+      <main className="container mx-auto px-4 py-8">
         <Card className="border dark:border-gray-700 shadow-sm">
           <CardHeader className="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -110,8 +109,9 @@ const ClientsDashboard = () => {
             </div>
           </CardFooter>
         </Card>
+      </main>
 
-      <ClientDetailSheet
+      <ClientDetailSheet 
         isOpen={isDetailSheetOpen}
         onOpenChange={setIsDetailSheetOpen}
         selectedContact={selectedContact}

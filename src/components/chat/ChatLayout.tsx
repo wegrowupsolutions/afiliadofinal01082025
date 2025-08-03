@@ -4,8 +4,6 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import ConversationList from './ConversationList';
 import ChatArea from './ChatArea';
 import ClientInfoPanel from './ClientInfoPanel';
-import { MobileChatLayout } from './MobileChatLayout';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Conversation, ChatMessage } from '@/types/chat';
 
 interface ChatLayoutProps {
@@ -22,51 +20,57 @@ interface ChatLayoutProps {
   markConversationRead: (sessionId: string) => void;
 }
 
-const ChatLayout = (props: ChatLayoutProps) => {
-  const isMobile = useIsMobile();
+const ChatLayout = ({
+  conversations,
+  selectedChat,
+  setSelectedChat,
+  isLoading,
+  openPauseDialog,
+  startBot,
+  loading,
+  messages,
+  handleNewMessage,
+  selectedConversation,
+  markConversationRead
+}: ChatLayoutProps) => {
   
   const handleSelectChat = (id: string) => {
     console.log(`Selecting chat with ID: ${id}`);
-    props.setSelectedChat(id);
-    props.markConversationRead(id);
+    setSelectedChat(id);
+    markConversationRead(id);
   };
-
-  // Use mobile layout on small screens
-  if (isMobile) {
-    return <MobileChatLayout {...props} setSelectedChat={handleSelectChat} />;
-  }
   
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
-      <ResizablePanel defaultSize={25} minSize={20} maxSize={30} className="bg-card">
+      <ResizablePanel defaultSize={25} minSize={20} maxSize={30} className="bg-white dark:bg-gray-800">
         <ConversationList 
-          conversations={props.conversations} 
-          selectedChat={props.selectedChat}
+          conversations={conversations} 
+          selectedChat={selectedChat}
           setSelectedChat={handleSelectChat}
-          isLoading={props.isLoading}
-          openPauseDialog={props.openPauseDialog}
-          startBot={props.startBot}
-          loading={props.loading}
+          isLoading={isLoading}
+          openPauseDialog={openPauseDialog}
+          startBot={startBot}
+          loading={loading}
         />
       </ResizablePanel>
 
       <ResizableHandle withHandle />
 
-      <ResizablePanel defaultSize={50} minSize={40} className="bg-muted/30 flex flex-col">
+      <ResizablePanel defaultSize={50} minSize={40} className="bg-gray-50 dark:bg-gray-900 flex flex-col">
         <ChatArea 
-          selectedChat={props.selectedChat}
-          selectedConversation={props.selectedConversation}
-          messages={props.messages}
-          loading={props.loading}
+          selectedChat={selectedChat}
+          selectedConversation={selectedConversation}
+          messages={messages}
+          loading={loading}
         />
       </ResizablePanel>
 
       <ResizableHandle withHandle />
 
-      <ResizablePanel defaultSize={25} minSize={20} maxSize={30} className="bg-card">
+      <ResizablePanel defaultSize={25} minSize={20} maxSize={30} className="bg-white dark:bg-gray-800">
         <ClientInfoPanel 
-          selectedChat={props.selectedChat}
-          selectedConversation={props.selectedConversation}
+          selectedChat={selectedChat}
+          selectedConversation={selectedConversation}
         />
       </ResizablePanel>
     </ResizablePanelGroup>
