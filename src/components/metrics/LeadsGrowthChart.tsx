@@ -56,8 +56,9 @@ const LeadsGrowthChart: React.FC<LeadsGrowthChartProps> = ({ data, loading = fal
                   axisLine={false} 
                   tickLine={false} 
                   tick={{ fontSize: 12 }}
-                  domain={[0, 'dataMax']}
+                  domain={[0, (dataMax: number) => Math.max(dataMax, 1)]}
                   allowDecimals={false}
+                  tickCount={Math.max(...data.map(d => d.leads)) + 1}
                 />
                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
                 <ChartTooltip
