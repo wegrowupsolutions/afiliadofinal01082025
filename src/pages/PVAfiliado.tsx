@@ -351,6 +351,16 @@ const PVAfiliado = () => {
                   </div>
                 </div>
               </div>
+              
+              <div className="mt-6 sm:mt-8">
+                <Button 
+                  size="lg" 
+                  className="w-full bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-lg sm:text-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-300"
+                  onClick={() => window.open('https://pay.kiwify.com.br/N2nYkko', '_blank')}
+                >
+                  Sim! Eu quero!
+                </Button>
+              </div>
             </div>
           </div>
         </div>
