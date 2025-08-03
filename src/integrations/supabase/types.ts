@@ -53,21 +53,21 @@ export type Database = {
           name: string | null
           remotejid: string | null
           timestamp: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           id?: number
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           id?: number
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -565,6 +565,10 @@ export type Database = {
           p_phone_number?: string
         }
         Returns: undefined
+      }
+      user_can_access_lead: {
+        Args: { lead_remotejid: string }
+        Returns: boolean
       }
     }
     Enums: {
