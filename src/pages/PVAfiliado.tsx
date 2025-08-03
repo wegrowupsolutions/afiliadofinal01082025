@@ -135,6 +135,7 @@ const PVAfiliado = () => {
                 variant="outline" 
                 size="lg"
                 className="border-white text-white hover:bg-white hover:text-slate-900 px-8 py-4 text-lg font-semibold"
+                onClick={() => window.open('https://wa.me/5511910362476?text=Ol%C3%A1%20quero%20testar%20o%20agente%20afiliado%20com%20ingtelig%C3%AAncia%20artificial', '_blank')}
               >
                 <PlayCircle className="mr-2 h-5 w-5" />
                 Ver Demonstração
