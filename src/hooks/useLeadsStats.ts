@@ -71,7 +71,6 @@ export function useLeadsStats() {
         id: lead.id,
         name: lead.name || 'Nome não informado',
         phone: lead.remotejid?.replace('@s.whatsapp.net', '') || 'Telefone não informado',
-        pets: 0, // Como é lead, ainda não tem pets
         lastVisit: lead.timestamp ? new Date(lead.timestamp).toLocaleDateString('pt-BR') : 'Data não informada'
       })) || [];
 

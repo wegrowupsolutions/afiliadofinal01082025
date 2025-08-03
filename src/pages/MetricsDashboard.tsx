@@ -68,7 +68,7 @@ const MetricsDashboard = () => {
   const recentLeadsData = leadsStats.recentLeads?.length > 0
     ? leadsStats.recentLeads
     : [
-        { id: 1, name: 'Carregando...', phone: '...', pets: 0, lastVisit: '...' }
+        { id: 1, name: 'Carregando...', phone: '...', lastVisit: '...' }
       ];
 
   return (

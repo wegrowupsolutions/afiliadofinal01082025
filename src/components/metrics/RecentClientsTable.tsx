@@ -18,7 +18,6 @@ interface Client {
   id: number;
   name: string;
   phone: string;
-  pets: number;
   lastVisit: string;
 }
 
@@ -57,14 +56,13 @@ const RecentClientsTable: React.FC<RecentClientsTableProps> = ({ clients, loadin
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
-                  <TableHead>Pets</TableHead>
                   <TableHead>Cadastro</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {clients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-6 text-gray-500 dark:text-gray-400">
+                    <TableCell colSpan={3} className="text-center py-6 text-gray-500 dark:text-gray-400">
                       Nenhum cliente encontrado
                     </TableCell>
                   </TableRow>
@@ -73,11 +71,6 @@ const RecentClientsTable: React.FC<RecentClientsTableProps> = ({ clients, loadin
                     <TableRow key={client.id}>
                       <TableCell className="font-medium">{client.name}</TableCell>
                       <TableCell>{client.phone}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800/40">
-                          {client.pets} {client.pets !== 1 ? 'pets' : 'pet'}
-                        </Badge>
-                      </TableCell>
                       <TableCell>{client.lastVisit}</TableCell>
                     </TableRow>
                   ))
