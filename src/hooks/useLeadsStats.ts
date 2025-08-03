@@ -20,11 +20,10 @@ export function useLeadsStats() {
     try {
       setLoading(true);
       
-      // Fetch total leads for current user only
+      // Fetch total leads
       const { count: totalLeads } = await supabase
         .from('afiliado_base_leads')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id);
+        .select('*', { count: 'exact' });
 
       // Fetch new leads this month
       const today = new Date();
@@ -33,7 +32,6 @@ export function useLeadsStats() {
       const { count: newLeadsThisMonth } = await supabase
         .from('afiliado_base_leads')
         .select('*', { count: 'exact' })
-        .eq('user_id', user.id)
         .gte('timestamp', firstDayOfMonth.toISOString())
         .lte('timestamp', today.toISOString());
 
@@ -48,7 +46,6 @@ export function useLeadsStats() {
         const { count } = await supabase
           .from('afiliado_base_leads')
           .select('*', { count: 'exact' })
-          .eq('user_id', user.id)
           .gte('timestamp', startOfMonth.toISOString())
           .lte('timestamp', endOfMonth.toISOString());
         
@@ -63,7 +60,6 @@ export function useLeadsStats() {
       const { data: recentLeadsData } = await supabase
         .from('afiliado_base_leads')
         .select('id, name, remotejid, timestamp')
-        .eq('user_id', user.id)
         .order('timestamp', { ascending: false })
         .limit(5);
 

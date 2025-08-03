@@ -68,11 +68,10 @@ export function useLeadsByState() {
     try {
       setLoading(true);
       
-      // Buscar todos os leads do usuário atual apenas
+      // Buscar todos os leads
       const { data: leads, error } = await supabase
         .from('afiliado_base_leads')
         .select('remotejid, timestamp')
-        .eq('user_id', user.id)
         .not('remotejid', 'is', null);
 
       if (error) {
