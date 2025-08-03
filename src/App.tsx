@@ -11,6 +11,7 @@ import ChatsDashboard from "./pages/ChatsDashboard";
 import KnowledgeManager from "./pages/KnowledgeManager";
 import ClientsDashboard from "./pages/ClientsDashboard";
 import Evolution from "./pages/Evolution";
+import PVAfiliado from "./pages/PVAfiliado";
 import Schedule from "./pages/Schedule";
 import Academia from "./pages/Academia";
 import Course from "./pages/Course";
@@ -31,7 +32,8 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
+          <Route path="/pvafiliado" element={<PVAfiliado />} />
+          <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/metrics" element={<MetricsDashboard />} />
               <Route path="/chats" element={<ChatsDashboard />} />
