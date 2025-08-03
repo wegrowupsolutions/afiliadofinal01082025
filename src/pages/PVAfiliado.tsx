@@ -331,9 +331,9 @@ const PVAfiliado = () => {
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
                   <div className="text-left">
-                    <p className="text-gray-300 line-through text-xl mb-2">De: R$ 997,00/mês</p>
-                    <p className="text-4xl font-bold text-green-400 mb-4">Por: R$ 297,00/mês</p>
-                    <Badge className="bg-red-500 text-white">70% OFF - Economia de R$ 700</Badge>
+                    <p className="text-gray-300 line-through text-xl mb-2">De: R$ 97,00/mês</p>
+                    <p className="text-4xl font-bold text-green-400 mb-4">Por: R$ 19,90/mês</p>
+                    <Badge className="bg-red-500 text-white">79% OFF - Economia de R$ 77,10</Badge>
                   </div>
                 </div>
                 <div className="space-y-3">
