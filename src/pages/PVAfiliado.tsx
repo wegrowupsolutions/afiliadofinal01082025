@@ -125,7 +125,7 @@ const PVAfiliado = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-4 text-lg font-semibold shadow-2xl transform hover:scale-105 transition-all duration-300"
-                onClick={() => document.getElementById('cta-form')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => window.open('https://pay.kiwify.com.br/N2nYkko', '_blank')}
               >
                 <Zap className="mr-2 h-5 w-5" />
                 QUERO ACESSO AGORA
