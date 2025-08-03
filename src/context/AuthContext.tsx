@@ -78,10 +78,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    console.log('Iniciando logout...');
     setIsLoading(true);
-    await supabase.auth.signOut();
-    navigate('/');
-    setIsLoading(false);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Erro no logout:', error);
+      } else {
+        console.log('Logout realizado com sucesso');
+      }
+      navigate('/');
+    } catch (error) {
+      console.error('Erro inesperado no logout:', error);
+    } finally {
+      setIsLoading(false);
+      console.log('Logout finalizado');
+    }
   };
 
   const value = {
