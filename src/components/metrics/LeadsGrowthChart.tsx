@@ -52,7 +52,13 @@ const LeadsGrowthChart: React.FC<LeadsGrowthChartProps> = ({ data, loading = fal
                   tickLine={false}
                   tick={{ fontSize: 12 }}
                 />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12 }}
+                  domain={[0, 'dataMax']}
+                  allowDecimals={false}
+                />
                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
                 <ChartTooltip
                   content={({ active, payload }) => {
