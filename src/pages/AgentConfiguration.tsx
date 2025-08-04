@@ -178,14 +178,14 @@ const AgentConfiguration = () => {
   }, [promptData, completionPercentage, isSaving]);
 
   const loadExistingPrompt = async () => {
-    if (!user) return;
+    if (!user?.email) return;
     
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('kiwify')
         .select('prompt')
-        .eq('user_id', user.id)
+        .eq('email', user.email)
         .maybeSingle();
 
       if (error) {
@@ -314,7 +314,7 @@ Data e hora atual:
   };
 
   const handleAutoSave = async () => {
-    if (!user) return;
+    if (!user?.email) return;
 
     try {
       const markdownPrompt = generateMarkdownPrompt();
@@ -322,7 +322,7 @@ Data e hora atual:
       const { error } = await supabase
         .from('kiwify')
         .upsert({
-          user_id: user.id,
+          email: user.email,
           prompt: markdownPrompt
         });
 
@@ -335,7 +335,7 @@ Data e hora atual:
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user?.email) return;
 
     setSaving(true);
     try {
@@ -344,7 +344,7 @@ Data e hora atual:
       const { error } = await supabase
         .from('kiwify')
         .upsert({
-          user_id: user.id,
+          email: user.email,
           prompt: markdownPrompt
         });
 
