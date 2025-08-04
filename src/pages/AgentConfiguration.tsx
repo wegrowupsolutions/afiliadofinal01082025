@@ -184,7 +184,7 @@ const AgentConfiguration = () => {
     try {
       const { data, error } = await supabase
         .from('kiwify')
-        .select('prompt')
+        .select('id, prompt')
         .eq('email', user.email)
         .maybeSingle();
 
@@ -319,15 +319,28 @@ Data e hora atual:
     try {
       const markdownPrompt = generateMarkdownPrompt();
       
-      const { error } = await supabase
+      // Primeiro, buscar o registro existente para obter o ID
+      const { data: existingRecord, error: fetchError } = await supabase
         .from('kiwify')
-        .upsert({
-          email: user.email,
-          prompt: markdownPrompt
-        });
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle();
 
-      if (!error) {
-        setLastSaved(new Date());
+      if (fetchError) {
+        console.error('Erro ao buscar registro:', fetchError);
+        return;
+      }
+
+      if (existingRecord) {
+        // Atualizar usando o ID
+        const { error } = await supabase
+          .from('kiwify')
+          .update({ prompt: markdownPrompt })
+          .eq('id', existingRecord.id);
+
+        if (!error) {
+          setLastSaved(new Date());
+        }
       }
     } catch (error) {
       console.error('Erro no auto-save:', error);
@@ -341,23 +354,39 @@ Data e hora atual:
     try {
       const markdownPrompt = generateMarkdownPrompt();
 
-      const { error } = await supabase
+      // Primeiro, buscar o registro existente para obter o ID
+      const { data: existingRecord, error: fetchError } = await supabase
         .from('kiwify')
-        .upsert({
-          email: user.email,
-          prompt: markdownPrompt
-        });
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Erro ao salvar:', error);
+      if (fetchError) {
+        console.error('Erro ao buscar registro:', fetchError);
         toast.error('Erro ao salvar configuração');
         return;
       }
 
-      setLastSaved(new Date());
-      toast.success('Configuração salva com sucesso!', {
-        description: 'Seu agente foi configurado e está pronto para uso.'
-      });
+      if (existingRecord) {
+        // Atualizar usando o ID
+        const { error } = await supabase
+          .from('kiwify')
+          .update({ prompt: markdownPrompt })
+          .eq('id', existingRecord.id);
+
+        if (error) {
+          console.error('Erro ao salvar:', error);
+          toast.error('Erro ao salvar configuração');
+          return;
+        }
+
+        setLastSaved(new Date());
+        toast.success('Configuração salva com sucesso!', {
+          description: 'Seu agente foi configurado e está pronto para uso.'
+        });
+      } else {
+        toast.error('Registro não encontrado. Verifique se você tem acesso a este recurso.');
+      }
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
       toast.error('Erro ao salvar configuração');
