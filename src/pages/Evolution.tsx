@@ -605,24 +605,24 @@ const Evolution = () => {
                 <div className="space-y-2">
                   <h4 className="font-medium text-gray-900 dark:text-white">Links dos Webhooks</h4>
                   <div className="bg-white dark:bg-gray-700 p-3 rounded border space-y-2">
-                    <div className="text-sm">
-                      <p className="font-medium text-gray-700 dark:text-gray-300">Mensagens:</p>
-                      <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
-                        {statusInfo.webhookUrls?.messages}
-                      </code>
-                    </div>
-                    <div className="text-sm">
-                      <p className="font-medium text-gray-700 dark:text-gray-300">Status:</p>
-                      <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
-                        {statusInfo.webhookUrls?.status}
-                      </code>
-                    </div>
-                    <div className="text-sm">
-                      <p className="font-medium text-gray-700 dark:text-gray-300">QR Code:</p>
-                      <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
-                        {statusInfo.webhookUrls?.qrcode}
-                      </code>
-                    </div>
+                     <div className="text-sm">
+                       <p className="font-medium text-gray-700 dark:text-gray-300">Mensagens:</p>
+                       <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
+                         https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado
+                       </code>
+                     </div>
+                     <div className="text-sm">
+                       <p className="font-medium text-gray-700 dark:text-gray-300">Status:</p>
+                       <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
+                         {statusInfo.webhookUrls?.status}
+                       </code>
+                     </div>
+                     <div className="text-sm">
+                       <p className="font-medium text-gray-700 dark:text-gray-300">QR Code:</p>
+                       <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
+                         https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado
+                       </code>
+                     </div>
                   </div>
                 </div>
                 
