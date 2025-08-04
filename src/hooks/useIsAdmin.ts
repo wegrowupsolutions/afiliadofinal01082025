@@ -23,9 +23,8 @@ export const useIsAdmin = () => {
           // Se falhar (usuário Kiwify), verificar diretamente por email
           const adminEmails = [
             'teste@gmail.com',
-            'rodrigo@gmail.com', 
-            'viniciushtx@gmail.com',
-            'rfreitasdc@gmail.com'
+            'rfreitasdc@gmail.com',
+            'viniciushtx@gmail.com'
           ];
           
           setIsAdmin(adminEmails.includes(user.email || ''));
@@ -37,9 +36,8 @@ export const useIsAdmin = () => {
         // Fallback para verificação por email
         const adminEmails = [
           'teste@gmail.com',
-          'rodrigo@gmail.com', 
-          'viniciushtx@gmail.com',
-          'rfreitasdc@gmail.com'
+          'rfreitasdc@gmail.com',
+          'viniciushtx@gmail.com'
         ];
         
         setIsAdmin(adminEmails.includes(user.email || ''));
