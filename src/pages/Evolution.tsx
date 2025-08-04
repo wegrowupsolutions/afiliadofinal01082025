@@ -27,14 +27,13 @@ const Evolution = () => {
   useEffect(() => {
     const checkExistingInstance = async () => {
       try {
-        const { data: user } = await supabase.auth.getUser();
-        console.log('Current user:', user.user?.id);
-        if (!user.user) return;
+        console.log('Current user from context:', user?.id);
+        if (!user?.id) return;
 
         const { data, error } = await supabase
           .from('evolution_instances')
           .select('instance_name, phone_number')
-          .eq('user_id', user.user.id)
+          .eq('user_id', user.id)
           .eq('is_connected', true)
           .order('connected_at', { ascending: false })
           .limit(1);
@@ -57,14 +56,17 @@ const Evolution = () => {
       }
     };
 
-    checkExistingInstance();
+    // Só executa se o usuário estiver carregado
+    if (user) {
+      checkExistingInstance();
+    }
     
     return () => {
       if (statusCheckIntervalRef.current !== null) {
         clearInterval(statusCheckIntervalRef.current);
       }
     };
-  }, []);
+  }, [user]); // Dependência do user para reexecutar quando o usuário carregar
   
   const checkConnectionStatus = async () => {
     try {
