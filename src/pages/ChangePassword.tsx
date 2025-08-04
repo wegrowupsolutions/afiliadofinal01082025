@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, Lock, Shield, Mail, Bot, Brain, Cpu, Zap, Network, Binary } from 'lucide-react';
+import { Eye, EyeOff, Lock, Shield, Mail, Bot, Brain, Cpu, Zap, Network, Binary, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const passwordSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -30,6 +39,7 @@ export default function ChangePassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   useEffect(() => {
     setIsPageLoaded(true);
@@ -123,12 +133,8 @@ export default function ChangePassword() {
         return;
       }
 
-      toast.success('Senha alterada com sucesso!', {
-        description: 'Agora faça login com seu email e nova senha.'
-      });
-
-      // Redirecionar para a tela de login
-      navigate('/');
+      // Mostrar dialog de sucesso
+      setShowSuccessDialog(true);
     } catch (error) {
       console.error('Erro inesperado ao alterar senha:', error);
       toast.error('Erro inesperado ao alterar senha');
@@ -289,6 +295,34 @@ export default function ChangePassword() {
           </form>
         </div>
       </div>
+      
+      {/* Success Dialog */}
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent className="bg-slate-900/95 border border-cyan-400/20 backdrop-blur-xl max-w-md">
+          <AlertDialogHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="relative">
+                <CheckCircle className="h-16 w-16 text-green-400 drop-shadow-glow animate-pulse" />
+                <div className="absolute inset-0 h-16 w-16 bg-green-400/20 rounded-full blur-md"></div>
+              </div>
+            </div>
+            <AlertDialogTitle className="text-2xl font-bold bg-gradient-to-r from-green-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent">
+              Senha Alterada com Sucesso!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-300 text-base">
+              Sua senha foi alterada com sucesso. Agora você pode fazer login com seu email e nova senha.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex justify-center pt-6">
+            <AlertDialogAction
+              onClick={() => navigate('/')}
+              className="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-900 font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg shadow-cyan-500/25 hover:shadow-xl hover:shadow-cyan-500/30"
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
