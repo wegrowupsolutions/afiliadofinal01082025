@@ -379,14 +379,26 @@ Data e hora atual:
           toast.error('Erro ao salvar configuração');
           return;
         }
-
-        setLastSaved(new Date());
-        toast.success('Configuração salva com sucesso!', {
-          description: 'Seu agente foi configurado e está pronto para uso.'
-        });
       } else {
-        toast.error('Registro não encontrado. Verifique se você tem acesso a este recurso.');
+        // Criar novo registro
+        const { error } = await supabase
+          .from('kiwify')
+          .insert({ 
+            email: user.email,
+            prompt: markdownPrompt 
+          });
+
+        if (error) {
+          console.error('Erro ao criar registro:', error);
+          toast.error('Erro ao salvar configuração');
+          return;
+        }
       }
+
+      setLastSaved(new Date());
+      toast.success('Configuração salva com sucesso!', {
+        description: 'Seu agente foi configurado e está pronto para uso.'
+      });
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
       toast.error('Erro ao salvar configuração');
