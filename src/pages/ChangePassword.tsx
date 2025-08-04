@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Lock, Shield } from 'lucide-react';
+import { Eye, EyeOff, Lock, Shield, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 const passwordSchema = z.object({
+  email: z.string().email('Email inválido'),
   newPassword: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(6, 'A confirmação da senha deve ter pelo menos 6 caracteres'),
 }).refine(data => data.newPassword === data.confirmPassword, {
@@ -22,6 +23,7 @@ export default function ChangePassword() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
+    email: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -63,37 +65,58 @@ export default function ChangePassword() {
     e.preventDefault();
     
     if (!validateForm()) return;
-    if (!user?.email) {
-      toast.error('Usuário não encontrado');
-      return;
-    }
 
     setIsLoading(true);
 
     try {
-      // Atualizar senha no Supabase Auth
-      const { error: authError } = await supabase.auth.updateUser({
-        password: formData.newPassword
-      });
+      // Primeiro verificar se o email existe na tabela kiwify (confirma a compra)
+      const { data: existingRecord, error: checkError } = await supabase
+        .from('kiwify')
+        .select('email, senha_alterada')
+        .eq('email', formData.email)
+        .maybeSingle();
 
-      if (authError) {
-        console.error('Erro ao atualizar senha no Auth:', authError);
-        toast.error('Erro ao atualizar senha');
+      if (checkError) {
+        console.error('Erro ao verificar email na tabela kiwify:', checkError);
+        toast.error('Erro ao verificar informações do cliente');
         return;
+      }
+
+      if (!existingRecord) {
+        toast.error('Email não encontrado. Verifique se este email foi usado na compra.');
+        return;
+      }
+
+      if (existingRecord.senha_alterada) {
+        toast.error('Este email já teve a senha alterada. Entre em contato com o suporte se necessário.');
+        return;
+      }
+
+      // Se chegou até aqui, o email é válido e não teve senha alterada ainda
+      // Atualizar senha no Supabase Auth (se o usuário estiver logado)
+      if (user?.email) {
+        const { error: authError } = await supabase.auth.updateUser({
+          password: formData.newPassword
+        });
+
+        if (authError) {
+          console.error('Erro ao atualizar senha no Auth:', authError);
+          // Não retornar aqui, pois o importante é salvar na tabela kiwify
+        }
       }
 
       // Salvar nova senha na tabela kiwify
       const { error: kiwifyError } = await supabase
         .from('kiwify')
-        .upsert({ 
-          email: user.email,
+        .update({ 
           nova_senha: formData.newPassword,
           senha_alterada: true
-        }, { onConflict: 'email' });
+        })
+        .eq('email', formData.email);
 
       if (kiwifyError) {
         console.error('Erro ao salvar senha na tabela kiwify:', kiwifyError);
-        toast.error('Erro ao salvar informações do usuário');
+        toast.error('Erro ao salvar nova senha');
         return;
       }
 
@@ -124,13 +147,35 @@ export default function ChangePassword() {
                 Primeiro Acesso
               </CardTitle>
               <CardDescription className="text-muted-foreground mt-2">
-                Por segurança, você precisa alterar sua senha no primeiro acesso
+                Digite o email usado na compra e defina sua nova senha para acessar o sistema
               </CardDescription>
             </div>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                  Email da Compra
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="pl-10"
+                    placeholder="Digite o email usado na compra"
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="newPassword" className="text-sm font-medium text-foreground">
                   Nova Senha

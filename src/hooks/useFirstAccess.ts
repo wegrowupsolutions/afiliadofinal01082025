@@ -9,17 +9,26 @@ export const useFirstAccess = () => {
 
   useEffect(() => {
     const checkFirstAccess = async () => {
-      if (authLoading || !user?.email) {
+      if (authLoading) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Se não está logado, não é primeiro acesso (vai para tela de login)
+      if (!user?.email) {
+        setIsFirstAccess(false);
         setIsLoading(false);
         return;
       }
 
       try {
-        // Verificar se o usuário já alterou a senha
+        // Verificar se existe algum registro na tabela kiwify que ainda precisa alterar senha
+        // e se corresponde ao email do usuário logado
         const { data, error } = await supabase
           .from('kiwify')
-          .select('senha_alterada')
+          .select('email, senha_alterada')
           .eq('email', user.email)
+          .eq('senha_alterada', false)
           .maybeSingle();
 
         if (error) {
@@ -28,9 +37,8 @@ export const useFirstAccess = () => {
           return;
         }
 
-        // Se não existe registro ou senha_alterada é false, é primeiro acesso
-        const firstAccess = !data || !data.senha_alterada;
-        setIsFirstAccess(firstAccess);
+        // Se existe um registro com senha_alterada = false, é primeiro acesso
+        setIsFirstAccess(!!data);
       } catch (error) {
         console.error('Erro inesperado ao verificar primeiro acesso:', error);
         setIsFirstAccess(false);
