@@ -183,12 +183,12 @@ const AgentConfiguration = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('kiwify')
         .select('prompt')
-        .eq('id', user.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Erro ao carregar prompt:', error);
         return;
       }
@@ -320,9 +320,9 @@ Data e hora atual:
       const markdownPrompt = generateMarkdownPrompt();
       
       const { error } = await supabase
-        .from('profiles')
+        .from('kiwify')
         .upsert({
-          id: user.id,
+          user_id: user.id,
           prompt: markdownPrompt
         });
 
@@ -342,9 +342,9 @@ Data e hora atual:
       const markdownPrompt = generateMarkdownPrompt();
 
       const { error } = await supabase
-        .from('profiles')
+        .from('kiwify')
         .upsert({
-          id: user.id,
+          user_id: user.id,
           prompt: markdownPrompt
         });
 
