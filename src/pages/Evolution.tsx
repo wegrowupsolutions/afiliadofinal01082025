@@ -351,30 +351,31 @@ const Evolution = () => {
         
         <div className="max-w-xl mx-auto">
           {connectedInstance && !qrCodeData && confirmationStatus !== 'confirmed' && (
-            <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30 mb-6">
+            <Card className="dark:bg-gray-800 shadow-lg border-green-200 dark:border-green-900/30 mb-6 bg-green-50 dark:bg-green-950/20">
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
                   <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
                     <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="text-xl font-medium text-gray-900 dark:text-white">Instância Conectada</h3>
+                  <h3 className="text-xl font-medium text-gray-900 dark:text-white">WhatsApp Conectado</h3>
                   <p className="text-gray-600 dark:text-gray-300">
-                    Você já possui uma instância <span className="font-semibold">{connectedInstance.instance_name}</span> conectada
+                    Você já possui uma instância <span className="font-semibold text-green-700 dark:text-green-400">{connectedInstance.instance_name}</span> conectada
                     {connectedInstance.phone_number && (
-                      <span> ao número <span className="font-semibold">{connectedInstance.phone_number}</span></span>
+                      <span> ao número <span className="font-semibold text-green-700 dark:text-green-400">{connectedInstance.phone_number}</span></span>
                     )}.
                   </p>
                   <div className="flex gap-3 justify-center">
                     <Button 
                       onClick={() => navigate('/chats')}
                       variant="default"
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
                     >
                       Ir para Conversas
                     </Button>
                     <Button 
                       onClick={() => setConnectedInstance(null)}
                       variant="outline"
+                      className="border-green-300 dark:border-green-600 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20"
                     >
                       Criar Nova Instância
                     </Button>
