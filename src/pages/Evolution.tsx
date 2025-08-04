@@ -28,21 +28,40 @@ const Evolution = () => {
     const checkExistingInstance = async () => {
       try {
         console.log('Current user from context:', user);
-        if (!user?.id) {
-          console.log('No user ID available yet');
+        if (!user?.email) {
+          console.log('No user email available yet');
           return;
         }
 
-        console.log('Querying evolution_instances for user_id:', user.id);
+        // Buscar ID do usuário na tabela kiwify usando o email
+        const { data: kiwifyUser, error: kiwifyError } = await supabase
+          .from('kiwify')
+          .select('id')
+          .eq('email', user.email)
+          .single();
+
+        if (kiwifyError) {
+          console.error('Erro ao buscar usuário Kiwify:', kiwifyError);
+          return;
+        }
+
+        if (!kiwifyUser) {
+          console.log('Usuário não encontrado na tabela Kiwify');
+          return;
+        }
+
+        console.log('Kiwify user found:', kiwifyUser);
+        console.log('Querying evolution_instances for user_id:', kiwifyUser.id);
+
         const { data, error } = await supabase
           .from('evolution_instances')
           .select('instance_name, phone_number')
-          .eq('user_id', user.id)
+          .eq('user_id', kiwifyUser.id.toString())
           .eq('is_connected', true)
           .order('connected_at', { ascending: false })
           .limit(1);
 
-        console.log('Evolution instances query result:', { data, error, user_id: user.id });
+        console.log('Evolution instances query result:', { data, error, user_id: kiwifyUser.id });
 
         if (error) {
           console.error('Erro ao verificar instância existente:', error);
@@ -62,7 +81,7 @@ const Evolution = () => {
     };
 
     // Só executa se o usuário estiver carregado
-    if (user?.id) {
+    if (user?.email) {
       checkExistingInstance();
     }
     
@@ -71,7 +90,7 @@ const Evolution = () => {
         clearInterval(statusCheckIntervalRef.current);
       }
     };
-  }, [user?.id]); // Dependência específica do user.id
+  }, [user?.email]); // Dependência específica do user.email
   
   const checkConnectionStatus = async () => {
     try {
@@ -118,26 +137,41 @@ const Evolution = () => {
             setConfirmationStatus('confirmed');
             retryCountRef.current = 0; // Reset retry counter on success
             
-            // Salvar instância conectada no banco
-            if (user?.id && instanceName) {
-              const { error: saveError } = await supabase
-                .from('evolution_instances')
-                .upsert({
-                  user_id: user.id,
-                  instance_name: instanceName.trim(),
-                  is_connected: true,
-                  connected_at: new Date().toISOString()
-                });
-              
-              if (saveError) {
-                console.error('Erro ao salvar instância conectada:', saveError);
-              } else {
-                console.log('Instância salva com sucesso no banco');
-                // Atualizar o estado local
-                setConnectedInstance({
-                  instance_name: instanceName.trim(),
-                  phone_number: undefined
-                });
+            // Salvar instância conectada no banco usando ID do Kiwify
+            if (user?.email && instanceName) {
+              try {
+                // Buscar ID do usuário na tabela kiwify
+                const { data: kiwifyUser, error: kiwifyError } = await supabase
+                  .from('kiwify')
+                  .select('id')
+                  .eq('email', user.email)
+                  .single();
+
+                if (kiwifyError) {
+                  console.error('Erro ao buscar usuário Kiwify para salvar:', kiwifyError);
+                } else if (kiwifyUser) {
+                  const { error: saveError } = await supabase
+                    .from('evolution_instances')
+                    .upsert({
+                      user_id: kiwifyUser.id.toString(),
+                      instance_name: instanceName.trim(),
+                      is_connected: true,
+                      connected_at: new Date().toISOString()
+                    });
+                  
+                  if (saveError) {
+                    console.error('Erro ao salvar instância conectada:', saveError);
+                  } else {
+                    console.log('Instância salva com sucesso no banco com ID Kiwify:', kiwifyUser.id);
+                    // Atualizar o estado local
+                    setConnectedInstance({
+                      instance_name: instanceName.trim(),
+                      phone_number: undefined
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error('Erro ao salvar instância:', error);
               }
             }
             
