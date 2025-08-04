@@ -20,6 +20,8 @@ const Evolution = () => {
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
   const [connectedInstance, setConnectedInstance] = useState<{instance_name: string, phone_number?: string} | null>(null);
+  const [statusInfo, setStatusInfo] = useState<any>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
@@ -418,6 +420,55 @@ const Evolution = () => {
       statusCheckIntervalRef.current = null;
     }
   };
+
+  const checkEvolutionStatus = async () => {
+    if (!connectedInstance?.instance_name || !user?.email) {
+      toast({
+        title: "Erro",
+        description: "Instância ou email do usuário não encontrado.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCheckingStatus(true);
+    try {
+      const { data: statusData, error: statusError } = await supabase.functions
+        .invoke('check-evolution-status', {
+          body: { 
+            userEmail: user.email,
+            instanceName: connectedInstance.instance_name 
+          }
+        });
+
+      if (statusError) {
+        console.error('Erro ao verificar status:', statusError);
+        toast({
+          title: "Erro",
+          description: "Não foi possível verificar o status da conexão.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Status verificado:', statusData);
+      setStatusInfo(statusData);
+      
+      toast({
+        title: "Status verificado",
+        description: "Informações da conexão atualizadas com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao verificar o status.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
@@ -477,6 +528,24 @@ const Evolution = () => {
                       Ir para Conversas
                     </Button>
                     <Button 
+                      onClick={checkEvolutionStatus}
+                      variant="outline"
+                      disabled={isCheckingStatus}
+                      className="border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                    >
+                      {isCheckingStatus ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Verificando...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Verificar Status
+                        </>
+                      )}
+                    </Button>
+                    <Button 
                       onClick={() => setConnectedInstance(null)}
                       variant="outline"
                       className="border-green-300 dark:border-green-600 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20"
@@ -484,6 +553,81 @@ const Evolution = () => {
                       Criar Nova Instância
                     </Button>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {statusInfo && (
+            <Card className="dark:bg-gray-800 shadow-lg border-blue-200 dark:border-blue-900/30 mb-6 bg-blue-50 dark:bg-blue-950/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <RefreshCw className="h-5 w-5" />
+                  Status da Conexão e Webhooks
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900 dark:text-white">Status no Banco de Dados</h4>
+                    <div className="bg-white dark:bg-gray-700 p-3 rounded border">
+                      {statusInfo.database?.status ? (
+                        <div className="space-y-1 text-sm">
+                          <p><span className="font-medium">Conectado:</span> {statusInfo.database.status.is_connected ? '✅ Sim' : '❌ Não'}</p>
+                          <p><span className="font-medium">Data Conexão:</span> {new Date(statusInfo.database.status.connected_at).toLocaleString('pt-BR')}</p>
+                          <p><span className="font-medium">Telefone:</span> {statusInfo.database.status.phone_number || 'N/A'}</p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">Não encontrado no banco</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900 dark:text-white">Status Evolution API</h4>
+                    <div className="bg-white dark:bg-gray-700 p-3 rounded border">
+                      {statusInfo.evolutionApi?.available ? (
+                        statusInfo.evolutionApi.status ? (
+                          <div className="space-y-1 text-sm">
+                            <p><span className="font-medium">Status:</span> {statusInfo.evolutionApi.status.instance?.state || 'N/A'}</p>
+                            <p><span className="font-medium">API:</span> ✅ Disponível</p>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">Status não disponível</p>
+                        )
+                      ) : (
+                        <p className="text-sm text-red-500">❌ API indisponível</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-900 dark:text-white">Links dos Webhooks</h4>
+                  <div className="bg-white dark:bg-gray-700 p-3 rounded border space-y-2">
+                    <div className="text-sm">
+                      <p className="font-medium text-gray-700 dark:text-gray-300">Mensagens:</p>
+                      <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
+                        {statusInfo.webhookUrls?.messages}
+                      </code>
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium text-gray-700 dark:text-gray-300">Status:</p>
+                      <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
+                        {statusInfo.webhookUrls?.status}
+                      </code>
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium text-gray-700 dark:text-gray-300">QR Code:</p>
+                      <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
+                        {statusInfo.webhookUrls?.qrcode}
+                      </code>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                  Última verificação: {new Date(statusInfo.checkTime).toLocaleString('pt-BR')}
                 </div>
               </CardContent>
             </Card>
