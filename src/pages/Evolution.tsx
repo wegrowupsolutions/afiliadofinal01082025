@@ -638,15 +638,6 @@ const Evolution = () => {
                         </>
                       )}
                     </Button>
-                    
-                    {/* Botão temporário para sincronizar instância teste1955 */}
-                    <Button 
-                      onClick={syncCurrentInstance}
-                      variant="outline"
-                      className="w-full mt-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-                    >
-                      Sincronizar Instância teste1955
-                    </Button>
                   </div>
                 </>
               )}
