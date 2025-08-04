@@ -140,16 +140,24 @@ const Evolution = () => {
             // Salvar instância conectada no banco usando ID do Kiwify
             if (user?.email && instanceName) {
               try {
-                // Buscar ID do usuário na tabela kiwify
+                // Chamar edge function para inserir na tabela
+                const { data: functionResult, error: functionError } = await supabase.functions
+                  .invoke('insert-evolution-instance');
+
+                if (functionError) {
+                  console.error('Erro ao chamar função de inserção:', functionError);
+                } else {
+                  console.log('Instância inserida via edge function:', functionResult);
+                }
+
+                // Fallback: tentar inserir diretamente
                 const { data: kiwifyUser, error: kiwifyError } = await supabase
                   .from('kiwify')
                   .select('id')
                   .eq('email', user.email)
                   .single();
 
-                if (kiwifyError) {
-                  console.error('Erro ao buscar usuário Kiwify para salvar:', kiwifyError);
-                } else if (kiwifyUser) {
+                if (!kiwifyError && kiwifyUser) {
                   const { error: saveError } = await supabase
                     .from('evolution_instances')
                     .upsert({
@@ -482,13 +490,37 @@ const Evolution = () => {
                       <span> ao número <span className="font-semibold text-green-700 dark:text-green-400">{connectedInstance.phone_number}</span></span>
                     )}.
                   </p>
-                  <div className="flex gap-3 justify-center">
+                   <div className="flex gap-3 justify-center">
                     <Button 
                       onClick={() => navigate('/chats')}
                       variant="default"
                       className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
                     >
                       Ir para Conversas
+                    </Button>
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase.functions.invoke('insert-evolution-instance');
+                          if (error) {
+                            console.error('Erro ao inserir instância:', error);
+                          } else {
+                            console.log('Instância inserida:', data);
+                            toast({
+                              title: "Sucesso",
+                              description: "Instância inserida na tabela!",
+                            });
+                            // Recarregar para mostrar a instância
+                            window.location.reload();
+                          }
+                        } catch (error) {
+                          console.error('Erro:', error);
+                        }
+                      }}
+                      variant="outline"
+                      className="border-green-300 dark:border-green-600 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20"
+                    >
+                      Inserir na Tabela
                     </Button>
                     <Button 
                       onClick={() => setConnectedInstance(null)}
