@@ -182,31 +182,68 @@ const AgentConfiguration = () => {
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Primeiro, tentar carregar da nova tabela agent_configurations
+      const { data: configData, error: configError } = await supabase
+        .from('agent_configurations')
+        .select('configuration_data')
+        .eq('user_id', user.email) // Usando email como user_id para compatibilidade com login Kiwify
+        .maybeSingle();
+
+      if (configError) {
+        console.error('Erro ao carregar configuração do agente:', configError);
+      }
+
+      if (configData?.configuration_data) {
+        // Carregar dados da nova tabela
+        const savedData = configData.configuration_data as unknown as PromptData;
+        setPromptData(savedData);
+        return;
+      }
+
+      // Fallback: tentar carregar da tabela kiwify (dados antigos)
+      const { data: oldData, error: oldError } = await supabase
         .from('kiwify')
         .select('id, prompt')
         .eq('email', user.email)
         .maybeSingle();
 
-      if (error) {
-        console.error('Erro ao carregar prompt:', error);
+      if (oldError) {
+        console.error('Erro ao carregar prompt antigo:', oldError);
         return;
       }
 
-      if (data?.prompt) {
+      if (oldData?.prompt) {
         try {
-          // Tenta primeiro carregar como JSON (dados antigos)
-          const parsedData = JSON.parse(data.prompt);
+          // Tenta carregar como JSON (dados antigos)
+          const parsedData = JSON.parse(oldData.prompt);
           setPromptData({ ...promptData, ...parsedData });
+          // Migrar para nova tabela
+          await migrateToNewTable(parsedData);
         } catch (e) {
-          // Se não for JSON, assume que já é markdown e deixa os campos vazios para nova edição
-          console.log('Prompt já salvo em markdown, iniciando edição nova');
+          // Se não for JSON válido, deixa os campos vazios
+          console.log('Prompt em formato não suportado, iniciando nova configuração');
         }
       }
     } catch (error) {
       console.error('Erro ao carregar configuração:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const migrateToNewTable = async (data: any) => {
+    if (!user?.email) return;
+    
+    try {
+      await supabase
+        .from('agent_configurations')
+        .upsert({
+          user_id: user.email,
+          configuration_data: data
+        });
+      console.log('Dados migrados para nova tabela com sucesso');
+    } catch (error) {
+      console.error('Erro ao migrar dados:', error);
     }
   };
 
@@ -317,30 +354,16 @@ Data e hora atual:
     if (!user?.email) return;
 
     try {
-      const markdownPrompt = generateMarkdownPrompt();
-      
-      // Primeiro, buscar o registro existente para obter o ID
-      const { data: existingRecord, error: fetchError } = await supabase
-        .from('kiwify')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle();
+      // Salvar configuração na nova tabela
+      const { error } = await supabase
+        .from('agent_configurations')
+        .upsert({
+          user_id: user.email,
+          configuration_data: promptData as any
+        });
 
-      if (fetchError) {
-        console.error('Erro ao buscar registro:', fetchError);
-        return;
-      }
-
-      if (existingRecord) {
-        // Atualizar usando o ID
-        const { error } = await supabase
-          .from('kiwify')
-          .update({ prompt: markdownPrompt })
-          .eq('id', existingRecord.id);
-
-        if (!error) {
-          setLastSaved(new Date());
-        }
+      if (!error) {
+        setLastSaved(new Date());
       }
     } catch (error) {
       console.error('Erro no auto-save:', error);
@@ -352,47 +375,34 @@ Data e hora atual:
 
     setSaving(true);
     try {
-      const markdownPrompt = generateMarkdownPrompt();
+      // Salvar configuração na nova tabela
+      const { error: configError } = await supabase
+        .from('agent_configurations')
+        .upsert({
+          user_id: user.email,
+          configuration_data: promptData as any
+        });
 
-      // Primeiro, buscar o registro existente para obter o ID
+      if (configError) {
+        console.error('Erro ao salvar configuração:', configError);
+        toast.error('Erro ao salvar configuração');
+        return;
+      }
+
+      // Também salvar o prompt em markdown na tabela kiwify (para compatibilidade)
+      const markdownPrompt = generateMarkdownPrompt();
+      
       const { data: existingRecord, error: fetchError } = await supabase
         .from('kiwify')
         .select('id')
         .eq('email', user.email)
         .maybeSingle();
 
-      if (fetchError) {
-        console.error('Erro ao buscar registro:', fetchError);
-        toast.error('Erro ao salvar configuração');
-        return;
-      }
-
-      if (existingRecord) {
-        // Atualizar usando o ID
-        const { error } = await supabase
+      if (!fetchError && existingRecord) {
+        await supabase
           .from('kiwify')
           .update({ prompt: markdownPrompt })
           .eq('id', existingRecord.id);
-
-        if (error) {
-          console.error('Erro ao salvar:', error);
-          toast.error('Erro ao salvar configuração');
-          return;
-        }
-      } else {
-        // Criar novo registro
-        const { error } = await supabase
-          .from('kiwify')
-          .insert({ 
-            email: user.email,
-            prompt: markdownPrompt 
-          });
-
-        if (error) {
-          console.error('Erro ao criar registro:', error);
-          toast.error('Erro ao salvar configuração');
-          return;
-        }
       }
 
       setLastSaved(new Date());

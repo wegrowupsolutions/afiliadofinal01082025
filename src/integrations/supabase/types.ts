@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_configurations: {
+        Row: {
+          configuration_data: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          configuration_data: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          configuration_data?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audio_files: {
         Row: {
           bitrate: number | null
