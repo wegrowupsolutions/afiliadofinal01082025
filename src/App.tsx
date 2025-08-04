@@ -18,8 +18,10 @@ import Course from "./pages/Course";
 import NotFound from "./pages/NotFound";
 import ConfigurationManager from "./pages/ConfigurationManager";
 import AgentConfiguration from "./pages/AgentConfiguration";
+import ChangePassword from "./pages/ChangePassword";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { FirstAccessGuard } from "./components/FirstAccessGuard";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +33,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
+            <FirstAccessGuard>
+              <Routes>
           <Route path="/pvafiliado" element={<PVAfiliado />} />
           <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -45,9 +48,11 @@ const App = () => (
               <Route path="/academia/:courseSlug" element={<Course />} />
               <Route path="/configuration-manager" element={<ConfigurationManager />} />
               <Route path="/agent-configuration" element={<AgentConfiguration />} />
+              <Route path="/change-password" element={<ChangePassword />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
+            </FirstAccessGuard>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
