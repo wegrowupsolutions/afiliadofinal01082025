@@ -33,44 +33,22 @@ const Evolution = () => {
           return;
         }
 
-        // Buscar ID do usuário na tabela kiwify usando o email
-        const { data: kiwifyUser, error: kiwifyError } = await supabase
-          .from('kiwify')
-          .select('id')
-          .eq('email', user.email)
-          .single();
+        // Usar edge function para buscar instâncias conectadas
+        const { data: functionData, error: functionError } = await supabase.functions
+          .invoke('get-user-evolution-instance', {
+            body: { userEmail: user.email }
+          });
 
-        if (kiwifyError) {
-          console.error('Erro ao buscar usuário Kiwify:', kiwifyError);
+        if (functionError) {
+          console.error('Erro ao chamar função de busca:', functionError);
           return;
         }
 
-        if (!kiwifyUser) {
-          console.log('Usuário não encontrado na tabela Kiwify');
-          return;
-        }
+        console.log('Function response:', functionData);
 
-        console.log('Kiwify user found:', kiwifyUser);
-        console.log('Querying evolution_instances for user_id:', kiwifyUser.id);
-
-        const { data, error } = await supabase
-          .from('evolution_instances')
-          .select('instance_name, phone_number')
-          .eq('user_id', kiwifyUser.id.toString())
-          .eq('is_connected', true)
-          .order('connected_at', { ascending: false })
-          .limit(1);
-
-        console.log('Evolution instances query result:', { data, error, user_id: kiwifyUser.id });
-
-        if (error) {
-          console.error('Erro ao verificar instância existente:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          console.log('Found connected instance:', data[0]);
-          setConnectedInstance(data[0]);
+        if (functionData?.connectedInstance) {
+          console.log('Found connected instance:', functionData.connectedInstance);
+          setConnectedInstance(functionData.connectedInstance);
         } else {
           console.log('No connected instances found for user');
           setConnectedInstance(null);
