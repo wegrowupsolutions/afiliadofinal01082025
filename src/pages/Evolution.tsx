@@ -499,30 +499,6 @@ const Evolution = () => {
                       Ir para Conversas
                     </Button>
                     <Button 
-                      onClick={async () => {
-                        try {
-                          const { data, error } = await supabase.functions.invoke('insert-evolution-instance');
-                          if (error) {
-                            console.error('Erro ao inserir instância:', error);
-                          } else {
-                            console.log('Instância inserida:', data);
-                            toast({
-                              title: "Sucesso",
-                              description: "Instância inserida na tabela!",
-                            });
-                            // Recarregar para mostrar a instância
-                            window.location.reload();
-                          }
-                        } catch (error) {
-                          console.error('Erro:', error);
-                        }
-                      }}
-                      variant="outline"
-                      className="border-green-300 dark:border-green-600 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20"
-                    >
-                      Inserir na Tabela
-                    </Button>
-                    <Button 
                       onClick={() => setConnectedInstance(null)}
                       variant="outline"
                       className="border-green-300 dark:border-green-600 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20"
