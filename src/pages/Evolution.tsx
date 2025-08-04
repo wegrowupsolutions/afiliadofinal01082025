@@ -284,7 +284,7 @@ const Evolution = () => {
     try {
       setIsLoading(true);
       console.log('Updating QR code for instance:', instanceName);
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

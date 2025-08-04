@@ -16,37 +16,37 @@ Deno.serve(async (req) => {
   try {
     const endpoints = [
       {
-        name: 'Enviar Mensagem',
+        name: 'envia_mensagem_afiliado',
         url: 'https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado',
         method: 'POST',
         testPayload: { test: true, instanceName: 'test' }
       },
       {
-        name: 'Pausar Bot',
+        name: 'pausa_bot_afiliado',
         url: 'https://webhook.serverwegrowup.com.br/webhook/pausa_bot_afiliado',
         method: 'POST',
         testPayload: { test: true, instanceName: 'test' }
       },
       {
-        name: 'Iniciar Bot',
+        name: 'inicia_bot_afiliado',
         url: 'https://webhook.serverwegrowup.com.br/webhook/inicia_bot_afiliado',
         method: 'POST',
         testPayload: { test: true, instanceName: 'test' }
       },
       {
-        name: 'Confirmar Afiliado',
+        name: 'confirma_afiliado',
         url: 'https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado',
         method: 'POST',
         testPayload: { test: true, instanceName: 'test' }
       },
       {
-        name: 'Instância Evolution',
+        name: 'instancia_evolution_afiliado',
         url: 'https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado',
         method: 'POST',
         testPayload: { test: true, instanceName: 'test' }
       },
       {
-        name: 'Atualizar QR Code',
+        name: 'atualizar_qr_code_afiliado',
         url: 'https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado',
         method: 'POST',
         testPayload: { test: true, instanceName: 'test' }

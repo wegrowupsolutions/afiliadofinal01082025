@@ -19,7 +19,7 @@ export const useEvolutionApi = () => {
       case 'instance':
         return 'https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado';
       case 'qr_code':
-        return 'https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado';
+        return 'https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado';
       case 'confirm':
         return 'https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado';
       default:
