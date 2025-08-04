@@ -121,11 +121,11 @@ export default function ChangePassword() {
       }
 
       toast.success('Senha alterada com sucesso!', {
-        description: 'Agora você pode acessar o sistema normalmente.'
+        description: 'Agora faça login com seu email e nova senha.'
       });
 
-      // Redirecionar para o dashboard
-      navigate('/dashboard');
+      // Redirecionar para a tela de login
+      navigate('/');
     } catch (error) {
       console.error('Erro inesperado ao alterar senha:', error);
       toast.error('Erro inesperado ao alterar senha');

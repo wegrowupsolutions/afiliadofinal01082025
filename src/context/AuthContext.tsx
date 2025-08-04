@@ -12,6 +12,10 @@ type AuthContextType = {
     error: AuthError | null;
     data: Session | null;
   }>;
+  signInWithKiwify: (email: string, password: string) => Promise<{
+    error: string | null;
+    data: any | null;
+  }>;
   signOut: () => Promise<void>;
 };
 
@@ -77,6 +81,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
+  const signInWithKiwify = async (email: string, password: string) => {
+    setIsLoading(true);
+    
+    try {
+      // Verificar se o email e senha estão corretos na tabela kiwify
+      const { data: kiwifyData, error: kiwifyError } = await supabase
+        .from('kiwify')
+        .select('email, nova_senha, senha_alterada')
+        .eq('email', email)
+        .eq('nova_senha', password)
+        .eq('senha_alterada', true)
+        .maybeSingle();
+
+      if (kiwifyError) {
+        console.error('Erro ao verificar credenciais na tabela kiwify:', kiwifyError);
+        return {
+          error: 'Erro ao verificar credenciais',
+          data: null
+        };
+      }
+
+      if (!kiwifyData) {
+        return {
+          error: 'Email ou senha incorretos',
+          data: null
+        };
+      }
+
+      // Se chegou até aqui, as credenciais estão corretas
+      // Criar uma sessão "fake" para simular login
+      const fakeUser = {
+        id: email, // usando email como ID único
+        email: email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      setUser(fakeUser as User);
+      setSession({
+        access_token: 'fake-token',
+        refresh_token: 'fake-refresh',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer',
+        user: fakeUser as User
+      } as Session);
+
+      return {
+        error: null,
+        data: { email }
+      };
+    } catch (error) {
+      console.error('Erro inesperado no login kiwify:', error);
+      return {
+        error: 'Erro inesperado',
+        data: null
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = async () => {
     console.log('Iniciando logout...');
     setIsLoading(true);
@@ -101,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isLoading,
     signIn,
+    signInWithKiwify,
     signOut,
   };
 
