@@ -2,14 +2,30 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, AlertTriangle, Activity, RefreshCw } from 'lucide-react';
+import { Copy, Check, AlertTriangle, Activity, RefreshCw, ExternalLink, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-interface EndpointStatus {
+interface EndpointResult {
+  name: string;
   url: string;
-  status: 'checking' | 'online' | 'offline' | 'unknown';
-  responseTime?: number;
-  error?: string;
+  status: number | null;
+  ok: boolean;
+  responseTime: number | null;
+  contentType: string | null;
+  response: any;
+  error: string | null;
+  timestamp: string;
+}
+
+interface TestResults {
+  summary: {
+    totalEndpoints: number;
+    activeEndpoints: number;
+    failedEndpoints: number;
+    testCompletedAt: string;
+  };
+  results: EndpointResult[];
 }
 
 interface EndpointsStatusCheckerProps {
@@ -18,98 +34,68 @@ interface EndpointsStatusCheckerProps {
 
 export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProps) => {
   const { toast } = useToast();
-  const [endpointStatuses, setEndpointStatuses] = React.useState<Record<string, EndpointStatus>>({});
+  const [testResults, setTestResults] = React.useState<TestResults | null>(null);
   const [copiedEndpoint, setCopiedEndpoint] = React.useState<string | null>(null);
   const [isChecking, setIsChecking] = React.useState(false);
+  const [lastCheckTime, setLastCheckTime] = React.useState<string | null>(null);
 
   const endpointGroups = {
     'Configuração do Bot': [
-      { key: 'mensagem', label: 'Enviar Mensagem' },
-      { key: 'pausaBot', label: 'Pausar Bot' },
-      { key: 'iniciaBot', label: 'Iniciar Bot' },
-      { key: 'confirma', label: 'Confirmar' }
+      { key: 'mensagem', label: 'Enviar Mensagem', afiliado: 'envia_mensagem_afiliado' },
+      { key: 'pausaBot', label: 'Pausar Bot', afiliado: 'pausa_bot_afiliado' },
+      { key: 'iniciaBot', label: 'Iniciar Bot', afiliado: 'inicia_bot_afiliado' },
+      { key: 'confirma', label: 'Confirmar', afiliado: 'confirma_afiliado' }
     ],
     'Configuração Evolution': [
-      { key: 'instanciaEvolution', label: 'Instância Evolution' },
-      { key: 'atualizarQrCode', label: 'Atualizar QR Code' }
+      { key: 'instanciaEvolution', label: 'Instância Evolution', afiliado: 'instancia_evolution_afiliado' },
+      { key: 'atualizarQrCode', label: 'Atualizar QR Code', afiliado: 'atualizar_qr_code_afiliado' }
     ]
-  };
-
-  const checkEndpoint = async (url: string): Promise<EndpointStatus> => {
-    const startTime = Date.now();
-    
-    try {
-      // Use AbortController para timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
-
-      const response = await fetch(url, {
-        method: 'HEAD',
-        mode: 'no-cors', // Para evitar problemas de CORS
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-      const responseTime = Date.now() - startTime;
-
-      return {
-        url,
-        status: 'online',
-        responseTime
-      };
-    } catch (error) {
-      const responseTime = Date.now() - startTime;
-      
-      if (error instanceof Error && error.name === 'AbortError') {
-        return {
-          url,
-          status: 'offline',
-          responseTime,
-          error: 'Timeout (>10s)'
-        };
-      }
-
-      // No modo no-cors, mesmo que o endpoint esteja funcionando, 
-      // pode retornar erro devido ao CORS, então consideramos como online
-      return {
-        url,
-        status: 'unknown',
-        responseTime,
-        error: 'Verificação limitada (CORS)'
-      };
-    }
   };
 
   const checkAllEndpoints = async () => {
     setIsChecking(true);
-    const relevantEndpoints = Object.entries(endpoints).filter(([key]) => 
-      ['mensagem', 'pausaBot', 'iniciaBot', 'confirma', 'instanciaEvolution', 'atualizarQrCode'].includes(key)
-    );
+    try {
+      console.log('Iniciando teste de webhooks...');
+      
+      const { data: functionData, error: functionError } = await supabase.functions
+        .invoke('test-webhook-connections', {
+          body: {}
+        });
 
-    const statusPromises = relevantEndpoints.map(async ([key, url]) => {
-      setEndpointStatuses(prev => ({
-        ...prev,
-        [key]: { url, status: 'checking' }
-      }));
+      if (functionError) {
+        console.error('Erro ao chamar função de teste:', functionError);
+        toast({
+          title: "Erro na verificação",
+          description: "Não foi possível executar o teste dos webhooks.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      const status = await checkEndpoint(url);
-      return [key, status] as [string, EndpointStatus];
-    });
+      console.log('Resultados do teste:', functionData);
+      setTestResults(functionData);
+      setLastCheckTime(functionData.summary.testCompletedAt);
+      
+      const { summary } = functionData;
+      const successRate = summary.totalEndpoints > 0 ? 
+        Math.round((summary.activeEndpoints / summary.totalEndpoints) * 100) : 0;
 
-    const results = await Promise.all(statusPromises);
-    
-    const newStatuses = results.reduce((acc, [key, status]) => {
-      acc[key] = status;
-      return acc;
-    }, {} as Record<string, EndpointStatus>);
+      toast({
+        title: "Verificação concluída",
+        description: `${summary.activeEndpoints}/${summary.totalEndpoints} endpoints ativos (${successRate}%)`,
+        variant: summary.activeEndpoints === summary.totalEndpoints ? "default" : "destructive"
+      });
 
-    setEndpointStatuses(newStatuses);
-    setIsChecking(false);
-
-    toast({
-      title: "Verificação concluída",
-      description: `${results.length} endpoints verificados.`,
-    });
+    } catch (error) {
+      console.error('Erro ao verificar endpoints:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro durante a verificação.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   const copyToClipboard = async (text: string, endpointKey: string) => {
@@ -130,49 +116,32 @@ export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProp
     }
   };
 
-  const getStatusColor = (status: EndpointStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return 'bg-green-600 text-white';
-      case 'offline':
-        return 'bg-red-600 text-white';
-      case 'checking':
-        return 'bg-blue-600 text-white';
-      case 'unknown':
-        return 'bg-yellow-600 text-white';
-      default:
-        return 'bg-gray-600 text-white';
-    }
+  const getEndpointResult = (endpointName: string): EndpointResult | null => {
+    if (!testResults) return null;
+    return testResults.results.find(r => r.name === endpointName) || null;
   };
 
-  const getStatusIcon = (status: EndpointStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return <Activity className="h-3 w-3" />;
-      case 'offline':
-        return <AlertTriangle className="h-3 w-3" />;
-      case 'checking':
-        return <RefreshCw className="h-3 w-3 animate-spin" />;
-      case 'unknown':
-        return <AlertTriangle className="h-3 w-3" />;
-      default:
-        return null;
-    }
+  const getStatusColor = (result: EndpointResult | null) => {
+    if (!result) return 'bg-gray-600 text-white';
+    if (result.ok) return 'bg-green-600 text-white';
+    return 'bg-red-600 text-white';
   };
 
-  const getStatusLabel = (status: EndpointStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return 'Online';
-      case 'offline':
-        return 'Offline';
-      case 'checking':
-        return 'Verificando...';
-      case 'unknown':
-        return 'Indeterminado';
-      default:
-        return 'Não verificado';
-    }
+  const getStatusIcon = (result: EndpointResult | null) => {
+    if (!result) return <AlertTriangle className="h-3 w-3" />;
+    if (result.ok) return <Activity className="h-3 w-3" />;
+    return <AlertTriangle className="h-3 w-3" />;
+  };
+
+  const getStatusLabel = (result: EndpointResult | null) => {
+    if (!result) return 'Não testado';
+    if (result.ok) return `Online (${result.status})`;
+    return result.error || 'Offline';
+  };
+
+  const formatResponseTime = (responseTime: number | null) => {
+    if (!responseTime) return '';
+    return `${responseTime}ms`;
   };
 
   React.useEffect(() => {
@@ -185,8 +154,19 @@ export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProp
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            <div className={`w-3 h-3 rounded-full ${
+              testResults?.summary.activeEndpoints === testResults?.summary.totalEndpoints 
+                ? 'bg-green-500' 
+                : isChecking 
+                ? 'bg-blue-500 animate-pulse' 
+                : 'bg-red-500'
+            }`}></div>
             Status das Conexões
+            {testResults && (
+              <Badge variant="outline" className="ml-2">
+                {testResults.summary.activeEndpoints}/{testResults.summary.totalEndpoints} ativos
+              </Badge>
+            )}
           </CardTitle>
           <Button
             onClick={checkAllEndpoints}
@@ -199,7 +179,7 @@ export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProp
             ) : (
               <RefreshCw className="h-4 w-4 mr-2" />
             )}
-            Verificar Novamente
+            {isChecking ? 'Testando...' : 'Testar Webhooks'}
           </Button>
         </div>
       </CardHeader>
@@ -212,47 +192,73 @@ export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProp
             <div className="space-y-3">
               {groupEndpoints.map((endpoint) => {
                 const url = endpoints[endpoint.key];
-                const status = endpointStatuses[endpoint.key];
+                const result = getEndpointResult(endpoint.afiliado);
                 
                 if (!url) return null;
 
                 return (
                   <div 
                     key={endpoint.key}
-                    className={`p-4 rounded-lg border ${
-                      status?.status === 'online' 
+                    className={`p-4 rounded-lg border transition-colors ${
+                      result?.ok
                         ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20'
-                        : status?.status === 'offline'
+                        : result && !result.ok
                         ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20'
-                        : status?.status === 'checking'
+                        : isChecking
                         ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20'
-                        : 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/20'
+                        : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950/20'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h5 className="font-medium text-sm">{endpoint.label}</h5>
                           <Badge 
-                            className={`text-xs ${getStatusColor(status?.status || 'unknown')}`}
+                            className={`text-xs ${getStatusColor(result)}`}
                           >
                             <div className="flex items-center gap-1">
-                              {getStatusIcon(status?.status || 'unknown')}
-                              {getStatusLabel(status?.status || 'unknown')}
+                              {isChecking ? (
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                              ) : (
+                                getStatusIcon(result)
+                              )}
+                              {isChecking ? 'Testando...' : getStatusLabel(result)}
                             </div>
                           </Badge>
-                          {status?.responseTime && (
-                            <span className="text-xs text-muted-foreground">
-                              ({status.responseTime}ms)
-                            </span>
+                          {result?.responseTime && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {formatResponseTime(result.responseTime)}
+                            </div>
                           )}
                         </div>
+                        
                         <div className="bg-muted/50 p-2 rounded text-xs font-mono break-all mb-2">
                           {url}
                         </div>
-                        {status?.error && (
-                          <div className="text-xs text-muted-foreground">
-                            Erro: {status.error}
+                        
+                        {result && (
+                          <div className="space-y-1 text-xs">
+                            {result.status && (
+                              <div className="text-muted-foreground">
+                                Status HTTP: {result.status}
+                              </div>
+                            )}
+                            {result.contentType && (
+                              <div className="text-muted-foreground">
+                                Content-Type: {result.contentType}
+                              </div>
+                            )}
+                            {result.error && (
+                              <div className="text-red-600 dark:text-red-400">
+                                Erro: {result.error}
+                              </div>
+                            )}
+                            {result.response && typeof result.response === 'string' && result.response.length < 100 && (
+                              <div className="text-muted-foreground">
+                                Resposta: {result.response}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -270,6 +276,14 @@ export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProp
                             <Copy className="h-3 w-3" />
                           )}
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(url, '_blank')}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -282,7 +296,11 @@ export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProp
         <div className="pt-4 border-t">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">
-              Última verificação: {new Date().toLocaleTimeString('pt-BR')}
+              {lastCheckTime ? (
+                `Última verificação: ${new Date(lastCheckTime).toLocaleString('pt-BR')}`
+              ) : (
+                'Nenhuma verificação realizada'
+              )}
             </span>
             <div className="flex items-center gap-4 text-xs">
               <div className="flex items-center gap-1">
@@ -294,8 +312,8 @@ export const EndpointsStatusChecker = ({ endpoints }: EndpointsStatusCheckerProp
                 <span>Offline</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span>Indeterminado</span>
+                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                <span>Não testado</span>
               </div>
             </div>
           </div>
