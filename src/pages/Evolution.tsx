@@ -50,7 +50,58 @@ const Evolution = () => {
 
         if (functionData?.connectedInstance) {
           console.log('Found connected instance:', functionData.connectedInstance);
-          setConnectedInstance(functionData.connectedInstance);
+          
+          // Verificar se a Evolution API está realmente ativa
+          try {
+            const { data: statusData, error: statusError } = await supabase.functions
+              .invoke('check-evolution-status', {
+                body: { 
+                  userEmail: user.email,
+                  instanceName: functionData.connectedInstance.instance_name 
+                }
+              });
+
+            if (!statusError && statusData?.evolutionApi?.available) {
+              console.log('Evolution API is available, keeping connected instance');
+              setConnectedInstance(functionData.connectedInstance);
+            } else {
+              console.log('Evolution API is not available, removing connected instance');
+              setConnectedInstance(null);
+              
+              // Marcar instância como desconectada no banco
+              const { data: kiwifyUser } = await supabase
+                .from('kiwify')
+                .select('id')
+                .eq('email', user.email)
+                .single();
+
+              if (kiwifyUser) {
+                await supabase
+                  .from('evolution_instances')
+                  .update({
+                    is_connected: false,
+                    disconnected_at: new Date().toISOString()
+                  })
+                  .eq('user_id', kiwifyUser.id.toString())
+                  .eq('instance_name', functionData.connectedInstance.instance_name);
+              }
+              
+              toast({
+                title: "Conexão perdida",
+                description: "A conexão com a Evolution API foi perdida. Crie uma nova instância.",
+                variant: "destructive"
+              });
+            }
+          } catch (error) {
+            console.error('Erro ao verificar Evolution API:', error);
+            // Se não conseguir verificar, manter instância mas mostrar aviso
+            setConnectedInstance(functionData.connectedInstance);
+            toast({
+              title: "Aviso",
+              description: "Não foi possível verificar o status da Evolution API.",
+              variant: "destructive"
+            });
+          }
         } else {
           console.log('No connected instances found for user');
           setConnectedInstance(null);
@@ -70,7 +121,7 @@ const Evolution = () => {
         clearInterval(statusCheckIntervalRef.current);
       }
     };
-  }, [user?.email]); // Dependência específica do user.email
+  }, [user?.email, toast]); // Dependência específica do user.email e toast
   
   const checkConnectionStatus = async () => {
     try {
