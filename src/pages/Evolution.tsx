@@ -28,6 +28,7 @@ const Evolution = () => {
     const checkExistingInstance = async () => {
       try {
         const { data: user } = await supabase.auth.getUser();
+        console.log('Current user:', user.user?.id);
         if (!user.user) return;
 
         const { data, error } = await supabase
@@ -38,13 +39,18 @@ const Evolution = () => {
           .order('connected_at', { ascending: false })
           .limit(1);
 
+        console.log('Evolution instances query result:', { data, error });
+
         if (error) {
           console.error('Erro ao verificar instância existente:', error);
           return;
         }
 
         if (data && data.length > 0) {
+          console.log('Found connected instance:', data[0]);
           setConnectedInstance(data[0]);
+        } else {
+          console.log('No connected instances found for user');
         }
       } catch (error) {
         console.error('Erro ao verificar instância conectada:', error);
