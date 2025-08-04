@@ -27,9 +27,13 @@ const Evolution = () => {
   useEffect(() => {
     const checkExistingInstance = async () => {
       try {
-        console.log('Current user from context:', user?.id);
-        if (!user?.id) return;
+        console.log('Current user from context:', user);
+        if (!user?.id) {
+          console.log('No user ID available yet');
+          return;
+        }
 
+        console.log('Querying evolution_instances for user_id:', user.id);
         const { data, error } = await supabase
           .from('evolution_instances')
           .select('instance_name, phone_number')
@@ -38,7 +42,7 @@ const Evolution = () => {
           .order('connected_at', { ascending: false })
           .limit(1);
 
-        console.log('Evolution instances query result:', { data, error });
+        console.log('Evolution instances query result:', { data, error, user_id: user.id });
 
         if (error) {
           console.error('Erro ao verificar instância existente:', error);
@@ -50,6 +54,7 @@ const Evolution = () => {
           setConnectedInstance(data[0]);
         } else {
           console.log('No connected instances found for user');
+          setConnectedInstance(null);
         }
       } catch (error) {
         console.error('Erro ao verificar instância conectada:', error);
@@ -57,7 +62,7 @@ const Evolution = () => {
     };
 
     // Só executa se o usuário estiver carregado
-    if (user) {
+    if (user?.id) {
       checkExistingInstance();
     }
     
@@ -66,7 +71,7 @@ const Evolution = () => {
         clearInterval(statusCheckIntervalRef.current);
       }
     };
-  }, [user]); // Dependência do user para reexecutar quando o usuário carregar
+  }, [user?.id]); // Dependência específica do user.id
   
   const checkConnectionStatus = async () => {
     try {
@@ -112,6 +117,30 @@ const Evolution = () => {
             }
             setConfirmationStatus('confirmed');
             retryCountRef.current = 0; // Reset retry counter on success
+            
+            // Salvar instância conectada no banco
+            if (user?.id && instanceName) {
+              const { error: saveError } = await supabase
+                .from('evolution_instances')
+                .upsert({
+                  user_id: user.id,
+                  instance_name: instanceName.trim(),
+                  is_connected: true,
+                  connected_at: new Date().toISOString()
+                });
+              
+              if (saveError) {
+                console.error('Erro ao salvar instância conectada:', saveError);
+              } else {
+                console.log('Instância salva com sucesso no banco');
+                // Atualizar o estado local
+                setConnectedInstance({
+                  instance_name: instanceName.trim(),
+                  phone_number: undefined
+                });
+              }
+            }
+            
             toast({
               title: "Conexão estabelecida!",
               description: "Seu WhatsApp foi conectado com sucesso.",
