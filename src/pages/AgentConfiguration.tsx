@@ -242,26 +242,26 @@ const AgentConfiguration = () => {
 
 ## 1. CONTEXTO
 [Descreva aqui o cenário específico e objetivo do prompt]
-${promptData.contexto.cenarioEspecifico || '- Qual é o problema que precisa ser resolvido?'}
-${promptData.contexto.problemaResolver || '- Qual é o resultado esperado?'}
-${promptData.contexto.resultadoEsperado || '- Quem é o público-alvo?'}
-${promptData.contexto.publicoAlvo || '- Em qual ambiente/situação será utilizado?'}
-${promptData.contexto.ambiente || ''}
+${promptData.contexto.cenarioEspecifico ? promptData.contexto.cenarioEspecifico : ''}
+${promptData.contexto.problemaResolver ? `- Problema a resolver: ${promptData.contexto.problemaResolver}` : '- Qual é o problema que precisa ser resolvido?'}
+${promptData.contexto.resultadoEsperado ? `- Resultado esperado: ${promptData.contexto.resultadoEsperado}` : '- Qual é o resultado esperado?'}
+${promptData.contexto.publicoAlvo ? `- Público-alvo: ${promptData.contexto.publicoAlvo}` : '- Quem é o público-alvo?'}
+${promptData.contexto.ambiente ? `- Ambiente/situação: ${promptData.contexto.ambiente}` : '- Em qual ambiente/situação será utilizado?'}
 
 ## 2. PERSONALIDADE
 [Defina o comportamento e características do agente]
-- Tom de voz (formal/informal): ${promptData.personalidade.tomVoz || '[Não definido]'}
-- Nível de linguagem: ${promptData.personalidade.nivelLinguagem || '[Não definido]'}
-- Características de personalidade específicas: ${promptData.personalidade.caracteristicasPersonalidade || '[Não definido]'}
-- Conhecimentos específicos necessários: ${promptData.personalidade.conhecimentosEspecificos || '[Não definido]'}
+${promptData.personalidade.tomVoz ? `- Tom de voz: ${promptData.personalidade.tomVoz}` : '- Tom de voz (formal/informal)'}
+${promptData.personalidade.nivelLinguagem ? `- Nível de linguagem: ${promptData.personalidade.nivelLinguagem}` : '- Nível de linguagem'}
+${promptData.personalidade.caracteristicasPersonalidade ? `- Características de personalidade: ${promptData.personalidade.caracteristicasPersonalidade}` : '- Características de personalidade específicas'}
+${promptData.personalidade.conhecimentosEspecificos ? `- Conhecimentos específicos: ${promptData.personalidade.conhecimentosEspecificos}` : '- Conhecimentos específicos necessários'}
 
 ## 3. DIRETRIZES
 [Liste as regras e restrições do negócio]
-- Políticas importantes: ${promptData.diretrizes.politicasImportantes || '[Não definido]'}
-- Limites de atuação: ${promptData.diretrizes.limitesAtuacao || '[Não definido]'}
-- Restrições legais ou éticas: ${promptData.diretrizes.restricoesLegais || '[Não definido]'}
-- Procedimentos obrigatórios: ${promptData.diretrizes.procedimentosObrigatorios || '[Não definido]'}
-- Informações confidenciais ou sensíveis: ${promptData.diretrizes.informacoesConfidenciais || '[Não definido]'}
+${promptData.diretrizes.politicasImportantes ? `- Políticas importantes: ${promptData.diretrizes.politicasImportantes}` : '- Políticas importantes'}
+${promptData.diretrizes.limitesAtuacao ? `- Limites de atuação: ${promptData.diretrizes.limitesAtuacao}` : '- Limites de atuação'}
+${promptData.diretrizes.restricoesLegais ? `- Restrições legais ou éticas: ${promptData.diretrizes.restricoesLegais}` : '- Restrições legais ou éticas'}
+${promptData.diretrizes.procedimentosObrigatorios ? `- Procedimentos obrigatórios: ${promptData.diretrizes.procedimentosObrigatorios}` : '- Procedimentos obrigatórios'}
+${promptData.diretrizes.informacoesConfidenciais ? `- Informações confidenciais: ${promptData.diretrizes.informacoesConfidenciais}` : '- Informações confidenciais ou sensíveis'}
 
 ## 4. ESTRUTURA DA CONVERSA
 [Detalhe o passo a passo do raciocínio]
@@ -294,9 +294,9 @@ Exemplo 2:
 
 ## 7. MÉTRICAS DE SUCESSO
 [Defina como medir o sucesso do prompt]
-- Indicadores de qualidade: ${promptData.metricasSucesso.indicadoresQualidade || '[Não definido]'}
-- Métricas de desempenho: ${promptData.metricasSucesso.metricasDesempenho || '[Não definido]'}
-- Critérios de avaliação: ${promptData.metricasSucesso.criteriosAvaliacao || '[Não definido]'}
+${promptData.metricasSucesso.indicadoresQualidade ? `- Indicadores de qualidade: ${promptData.metricasSucesso.indicadoresQualidade}` : '- Indicadores de qualidade'}
+${promptData.metricasSucesso.metricasDesempenho ? `- Métricas de desempenho: ${promptData.metricasSucesso.metricasDesempenho}` : '- Métricas de desempenho'}
+${promptData.metricasSucesso.criteriosAvaliacao ? `- Critérios de avaliação: ${promptData.metricasSucesso.criteriosAvaliacao}` : '- Critérios de avaliação'}
 
 ${promptData.linksPromocao.filter(link => link.link.trim() !== '').length > 0 ? `
 ## 8. LINKS DE DIVULGAÇÃO
@@ -306,8 +306,8 @@ Descrição: ${link.descricao || 'Sem descrição'}
 `).join('')}` : ''}
 
 ---
-
 Com base nas informações acima, gere um prompt completo que atenda aos requisitos especificados. Gere no formato markdown.
+sempre adicione o texto abaixo em todos os prompts gerados
 
 Data e hora atual:
 {{ (() => { const nowNoTimeZone = new Date(); const now = nowNoTimeZone; const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']; const today = new Date(); const totimeZone = today.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }); const tomorrow = new Date(now.setDate(now.getDate() + 1)); const dayAfterTomorrow = new Date(now.setDate(now.getDate() + 1)); const nextWeekSameDay = new Date(today); nextWeekSameDay.setDate(today.getDate() + 7); return \`A hora atual é \${new Intl.DateTimeFormat('pt-BR', {    hour: '2-digit',    minute: '2-digit',    timeZone: 'America/Sao_Paulo'  }).format(today)} e a data é \${today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' })}, hoje o dia da semana é \${daysOfWeek[today.getDay()]}. A próxima \${daysOfWeek[today.getDay()]} será dia \${nextWeekSameDay.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.  Amanhã é \${daysOfWeek[tomorrow.getDay()]} dia \${tomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}. Depois de amanhã é \${daysOfWeek[dayAfterTomorrow.getDay()]} dia \${dayAfterTomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.\`; })() }}, use isso!`;
