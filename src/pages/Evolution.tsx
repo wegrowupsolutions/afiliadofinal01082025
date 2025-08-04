@@ -156,7 +156,8 @@ const Evolution = () => {
                       user_id: kiwifyUser.id.toString(),
                       instance_name: instanceName.trim(),
                       is_connected: true,
-                      connected_at: new Date().toISOString()
+                      connected_at: new Date().toISOString(),
+                      phone_number: '+5511910362476' // Número conectado
                     });
                   
                   if (saveError) {
@@ -166,7 +167,7 @@ const Evolution = () => {
                     // Atualizar o estado local
                     setConnectedInstance({
                       instance_name: instanceName.trim(),
-                      phone_number: undefined
+                      phone_number: '+5511910362476'
                     });
                   }
                 }
@@ -365,6 +366,52 @@ const Evolution = () => {
       setConfirmationStatus(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const syncCurrentInstance = async () => {
+    try {
+      const { data: kiwifyUser, error: kiwifyError } = await supabase
+        .from('kiwify')
+        .select('id')
+        .eq('email', user?.email)
+        .single();
+
+      if (kiwifyError || !kiwifyUser) {
+        console.error('Erro ao buscar usuário Kiwify:', kiwifyError);
+        return;
+      }
+
+      const { error: saveError } = await supabase
+        .from('evolution_instances')
+        .upsert({
+          user_id: kiwifyUser.id.toString(),
+          instance_name: 'teste1955',
+          phone_number: '+5511910362476',
+          is_connected: true,
+          connected_at: new Date().toISOString()
+        });
+
+      if (saveError) {
+        console.error('Erro ao sincronizar instância:', saveError);
+        toast({
+          title: "Erro",
+          description: "Não foi possível sincronizar a instância.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('Instância sincronizada com sucesso');
+        setConnectedInstance({
+          instance_name: 'teste1955',
+          phone_number: '+5511910362476'
+        });
+        toast({
+          title: "Sucesso",
+          description: "Instância sincronizada com sucesso!",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao sincronizar:', error);
     }
   };
 
@@ -590,6 +637,15 @@ const Evolution = () => {
                           Criar Instância
                         </>
                       )}
+                    </Button>
+                    
+                    {/* Botão temporário para sincronizar instância teste1955 */}
+                    <Button 
+                      onClick={syncCurrentInstance}
+                      variant="outline"
+                      className="w-full mt-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                    >
+                      Sincronizar Instância teste1955
                     </Button>
                   </div>
                 </>
