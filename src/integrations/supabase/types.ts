@@ -329,6 +329,33 @@ export type Database = {
         }
         Relationships: []
       }
+      kiwify: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: number
+          Nome: string | null
+          prompt: string | null
+          telefone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          Nome?: string | null
+          prompt?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          Nome?: string | null
+          prompt?: string | null
+          telefone?: string | null
+        }
+        Relationships: []
+      }
       media_files: {
         Row: {
           category: string | null
@@ -417,7 +444,6 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
-          prompt: string | null
           updated_at: string | null
         }
         Insert: {
@@ -426,7 +452,6 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
-          prompt?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -435,7 +460,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
-          prompt?: string | null
           updated_at?: string | null
         }
         Relationships: []
