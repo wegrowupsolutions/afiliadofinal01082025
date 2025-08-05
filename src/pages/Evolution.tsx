@@ -82,7 +82,7 @@ const Evolution = () => {
                     is_connected: false,
                     disconnected_at: new Date().toISOString()
                   })
-                  .eq('user_id', kiwifyUser.id.toString())
+                  .eq('id', kiwifyUser.id)
                   .eq('instance_name', functionData.connectedInstance.instance_name);
               }
               
@@ -184,11 +184,11 @@ const Evolution = () => {
                 console.log('Usuário Kiwify encontrado:', { kiwifyUser, kiwifyError });
 
                 if (!kiwifyError && kiwifyUser) {
-                  console.log('Atualizando instância para user_id:', kiwifyUser.id.toString());
+                  console.log('Atualizando instância para id:', kiwifyUser.id);
                   const { error: saveError } = await supabase
                     .from('evolution_instances')
                     .upsert({
-                      user_id: kiwifyUser.id.toString(),
+                      id: kiwifyUser.id,
                       instance_name: instanceName.trim(),
                       is_connected: true,
                       connected_at: new Date().toISOString(),
@@ -399,11 +399,11 @@ const Evolution = () => {
           console.log('Resultado da busca Kiwify:', { kiwifyUser, kiwifyError });
 
           if (!kiwifyError && kiwifyUser) {
-            console.log('Salvando instância para user_id:', kiwifyUser.id.toString());
+            console.log('Salvando instância para id:', kiwifyUser.id);
             const { error: saveError } = await supabase
               .from('evolution_instances')
               .insert({
-                user_id: kiwifyUser.id.toString(),
+                id: kiwifyUser.id,
                 instance_name: instanceName.trim(),
                 is_connected: false,
                 created_at: new Date().toISOString(),
@@ -469,7 +469,7 @@ const Evolution = () => {
       const { error: saveError } = await supabase
         .from('evolution_instances')
         .upsert({
-          user_id: kiwifyUser.id.toString(),
+          id: kiwifyUser.id,
           instance_name: 'teste1955',
           phone_number: '+5511910362476',
           is_connected: true,
