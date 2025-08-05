@@ -266,57 +266,6 @@ export type Database = {
         }
         Relationships: []
       }
-      evolution_instances: {
-        Row: {
-          connected_at: string | null
-          created_at: string
-          disconnected_at: string | null
-          id: number
-          instance_name: string
-          is_connected: boolean
-          phone_number: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          connected_at?: string | null
-          created_at?: string
-          disconnected_at?: string | null
-          id: number
-          instance_name: string
-          is_connected?: boolean
-          phone_number?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          connected_at?: string | null
-          created_at?: string
-          disconnected_at?: string | null
-          id?: number
-          instance_name?: string
-          is_connected?: boolean
-          phone_number?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "evolution_instances_id_fkey"
-            columns: ["id"]
-            isOneToOne: false
-            referencedRelation: "kiwify"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "evolution_instances_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       image_files: {
         Row: {
           category: string | null
