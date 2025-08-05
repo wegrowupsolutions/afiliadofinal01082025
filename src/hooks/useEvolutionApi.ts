@@ -81,7 +81,7 @@ export const useEvolutionApi = () => {
       const blob = await response.blob();
       console.log('QR Code recebido, tipo:', blob.type);
       
-      // Salvar no Supabase
+      // Salvar no Supabase usando tabela kiwify
       const { error } = await supabase.rpc('mark_instance_connected', {
         p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
         p_instance_name: instanceName.trim(),
@@ -166,7 +166,7 @@ export const useEvolutionApi = () => {
         console.log('Conexão confirmada!');
         setConnectionStatus('connected');
         
-        // Atualizar status no Supabase
+        // Atualizar status no Supabase usando tabela kiwify
         const { error } = await supabase.rpc('mark_instance_connected', {
           p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
           p_instance_name: instanceName.trim(),
@@ -193,11 +193,14 @@ export const useEvolutionApi = () => {
 
   const getInstanceStatus = async (instanceName: string) => {
     try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return null;
+      
       const { data, error } = await supabase
-        .from('evolution_instances')
+        .from('kiwify')
         .select('*')
-        .eq('instance_name', instanceName.trim())
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('Nome da instancia da Evolution', instanceName.trim())
+        .eq('id', parseInt(userId))
         .order('created_at', { ascending: false })
         .limit(1);
 

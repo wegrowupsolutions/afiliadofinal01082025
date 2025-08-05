@@ -193,7 +193,7 @@ const AgentConfiguration = () => {
         return;
       }
 
-      if (data?.prompt) {
+      if (data && 'prompt' in data && data.prompt && typeof data.prompt === 'string') {
         try {
           // Tenta primeiro carregar como JSON (dados antigos)
           const parsedData = JSON.parse(data.prompt);

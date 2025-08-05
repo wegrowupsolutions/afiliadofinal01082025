@@ -31,9 +31,9 @@ const Evolution = () => {
         if (!user.user) return;
 
         const { data, error } = await supabase
-          .from('evolution_instances')
-          .select('instance_name, phone_number')
-          .eq('user_id', user.user.id)
+          .from('kiwify')
+          .select('"Nome da instancia da Evolution", remojid, is_connected')
+          .eq('id', parseInt(user.user.id))
           .eq('is_connected', true)
           .order('connected_at', { ascending: false })
           .limit(1);
@@ -44,7 +44,12 @@ const Evolution = () => {
         }
 
         if (data && data.length > 0) {
-          setConnectedInstance(data[0]);
+          // Mapear campos da tabela kiwify para o formato esperado
+          const instance = {
+            instance_name: data[0]["Nome da instancia da Evolution"],
+            phone_number: data[0].remojid
+          };
+          setConnectedInstance(instance);
         }
       } catch (error) {
         console.error('Erro ao verificar instância conectada:', error);

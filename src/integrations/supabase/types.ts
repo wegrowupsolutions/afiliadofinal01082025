@@ -370,10 +370,13 @@ export type Database = {
       }
       kiwify: {
         Row: {
+          connected_at: string | null
           created_at: string
+          disconnected_at: string | null
           email: string | null
           evo_instance: string | null
           id: number
+          is_connected: boolean | null
           Nome: string | null
           "Nome da instancia da Evolution": string | null
           nova_senha: string | null
@@ -383,10 +386,13 @@ export type Database = {
           telefone: string | null
         }
         Insert: {
+          connected_at?: string | null
           created_at?: string
+          disconnected_at?: string | null
           email?: string | null
           evo_instance?: string | null
           id?: number
+          is_connected?: boolean | null
           Nome?: string | null
           "Nome da instancia da Evolution"?: string | null
           nova_senha?: string | null
@@ -396,10 +402,13 @@ export type Database = {
           telefone?: string | null
         }
         Update: {
+          connected_at?: string | null
           created_at?: string
+          disconnected_at?: string | null
           email?: string | null
           evo_instance?: string | null
           id?: number
+          is_connected?: boolean | null
           Nome?: string | null
           "Nome da instancia da Evolution"?: string | null
           nova_senha?: string | null
@@ -614,7 +623,7 @@ export type Database = {
         Returns: string
       }
       get_user_by_phone_number: {
-        Args: { input_phone_number: string }
+        Args: { phone_number: string }
         Returns: string
       }
       get_user_connected_instance: {
