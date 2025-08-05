@@ -15,6 +15,7 @@ import PVAfiliado from "./pages/PVAfiliado";
 import Schedule from "./pages/Schedule";
 import Academia from "./pages/Academia";
 import Course from "./pages/Course";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 import ConfigurationManager from "./pages/ConfigurationManager";
 import AgentConfiguration from "./pages/AgentConfiguration";
@@ -34,6 +35,7 @@ const App = () => (
             <Routes>
           <Route path="/pvafiliado" element={<PVAfiliado />} />
           <Route path="/" element={<Index />} />
+          <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/metrics" element={<MetricsDashboard />} />
               <Route path="/chats" element={<ChatsDashboard />} />

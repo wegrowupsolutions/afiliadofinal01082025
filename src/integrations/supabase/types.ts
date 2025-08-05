@@ -542,6 +542,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      check_kiwify_email_exists: {
+        Args: { user_email: string }
+        Returns: boolean
+      }
       cleanup_inactive_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -621,6 +625,17 @@ export type Database = {
           p_phone_number?: string
         }
         Returns: undefined
+      }
+      sync_kiwify_user_on_login: {
+        Args: { user_email: string; user_password: string }
+        Returns: {
+          user_id: string
+          kiwify_data: Json
+        }[]
+      }
+      update_kiwify_password: {
+        Args: { user_email: string; new_password: string }
+        Returns: boolean
       }
       user_can_access_lead: {
         Args: { lead_remotejid: string }

@@ -68,13 +68,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
-    const response = await supabase.auth.signInWithPassword({ email, password });
-    setIsLoading(false);
     
-    return {
-      error: response.error,
-      data: response.data.session
-    };
+    try {
+      // Primeiro, verificar se é um usuário do Kiwify que precisa de conta criada
+      const { data: kiwifySync, error: syncError } = await supabase
+        .rpc('sync_kiwify_user_on_login', { 
+          user_email: email, 
+          user_password: password 
+        });
+
+      if (syncError) {
+        console.error('Erro na sincronização Kiwify:', syncError);
+      }
+
+      // Se há dados do Kiwify e não há conta no auth.users, criar conta
+      if (kiwifySync && kiwifySync.length > 0) {
+        const kiwifyData = kiwifySync[0];
+        
+        // Verificar se usuário já existe no auth.users
+        const { data: existingUser } = await supabase.auth.getUser();
+        
+        if (!existingUser.user || !kiwifyData.user_id) {
+          // Criar conta no Supabase Auth
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/dashboard`,
+              data: {
+                full_name: (kiwifyData.kiwify_data as any)?.nome || ''
+              }
+            }
+          });
+
+          if (signUpError) {
+            console.error('Erro ao criar conta:', signUpError);
+            // Se falhou por email já existir, tentar login normal
+            if (signUpError.message.includes('already been registered')) {
+              const response = await supabase.auth.signInWithPassword({ email, password });
+              setIsLoading(false);
+              return {
+                error: response.error,
+                data: response.data.session
+              };
+            }
+            
+            setIsLoading(false);
+            return {
+              error: signUpError,
+              data: null
+            };
+          }
+
+          // Conta criada, fazer login
+          const loginResponse = await supabase.auth.signInWithPassword({ email, password });
+          setIsLoading(false);
+          return {
+            error: loginResponse.error,
+            data: loginResponse.data.session
+          };
+        }
+      }
+
+      // Login normal para usuários já existentes
+      const response = await supabase.auth.signInWithPassword({ email, password });
+      setIsLoading(false);
+      
+      return {
+        error: response.error,
+        data: response.data.session
+      };
+    } catch (error) {
+      console.error('Erro no signIn:', error);
+      setIsLoading(false);
+      return {
+        error: error as any,
+        data: null
+      };
+    }
   };
 
   const signOut = async () => {
