@@ -31,30 +31,50 @@ serve(async (req) => {
     // Buscar o usuário pelo email na tabela profiles
     const { data: profileData, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('id, email')
+      .select('id, email, full_name, phone, created_at, updated_at')
       .eq('email', userEmail)
       .single()
 
     if (profileError || !profileData) {
       console.error('Profile not found:', profileError)
       return new Response(
-        JSON.stringify({ error: 'User profile not found' }),
+        JSON.stringify({ error: 'User profile not found', details: `No profile found for email: ${userEmail}` }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     const userId = profileData.id
-    console.log('Found user:', userId, userEmail)
+    console.log('Found user profile:', { 
+      id: userId, 
+      email: profileData.email, 
+      full_name: profileData.full_name,
+      phone: profileData.phone 
+    })
 
     switch (action) {
       case 'create':
+        // Verificar se já existe uma instância com esse nome para o usuário
+        const { data: existingInstance, error: checkError } = await supabaseClient
+          .from('evolution_instances')
+          .select('instance_name')
+          .eq('user_id', userId)
+          .eq('instance_name', instanceName)
+          .single()
+
+        if (existingInstance) {
+          return new Response(
+            JSON.stringify({ error: 'Instance name already exists for this user' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
         // Criar nova instância
         const { error: insertError } = await supabaseClient
           .from('evolution_instances')
           .insert({
             user_id: userId,
             instance_name: instanceName,
-            phone_number: phoneNumber,
+            phone_number: phoneNumber || profileData.phone, // Usar telefone do perfil se não fornecido
             is_connected: false
           })
         
@@ -66,9 +86,16 @@ serve(async (req) => {
           )
         }
 
-        console.log('Instance created successfully')
+        console.log('Instance created successfully for user:', profileData.full_name || profileData.email)
         return new Response(
-          JSON.stringify({ success: true, message: 'Instance created successfully' }),
+          JSON.stringify({ 
+            success: true, 
+            message: 'Instance created successfully',
+            user: {
+              name: profileData.full_name || profileData.email,
+              email: profileData.email
+            }
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 
@@ -93,9 +120,20 @@ serve(async (req) => {
           )
         }
 
-        console.log('Instance connected successfully')
+        console.log('Instance connected successfully for user:', profileData.full_name || profileData.email)
         return new Response(
-          JSON.stringify({ success: true, message: 'Instance connected successfully' }),
+          JSON.stringify({ 
+            success: true, 
+            message: 'Instance connected successfully',
+            user: {
+              name: profileData.full_name || profileData.email,
+              email: profileData.email
+            },
+            instance: {
+              name: instanceName,
+              phone: phoneNumber
+            }
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 
@@ -125,10 +163,17 @@ serve(async (req) => {
         )
 
       case 'list':
-        // Listar instâncias do usuário
+        // Listar instâncias do usuário com dados completos
         const { data: instances, error: listError } = await supabaseClient
           .from('evolution_instances')
-          .select('*')
+          .select(`
+            *,
+            profiles!inner(
+              email,
+              full_name,
+              phone
+            )
+          `)
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
         
@@ -140,9 +185,16 @@ serve(async (req) => {
           )
         }
 
-        console.log('Instances listed successfully:', instances?.length || 0)
+        console.log('Instances listed successfully for user:', profileData.full_name || profileData.email, '- Count:', instances?.length || 0)
         return new Response(
-          JSON.stringify({ instances }),
+          JSON.stringify({ 
+            instances,
+            user: {
+              name: profileData.full_name || profileData.email,
+              email: profileData.email,
+              phone: profileData.phone
+            }
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 

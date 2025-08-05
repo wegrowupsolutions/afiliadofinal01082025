@@ -20,6 +20,7 @@ const Evolution = () => {
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
   const [userInstances, setUserInstances] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [showInstancesList, setShowInstancesList] = useState(false);
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
@@ -48,9 +49,19 @@ const Evolution = () => {
       });
 
       if (error) throw error;
+      
       setUserInstances(data.instances || []);
+      setUserProfile(data.user || null);
+      
+      console.log('Loaded user profile:', data.user);
+      console.log('Loaded instances:', data.instances?.length || 0);
     } catch (error) {
       console.error('Error loading user instances:', error);
+      toast({
+        title: "Erro ao carregar instâncias",
+        description: "Não foi possível carregar suas instâncias.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -397,8 +408,13 @@ const Evolution = () => {
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="bg-white/10 text-white border-0 px-3 py-1">
-              {user?.user_metadata?.name || user?.email}
+              {userProfile?.name || user?.user_metadata?.name || user?.email}
             </Badge>
+            {userProfile?.phone && (
+              <Badge variant="outline" className="bg-white/10 text-white border-0 px-2 py-1 text-xs">
+                📞 {userProfile.phone}
+              </Badge>
+            )}
             <ThemeToggle />
           </div>
         </div>
@@ -425,17 +441,29 @@ const Evolution = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                 <List className="h-5 w-5" />
-                Suas Instâncias
+                Instâncias de {userProfile?.name || user?.email}
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {userProfile && (
+                <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-2">Informações do Perfil</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div><span className="font-medium">Nome:</span> {userProfile.name}</div>
+                    <div><span className="font-medium">Email:</span> {userProfile.email}</div>
+                    {userProfile.phone && (
+                      <div><span className="font-medium">Telefone:</span> {userProfile.phone}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               {userInstances.length === 0 ? (
                 <p className="text-gray-600 dark:text-gray-300 text-center py-4">
                   Nenhuma instância encontrada.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {userInstances.map((instance) => (
+                <div className="space-y-3">{userInstances.map((instance) => (
                     <div
                       key={instance.id}
                       className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-600"
@@ -453,6 +481,11 @@ const Evolution = () => {
                         {instance.connected_at && (
                           <p className="text-sm text-gray-600 dark:text-gray-300">
                             Conectada em: {new Date(instance.connected_at).toLocaleString('pt-BR')}
+                          </p>
+                        )}
+                        {instance.profiles && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Usuário: {instance.profiles.full_name || instance.profiles.email}
                           </p>
                         )}
                       </div>
