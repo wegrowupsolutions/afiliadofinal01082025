@@ -44,9 +44,10 @@ const Evolution = () => {
 
         const { data, error } = await supabase
           .from('kiwify')
-          .select('"Nome da instancia da Evolution", remojid, is_connected')
+          .select('"Nome da instancia da Evolution", remojid, is_connected, disconnected_at')
           .eq('user_id', user.user.id)
           .eq('is_connected', true)
+          .is('disconnected_at', null)
           .order('connected_at', { ascending: false })
           .limit(1);
 
@@ -461,17 +462,19 @@ const Evolution = () => {
             </Card>
           )}
           
-          <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                {qrCodeData ? (
-                  <QrCode className="h-5 w-5" />
-                ) : (
-                  <Plus className="h-5 w-5" />
-                )}
-                {qrCodeData ? "Conectar WhatsApp" : "Criar Nova Instância"}
-              </CardTitle>
-            </CardHeader>
+          {/* Só mostrar o card de criação se não há instância conectada */}
+          {!connectedInstance && (
+            <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                  {qrCodeData ? (
+                    <QrCode className="h-5 w-5" />
+                  ) : (
+                    <Plus className="h-5 w-5" />
+                  )}
+                  {qrCodeData ? "Conectar WhatsApp" : "Criar Nova Instância"}
+                </CardTitle>
+              </CardHeader>
             <CardContent className="space-y-6">
               {qrCodeData ? (
                 <div className="space-y-6 text-center">
@@ -601,6 +604,7 @@ const Evolution = () => {
               )}
             </CardContent>
           </Card>
+          )}
         </div>
         
         {/* Lista de Instâncias Conectadas */}

@@ -27,7 +27,7 @@ export const ConnectedInstancesList = () => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('kiwify')
-        .select('id, "Nome da instancia da Evolution", remojid, connected_at, email, is_connected')
+        .select('id, "Nome da instancia da Evolution", remojid, connected_at, email, is_connected, disconnected_at')
         .eq('user_id', user?.id)
         .not('"Nome da instancia da Evolution"', 'is', null)
         .order('connected_at', { ascending: false });
@@ -48,7 +48,7 @@ export const ConnectedInstancesList = () => {
         phoneNumber: item.remojid,
         connectedAt: item.connected_at || '',
         email: item.email || '',
-        isConnected: item.is_connected || false
+        isConnected: item.is_connected && !item.disconnected_at
       }));
 
       setInstances(formattedInstances);
