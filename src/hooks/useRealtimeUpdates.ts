@@ -14,21 +14,21 @@ export function useRealtimeUpdates({
 }: UseRealtimeUpdatesProps) {
   
   useEffect(() => {
-    console.log('Setting up realtime updates for chat history');
+    console.log('Setting up realtime updates for n8n chat history');
     
-    // Create a single subscription for chat history updates
+    // Create a single subscription for n8n chat history updates
     const subscription = supabase
-      .channel('afiliado_mensagens_updates')
+      .channel('n8n_chat_histories_updates')
       .on('postgres_changes', 
         { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'afiliado_mensagens' 
+          table: 'n8n_chat_histories' 
         }, 
         (payload) => {
-          console.log('New chat history entry detected:', payload);
+          console.log('New n8n chat history entry detected:', payload);
           
-          const sessionId = (payload.new as any).remotejid;
+          const sessionId = (payload.new as any).session_id;
           console.log(`Processing message for session: ${sessionId}`);
           
           // First update the last message in the conversation list
@@ -39,10 +39,10 @@ export function useRealtimeUpdates({
       )
       .subscribe();
       
-    console.log('Realtime subscription established');
+    console.log('N8N Realtime subscription established');
       
     return () => {
-      console.log('Cleaning up realtime subscription');
+      console.log('Cleaning up n8n realtime subscription');
       subscription.unsubscribe();
     };
   }, [updateConversationLastMessage, fetchConversations]);
