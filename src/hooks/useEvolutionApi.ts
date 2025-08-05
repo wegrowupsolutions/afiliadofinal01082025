@@ -168,19 +168,31 @@ export const useEvolutionApi = () => {
         console.log('Phone number:', responseData.instance?.owner || responseData.owner);
         
         try {
-          const { error } = await supabase.rpc('mark_instance_connected', {
+          console.log('Iniciando chamada RPC mark_instance_connected...');
+          console.log('Parâmetros RPC:', {
+            p_user_id: userData.user?.id || '',
+            p_instance_name: instanceName.trim(),
+            p_phone_number: responseData.instance?.owner || responseData.owner || null
+          });
+          
+          const { data, error } = await supabase.rpc('mark_instance_connected', {
             p_user_id: userData.user?.id || '',
             p_instance_name: instanceName.trim(),
             p_phone_number: responseData.instance?.owner || responseData.owner || null
           });
 
+          console.log('Resposta RPC:', { data, error });
+
           if (error) {
             console.error('Erro ao atualizar status no Supabase:', error);
+            console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
           } else {
             console.log('Instância salva com sucesso no Supabase');
+            console.log('Dados retornados:', data);
           }
         } catch (rpcError) {
-          console.error('Erro na chamada RPC:', rpcError);
+          console.error('Erro na chamada RPC (catch):', rpcError);
+          console.error('Stack trace:', rpcError instanceof Error ? rpcError.stack : 'N/A');
         }
 
         return true;
