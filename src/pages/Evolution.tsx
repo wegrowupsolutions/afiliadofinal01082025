@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ConnectedInstancesList } from '@/components/evolution/ConnectedInstancesList';
+import { EvolutionEndpointsStatus } from '@/components/evolution/EvolutionEndpointsStatus';
+import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 
 const Evolution = () => {
   const navigate = useNavigate();
@@ -24,6 +27,13 @@ const Evolution = () => {
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
+  
+  // Usar o hook useEvolutionApi para APIs
+  const { 
+    createInstance: createEvolutionInstance, 
+    updateQrCode: updateEvolutionQrCode, 
+    checkConnectionStatus: checkEvolutionConnectionStatus 
+  } = useEvolutionApi();
   
   useEffect(() => {
     const checkExistingInstance = async () => {
@@ -172,7 +182,7 @@ const Evolution = () => {
                 description: "Não foi possível conectar após várias tentativas. Obtendo novo QR code...",
                 variant: "destructive"
               });
-              updateQrCode(); // Automatically get a new QR code
+              handleUpdateQrCode(); // Automatically get a new QR code
             } else {
               console.log(`Retrying... (${retryCountRef.current}/${maxRetries})`);
               toast({
@@ -215,59 +225,56 @@ const Evolution = () => {
     }
   };
   
-  const updateQrCode = async () => {
+  const handleUpdateQrCode = async () => {
     try {
       setIsLoading(true);
-      console.log('Updating QR code for instance:', instanceName);
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          instanceName: instanceName.trim() 
-        }),
-      });
+      console.log('🔄 Atualizando QR code usando useEvolutionApi:', instanceName.trim());
       
-      console.log('QR code update response status:', response.status);
+      const blob = await updateEvolutionQrCode(instanceName.trim());
       
-      if (response.ok) {
-        const blob = await response.blob();
-        console.log('Received blob content type:', blob.type);
-        
+      if (blob) {
         const qrCodeUrl = URL.createObjectURL(blob);
         setQrCodeData(qrCodeUrl);
         setConfirmationStatus('waiting');
-        retryCountRef.current = 0; // Reset retry counter when getting new QR code
-        console.log('QR code updated successfully');
+        retryCountRef.current = 0;
         
         if (statusCheckIntervalRef.current !== null) {
           clearInterval(statusCheckIntervalRef.current);
         }
         
-        console.log('Starting new polling interval');
-        statusCheckIntervalRef.current = window.setInterval(() => {
-          checkConnectionStatus();
+        console.log('✅ Reiniciando verificação de status');
+        statusCheckIntervalRef.current = window.setInterval(async () => {
+          try {
+            const isConnected = await checkEvolutionConnectionStatus(instanceName.trim());
+            if (isConnected) {
+              clearInterval(statusCheckIntervalRef.current!);
+              statusCheckIntervalRef.current = null;
+              setConfirmationStatus('confirmed');
+              setConnectedInstance({
+                instance_name: instanceName.trim(),
+                phone_number: undefined
+              });
+              
+              toast({
+                title: "Conexão estabelecida!",
+                description: "Seu WhatsApp foi conectado com sucesso.",
+              });
+            }
+          } catch (error) {
+            console.error('Erro na verificação de status:', error);
+          }
         }, 10000);
         
         toast({
           title: "QR Code atualizado",
           description: "Escaneie o novo QR code para conectar seu WhatsApp.",
         });
-      } else {
-        const errorText = await response.text();
-        console.error('Falha ao atualizar QR code:', errorText);
-        toast({
-          title: "Erro",
-          description: "Não foi possível atualizar o QR code. Tente novamente.",
-          variant: "destructive"
-        });
       }
     } catch (error) {
-      console.error('Erro ao atualizar QR code:', error);
+      console.error('❌ Erro ao atualizar QR code:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao atualizar o QR code.",
+        description: "Não foi possível atualizar o QR code. Tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -288,26 +295,13 @@ const Evolution = () => {
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
-    retryCountRef.current = 0; // Reset retry counter for new instance creation
+    retryCountRef.current = 0;
     
     try {
-      console.log('Creating instance with name:', instanceName);
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          instanceName: instanceName.trim() 
-        }),
-      });
+      console.log('🚀 Criando instância usando useEvolutionApi:', instanceName.trim());
+      const blob = await createEvolutionInstance(instanceName.trim());
       
-      console.log('Create instance response status:', response.status);
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        console.log('Received blob content type:', blob.type);
-        
+      if (blob) {
         const qrCodeUrl = URL.createObjectURL(blob);
         setQrCodeData(qrCodeUrl);
         setConfirmationStatus('waiting');
@@ -316,22 +310,36 @@ const Evolution = () => {
           clearInterval(statusCheckIntervalRef.current);
         }
         
-        console.log('Starting status checking interval');
-        statusCheckIntervalRef.current = window.setInterval(() => {
-          checkConnectionStatus();
+        console.log('✅ Iniciando verificação de status a cada 10 segundos');
+        statusCheckIntervalRef.current = window.setInterval(async () => {
+          try {
+            const isConnected = await checkEvolutionConnectionStatus(instanceName.trim());
+            if (isConnected) {
+              clearInterval(statusCheckIntervalRef.current!);
+              statusCheckIntervalRef.current = null;
+              setConfirmationStatus('confirmed');
+              setConnectedInstance({
+                instance_name: instanceName.trim(),
+                phone_number: undefined
+              });
+              
+              toast({
+                title: "Conexão estabelecida!",
+                description: "Seu WhatsApp foi conectado com sucesso.",
+              });
+            }
+          } catch (error) {
+            console.error('Erro na verificação de status:', error);
+          }
         }, 10000);
         
         toast({
           title: "Instância criada!",
           description: "Escaneie o QR code para conectar seu WhatsApp.",
         });
-      } else {
-        const errorText = await response.text();
-        console.error('Falha ao criar instância:', errorText);
-        throw new Error('Falha ao criar instância');
       }
     } catch (error) {
-      console.error('Erro ao criar instância:', error);
+      console.error('❌ Erro ao criar instância:', error);
       toast({
         title: "Erro",
         description: "Não foi possível criar a instância. Tente novamente.",
@@ -592,6 +600,12 @@ const Evolution = () => {
               )}
             </CardContent>
           </Card>
+        </div>
+        
+        {/* Lista de Instâncias Conectadas */}
+        <div className="max-w-4xl mx-auto mt-8 space-y-6">
+          <ConnectedInstancesList />
+          <EvolutionEndpointsStatus />
         </div>
       </main>
     </div>

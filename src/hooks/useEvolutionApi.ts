@@ -8,20 +8,26 @@ export const useEvolutionApi = () => {
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
 
   const getEvolutionEndpoint = (type: 'instance' | 'qr_code' | 'confirm') => {
-    const baseUrl = configurations['evolution_api_url'] || 'https://evolution-api.serverwegrowup.com.br';
-    const apiKey = configurations['evolution_api_key'];
-    
-    if (!apiKey) {
-      console.warn('Evolution API Key não configurada');
-    }
+    console.log('🔗 Obtendo endpoint Evolution para:', type);
+    console.log('📋 Configurações disponíveis:', {
+      webhook_instancia_evolution: configurations['webhook_instancia_evolution'],
+      webhook_atualizar_qr_code: configurations['webhook_atualizar_qr_code'],
+      webhook_confirma: configurations['webhook_confirma']
+    });
     
     switch (type) {
       case 'instance':
-        return 'https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado';
+        const instanceUrl = configurations['webhook_instancia_evolution'] || 'https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado';
+        console.log('✅ Endpoint instance:', instanceUrl);
+        return instanceUrl;
       case 'qr_code':
-        return 'https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado';
+        const qrUrl = configurations['webhook_atualizar_qr_code'] || 'https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado';
+        console.log('✅ Endpoint qr_code:', qrUrl);
+        return qrUrl;
       case 'confirm':
-        return 'https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado';
+        const confirmUrl = configurations['webhook_confirma'] || 'https://webhook.serverwegrowup.com.br/webhook/pop-up';
+        console.log('✅ Endpoint confirm:', confirmUrl);
+        return confirmUrl;
       default:
         throw new Error(`Tipo de endpoint inválido: ${type}`);
     }
@@ -47,10 +53,12 @@ export const useEvolutionApi = () => {
       console.log('Criando instância Evolution:', { instanceName });
       
       const endpoint = getEvolutionEndpoint('instance');
-      const webhookUrl = 'https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado';
+      const webhookUrl = configurations['webhook_mensagem'] || 'https://webhook.serverwegrowup.com.br/webhook/envia_mensagem-afiliado';
       
-      console.log('Usando endpoint:', endpoint);
-      console.log('Webhook URL:', webhookUrl);
+      console.log('🚀 Criando instância Evolution');
+      console.log('📍 Endpoint:', endpoint);
+      console.log('🔗 Webhook URL:', webhookUrl);
+      console.log('📝 Nome da instância:', instanceName.trim());
       
       const requestBody = {
         instanceName: instanceName.trim(),
@@ -97,12 +105,17 @@ export const useEvolutionApi = () => {
       setIsConnecting(true);
       console.log('Atualizando QR Code para instância:', instanceName);
       
-      const endpoint = `${getEvolutionEndpoint('qr_code')}/${instanceName.trim()}`;
-      console.log('Usando endpoint:', endpoint);
+      const endpoint = getEvolutionEndpoint('qr_code');
+      console.log('🔄 Atualizando QR Code');
+      console.log('📍 Endpoint:', endpoint);
+      console.log('📝 Nome da instância:', instanceName.trim());
       
       const response = await fetch(endpoint, {
-        method: 'GET',
+        method: 'POST',
         headers: getHeaders(),
+        body: JSON.stringify({ 
+          instanceName: instanceName.trim() 
+        }),
       });
 
       if (!response.ok) {
@@ -127,12 +140,17 @@ export const useEvolutionApi = () => {
     try {
       console.log('Verificando status da conexão para:', instanceName);
       
-      const endpoint = `${getEvolutionEndpoint('confirm')}/${instanceName.trim()}`;
-      console.log('Usando endpoint:', endpoint);
+      const endpoint = getEvolutionEndpoint('confirm');
+      console.log('🔍 Verificando status da conexão');
+      console.log('📍 Endpoint:', endpoint);
+      console.log('📝 Nome da instância:', instanceName.trim());
       
       const response = await fetch(endpoint, {
-        method: 'GET',
+        method: 'POST',
         headers: getHeaders(),
+        body: JSON.stringify({ 
+          instanceName: instanceName.trim() 
+        }),
       });
 
       if (!response.ok) {
