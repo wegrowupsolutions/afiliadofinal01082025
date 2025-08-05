@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check } from 'lucide-react';
+import { ArrowLeft, Link, PawPrint, Plus, QrCode, Loader2, RefreshCw, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,6 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const Evolution = () => {
   const navigate = useNavigate();
@@ -19,114 +18,22 @@ const Evolution = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
-  const [connectedInstance, setConnectedInstance] = useState<{instance_name: string, phone_number?: string} | null>(null);
-  const [statusInfo, setStatusInfo] = useState<any>(null);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
   
   useEffect(() => {
-    const checkExistingInstance = async () => {
-      try {
-        console.log('Current user from context:', user);
-        if (!user?.email) {
-          console.log('No user email available yet');
-          return;
-        }
-
-        // Usar edge function para buscar instâncias conectadas
-        const { data: functionData, error: functionError } = await supabase.functions
-          .invoke('get-user-evolution-instance', {
-            body: { userEmail: user.email }
-          });
-
-        if (functionError) {
-          console.error('Erro ao chamar função de busca:', functionError);
-          return;
-        }
-
-        console.log('Function response:', functionData);
-
-        if (functionData?.connectedInstance) {
-          console.log('Found connected instance:', functionData.connectedInstance);
-          
-          // Verificar se a Evolution API está realmente ativa
-          try {
-            const { data: statusData, error: statusError } = await supabase.functions
-              .invoke('check-evolution-status', {
-                body: { 
-                  userEmail: user.email,
-                  instanceName: functionData.connectedInstance.instance_name 
-                }
-              });
-
-            if (!statusError && statusData?.evolutionApi?.available) {
-              console.log('Evolution API is available, keeping connected instance');
-              setConnectedInstance(functionData.connectedInstance);
-            } else {
-              console.log('Evolution API is not available, removing connected instance');
-              setConnectedInstance(null);
-              
-              // Marcar instância como desconectada no banco
-              const { data: kiwifyUser } = await supabase
-                .from('kiwify')
-                .select('id')
-                .eq('email', user.email)
-                .single();
-
-              if (kiwifyUser) {
-                await supabase
-                  .from('evolution_instances')
-                  .update({
-                    is_connected: false,
-                    disconnected_at: new Date().toISOString()
-                  })
-                  .eq('id', kiwifyUser.id)
-                  .eq('instance_name', functionData.connectedInstance.instance_name);
-              }
-              
-              toast({
-                title: "Conexão perdida",
-                description: "A conexão com a Evolution API foi perdida. Crie uma nova instância.",
-                variant: "destructive"
-              });
-            }
-          } catch (error) {
-            console.error('Erro ao verificar Evolution API:', error);
-            // Se não conseguir verificar, manter instância mas mostrar aviso
-            setConnectedInstance(functionData.connectedInstance);
-            toast({
-              title: "Aviso",
-              description: "Não foi possível verificar o status da Evolution API.",
-              variant: "destructive"
-            });
-          }
-        } else {
-          console.log('No connected instances found for user');
-          setConnectedInstance(null);
-        }
-      } catch (error) {
-        console.error('Erro ao verificar instância conectada:', error);
-      }
-    };
-
-    // Só executa se o usuário estiver carregado
-    if (user?.email) {
-      checkExistingInstance();
-    }
-    
     return () => {
       if (statusCheckIntervalRef.current !== null) {
         clearInterval(statusCheckIntervalRef.current);
       }
     };
-  }, [user?.email, toast]); // Dependência específica do user.email e toast
+  }, []);
   
   const checkConnectionStatus = async () => {
     try {
       console.log('Checking connection status for:', instanceName);
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado', {
+      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/confirma', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,53 +74,6 @@ const Evolution = () => {
             }
             setConfirmationStatus('confirmed');
             retryCountRef.current = 0; // Reset retry counter on success
-            
-            // Salvar instância conectada no banco usando ID do Kiwify
-            if (user?.email && instanceName) {
-              try {
-                console.log('Salvando instância conectada para usuário:', user.email);
-                console.log('Nome da instância:', instanceName.trim());
-
-                // Buscar usuário Kiwify
-                const { data: kiwifyUser, error: kiwifyError } = await supabase
-                  .from('kiwify')
-                  .select('id')
-                  .eq('email', user.email)
-                  .maybeSingle();
-
-                console.log('Usuário Kiwify encontrado:', { kiwifyUser, kiwifyError });
-
-                if (!kiwifyError && kiwifyUser) {
-                  console.log('Atualizando instância para id:', kiwifyUser.id);
-                  const { error: saveError } = await supabase
-                    .from('evolution_instances')
-                    .upsert({
-                      id: kiwifyUser.id,
-                      instance_name: instanceName.trim(),
-                      is_connected: true,
-                      connected_at: new Date().toISOString(),
-                      phone_number: '+5511910362476', // Número conectado
-                      updated_at: new Date().toISOString()
-                    });
-                  
-                  if (saveError) {
-                    console.error('Erro ao salvar instância conectada:', saveError);
-                  } else {
-                    console.log('Instância salva com sucesso no banco com ID Kiwify:', kiwifyUser.id);
-                    // Atualizar o estado local
-                    setConnectedInstance({
-                      instance_name: instanceName.trim(),
-                      phone_number: '+5511910362476'
-                    });
-                  }
-                } else {
-                  console.error('Usuário Kiwify não encontrado para email:', user.email);
-                }
-              } catch (error) {
-                console.error('Erro ao salvar instância:', error);
-              }
-            }
-            
             toast({
               title: "Conexão estabelecida!",
               description: "Seu WhatsApp foi conectado com sucesso.",
@@ -283,7 +143,7 @@ const Evolution = () => {
     try {
       setIsLoading(true);
       console.log('Updating QR code for instance:', instanceName);
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado', {
+      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/atualizar-qr-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -349,15 +209,6 @@ const Evolution = () => {
       return;
     }
 
-    if (!user?.email) {
-      toast({
-        title: "Erro de autenticação",
-        description: "Email do usuário não encontrado. Faça login novamente.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
@@ -365,9 +216,7 @@ const Evolution = () => {
     
     try {
       console.log('Creating instance with name:', instanceName);
-      console.log('User email:', user.email);
-      
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado', {
+      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/instanciaevolution', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -386,41 +235,6 @@ const Evolution = () => {
         const qrCodeUrl = URL.createObjectURL(blob);
         setQrCodeData(qrCodeUrl);
         setConfirmationStatus('waiting');
-        
-        // Salvar instância criada no banco de dados
-        try {
-          console.log('Buscando usuário Kiwify com email:', user.email);
-          const { data: kiwifyUser, error: kiwifyError } = await supabase
-            .from('kiwify')
-            .select('id')
-            .eq('email', user.email)
-            .maybeSingle();
-
-          console.log('Resultado da busca Kiwify:', { kiwifyUser, kiwifyError });
-
-          if (!kiwifyError && kiwifyUser) {
-            console.log('Salvando instância para id:', kiwifyUser.id);
-            const { error: saveError } = await supabase
-              .from('evolution_instances')
-              .insert({
-                id: kiwifyUser.id,
-                instance_name: instanceName.trim(),
-                is_connected: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-            
-            if (saveError) {
-              console.error('Erro ao salvar instância no banco:', saveError);
-            } else {
-              console.log('Instância salva no banco com sucesso:', instanceName.trim());
-            }
-          } else {
-            console.error('Usuário Kiwify não encontrado:', kiwifyError || 'Usuário não existe');
-          }
-        } catch (dbError) {
-          console.error('Erro ao acessar banco de dados:', dbError);
-        }
         
         if (statusCheckIntervalRef.current !== null) {
           clearInterval(statusCheckIntervalRef.current);
@@ -453,52 +267,6 @@ const Evolution = () => {
     }
   };
 
-  const syncCurrentInstance = async () => {
-    try {
-      const { data: kiwifyUser, error: kiwifyError } = await supabase
-        .from('kiwify')
-        .select('id')
-        .eq('email', user?.email)
-        .single();
-
-      if (kiwifyError || !kiwifyUser) {
-        console.error('Erro ao buscar usuário Kiwify:', kiwifyError);
-        return;
-      }
-
-      const { error: saveError } = await supabase
-        .from('evolution_instances')
-        .upsert({
-          id: kiwifyUser.id,
-          instance_name: 'teste1955',
-          phone_number: '+5511910362476',
-          is_connected: true,
-          connected_at: new Date().toISOString()
-        });
-
-      if (saveError) {
-        console.error('Erro ao sincronizar instância:', saveError);
-        toast({
-          title: "Erro",
-          description: "Não foi possível sincronizar a instância.",
-          variant: "destructive"
-        });
-      } else {
-        console.log('Instância sincronizada com sucesso');
-        setConnectedInstance({
-          instance_name: 'teste1955',
-          phone_number: '+5511910362476'
-        });
-        toast({
-          title: "Sucesso",
-          description: "Instância sincronizada com sucesso!",
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao sincronizar:', error);
-    }
-  };
-
   const handleTryAgain = () => {
     setIsLoading(true);
     setQrCodeData(null);
@@ -516,55 +284,6 @@ const Evolution = () => {
       statusCheckIntervalRef.current = null;
     }
   };
-
-  const checkEvolutionStatus = async () => {
-    if (!connectedInstance?.instance_name || !user?.email) {
-      toast({
-        title: "Erro",
-        description: "Instância ou email do usuário não encontrado.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsCheckingStatus(true);
-    try {
-      const { data: statusData, error: statusError } = await supabase.functions
-        .invoke('check-evolution-status', {
-          body: { 
-            userEmail: user.email,
-            instanceName: connectedInstance.instance_name 
-          }
-        });
-
-      if (statusError) {
-        console.error('Erro ao verificar status:', statusError);
-        toast({
-          title: "Erro",
-          description: "Não foi possível verificar o status da conexão.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('Status verificado:', statusData);
-      setStatusInfo(statusData);
-      
-      toast({
-        title: "Status verificado",
-        description: "Informações da conexão atualizadas com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao verificar status:', error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao verificar o status.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCheckingStatus(false);
-    }
-  };
   
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
@@ -579,8 +298,8 @@ const Evolution = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Bot className="h-8 w-8 text-petshop-gold" />
-            <h1 className="text-2xl font-bold">Afiliado AI</h1>
+            <PawPrint className="h-8 w-8 text-petshop-gold" />
+            <h1 className="text-2xl font-bold">Pet Paradise</h1>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="bg-white/10 text-white border-0 px-3 py-1">
@@ -599,136 +318,7 @@ const Evolution = () => {
           </h2>
         </div>
         
-        
         <div className="max-w-xl mx-auto">
-          {connectedInstance && !qrCodeData && confirmationStatus !== 'confirmed' && (
-            <Card className="dark:bg-gray-800 shadow-lg border-green-200 dark:border-green-900/30 mb-6 bg-green-50 dark:bg-green-950/20">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
-                    <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
-                  </div>
-                  <h3 className="text-xl font-medium text-gray-900 dark:text-white">WhatsApp Conectado</h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Você já possui uma instância <span className="font-semibold text-green-700 dark:text-green-400">{connectedInstance.instance_name}</span> conectada
-                    {connectedInstance.phone_number && (
-                      <span> ao número <span className="font-semibold text-green-700 dark:text-green-400">{connectedInstance.phone_number}</span></span>
-                    )}.
-                  </p>
-                   <div className="flex gap-3 justify-center">
-                    <Button 
-                      onClick={() => navigate('/chats')}
-                      variant="default"
-                      className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
-                    >
-                      Ir para Conversas
-                    </Button>
-                    <Button 
-                      onClick={checkEvolutionStatus}
-                      variant="outline"
-                      disabled={isCheckingStatus}
-                      className="border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20"
-                    >
-                      {isCheckingStatus ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Verificando...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          Verificar Status
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      onClick={() => setConnectedInstance(null)}
-                      variant="outline"
-                      className="border-green-300 dark:border-green-600 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20"
-                    >
-                      Criar Nova Instância
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {statusInfo && (
-            <Card className="dark:bg-gray-800 shadow-lg border-blue-200 dark:border-blue-900/30 mb-6 bg-blue-50 dark:bg-blue-950/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                  <RefreshCw className="h-5 w-5" />
-                  Status da Conexão e Webhooks
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900 dark:text-white">Status no Banco de Dados</h4>
-                    <div className="bg-white dark:bg-gray-700 p-3 rounded border">
-                      {statusInfo.database?.status ? (
-                        <div className="space-y-1 text-sm">
-                          <p><span className="font-medium">Conectado:</span> {statusInfo.database.status.is_connected ? '✅ Sim' : '❌ Não'}</p>
-                          <p><span className="font-medium">Data Conexão:</span> {new Date(statusInfo.database.status.connected_at).toLocaleString('pt-BR')}</p>
-                          <p><span className="font-medium">Telefone:</span> {statusInfo.database.status.phone_number || 'N/A'}</p>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">Não encontrado no banco</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900 dark:text-white">Status Evolution API</h4>
-                    <div className="bg-white dark:bg-gray-700 p-3 rounded border">
-                      {statusInfo.evolutionApi?.available ? (
-                        statusInfo.evolutionApi.status ? (
-                          <div className="space-y-1 text-sm">
-                            <p><span className="font-medium">Status:</span> {statusInfo.evolutionApi.status.instance?.state || 'N/A'}</p>
-                            <p><span className="font-medium">API:</span> ✅ Disponível</p>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-gray-500">Status não disponível</p>
-                        )
-                      ) : (
-                        <p className="text-sm text-red-500">❌ API indisponível</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="font-medium text-gray-900 dark:text-white">Links dos Webhooks</h4>
-                  <div className="bg-white dark:bg-gray-700 p-3 rounded border space-y-2">
-                     <div className="text-sm">
-                       <p className="font-medium text-gray-700 dark:text-gray-300">Mensagens:</p>
-                       <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
-                         https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado
-                       </code>
-                     </div>
-                     <div className="text-sm">
-                       <p className="font-medium text-gray-700 dark:text-gray-300">Status:</p>
-                       <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
-                         {statusInfo.webhookUrls?.status}
-                       </code>
-                     </div>
-                     <div className="text-sm">
-                       <p className="font-medium text-gray-700 dark:text-gray-300">QR Code:</p>
-                       <code className="text-xs bg-gray-100 dark:bg-gray-600 p-1 rounded block break-all">
-                         https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado
-                       </code>
-                     </div>
-                  </div>
-                </div>
-                
-                <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  Última verificação: {new Date(statusInfo.checkTime).toLocaleString('pt-BR')}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
           <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
