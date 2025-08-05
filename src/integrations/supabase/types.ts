@@ -683,6 +683,15 @@ export type Database = {
         Args: { lead_remotejid: string }
         Returns: boolean
       }
+      validate_kiwify_user_sync: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          kiwify_email: string
+          kiwify_user_id: string
+          auth_user_id: string
+          is_synced: boolean
+        }[]
+      }
     }
     Enums: {
       afiliado_status: "ativo" | "inativo" | "pendente"
