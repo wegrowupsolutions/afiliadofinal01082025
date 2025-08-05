@@ -377,6 +377,37 @@ const Evolution = () => {
         setQrCodeData(qrCodeUrl);
         setConfirmationStatus('waiting');
         
+        // Salvar instância criada no banco de dados
+        try {
+          const { data: kiwifyUser, error: kiwifyError } = await supabase
+            .from('kiwify')
+            .select('id')
+            .eq('email', user?.email)
+            .maybeSingle();
+
+          if (!kiwifyError && kiwifyUser) {
+            const { error: saveError } = await supabase
+              .from('evolution_instances')
+              .insert({
+                user_id: kiwifyUser.id.toString(),
+                instance_name: instanceName.trim(),
+                is_connected: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            
+            if (saveError) {
+              console.error('Erro ao salvar instância no banco:', saveError);
+            } else {
+              console.log('Instância salva no banco com sucesso:', instanceName.trim());
+            }
+          } else {
+            console.error('Usuário Kiwify não encontrado:', kiwifyError);
+          }
+        } catch (dbError) {
+          console.error('Erro ao acessar banco de dados:', dbError);
+        }
+        
         if (statusCheckIntervalRef.current !== null) {
           clearInterval(statusCheckIntervalRef.current);
         }
