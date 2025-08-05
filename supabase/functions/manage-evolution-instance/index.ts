@@ -15,26 +15,36 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Usar service role key
     )
 
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
-    
-    // Get user from token
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-    
-    if (authError || !user) {
-      console.error('Auth error:', authError)
+    const { action, instanceName, phoneNumber, userEmail } = await req.json()
+    console.log('Received request:', { action, instanceName, userEmail })
+
+    if (!userEmail) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'userEmail is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const { action, instanceName, phoneNumber } = await req.json()
-    console.log('User email:', user.email)
-    console.log('Action:', action, 'Instance:', instanceName)
+    // Buscar o usuário pelo email na tabela profiles
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('id, email')
+      .eq('email', userEmail)
+      .single()
+
+    if (profileError || !profileData) {
+      console.error('Profile not found:', profileError)
+      return new Response(
+        JSON.stringify({ error: 'User profile not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userId = profileData.id
+    console.log('Found user:', userId, userEmail)
 
     switch (action) {
       case 'create':
@@ -42,7 +52,7 @@ serve(async (req) => {
         const { error: insertError } = await supabaseClient
           .from('evolution_instances')
           .insert({
-            user_id: user.id,
+            user_id: userId,
             instance_name: instanceName,
             phone_number: phoneNumber,
             is_connected: false
@@ -56,6 +66,7 @@ serve(async (req) => {
           )
         }
 
+        console.log('Instance created successfully')
         return new Response(
           JSON.stringify({ success: true, message: 'Instance created successfully' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -71,7 +82,7 @@ serve(async (req) => {
             phone_number: phoneNumber,
             disconnected_at: null
           })
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('instance_name', instanceName)
         
         if (updateError) {
@@ -82,6 +93,7 @@ serve(async (req) => {
           )
         }
 
+        console.log('Instance connected successfully')
         return new Response(
           JSON.stringify({ success: true, message: 'Instance connected successfully' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -95,7 +107,7 @@ serve(async (req) => {
             is_connected: false,
             disconnected_at: new Date().toISOString()
           })
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('instance_name', instanceName)
         
         if (disconnectError) {
@@ -106,6 +118,7 @@ serve(async (req) => {
           )
         }
 
+        console.log('Instance disconnected successfully')
         return new Response(
           JSON.stringify({ success: true, message: 'Instance disconnected successfully' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -116,7 +129,7 @@ serve(async (req) => {
         const { data: instances, error: listError } = await supabaseClient
           .from('evolution_instances')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .order('created_at', { ascending: false })
         
         if (listError) {
@@ -127,6 +140,7 @@ serve(async (req) => {
           )
         }
 
+        console.log('Instances listed successfully:', instances?.length || 0)
         return new Response(
           JSON.stringify({ instances }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

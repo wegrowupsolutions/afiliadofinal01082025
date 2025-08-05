@@ -37,14 +37,14 @@ const Evolution = () => {
   }, [user]);
 
   const loadUserInstances = async () => {
-    if (!session?.access_token) return;
+    if (!user?.email) return;
     
     try {
       const { data, error } = await supabase.functions.invoke('manage-evolution-instance', {
-        body: { action: 'list' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        body: { 
+          action: 'list',
+          userEmail: user.email
+        }
       });
 
       if (error) throw error;
@@ -99,16 +99,14 @@ const Evolution = () => {
             }
             
             // Marcar instância como conectada no banco
-            if (session?.access_token) {
+            if (user?.email) {
               await supabase.functions.invoke('manage-evolution-instance', {
                 body: { 
                   action: 'connect', 
                   instanceName: instanceName.trim(),
-                  phoneNumber: responseData.phoneNumber || null
-                },
-                headers: {
-                  Authorization: `Bearer ${session.access_token}`,
-                },
+                  phoneNumber: responseData.phoneNumber || null,
+                  userEmail: user.email
+                }
               });
             }
             
@@ -251,7 +249,7 @@ const Evolution = () => {
       return;
     }
 
-    if (!session?.access_token) {
+    if (!user?.email) {
       toast({
         title: "Erro de autenticação",
         description: "Usuário não autenticado.",
@@ -272,11 +270,9 @@ const Evolution = () => {
       const { error: createError } = await supabase.functions.invoke('manage-evolution-instance', {
         body: { 
           action: 'create', 
-          instanceName: instanceName.trim()
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+          instanceName: instanceName.trim(),
+          userEmail: user.email
+        }
       });
 
       if (createError) {
@@ -357,17 +353,15 @@ const Evolution = () => {
   };
 
   const disconnectInstance = async (instance: any) => {
-    if (!session?.access_token) return;
+    if (!user?.email) return;
     
     try {
       await supabase.functions.invoke('manage-evolution-instance', {
         body: { 
           action: 'disconnect', 
-          instanceName: instance.instance_name
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+          instanceName: instance.instance_name,
+          userEmail: user.email
+        }
       });
       
       loadUserInstances();
