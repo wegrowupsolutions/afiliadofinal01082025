@@ -151,7 +151,13 @@ export const useEvolutionApi = () => {
       }
 
       // Evolution API retorna diferentes formatos dependendo do status
-      if (responseData && (responseData.state === "open" || responseData.status === "open" || responseData.instance?.state === "open")) {
+      // Verificar resposta "positivo" do webhook
+      if (responseData && (
+        responseData.respond === "positivo" ||
+        responseData.state === "open" || 
+        responseData.status === "open" || 
+        responseData.instance?.state === "open"
+      )) {
         console.log('Conexão confirmada!');
         setConnectionStatus('connected');
         
