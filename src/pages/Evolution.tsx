@@ -171,24 +171,20 @@ const Evolution = () => {
             // Salvar instância conectada no banco usando ID do Kiwify
             if (user?.email && instanceName) {
               try {
-                // Chamar edge function para inserir na tabela
-                const { data: functionResult, error: functionError } = await supabase.functions
-                  .invoke('insert-evolution-instance');
+                console.log('Salvando instância conectada para usuário:', user.email);
+                console.log('Nome da instância:', instanceName.trim());
 
-                if (functionError) {
-                  console.error('Erro ao chamar função de inserção:', functionError);
-                } else {
-                  console.log('Instância inserida via edge function:', functionResult);
-                }
-
-                // Fallback: tentar inserir diretamente
+                // Buscar usuário Kiwify
                 const { data: kiwifyUser, error: kiwifyError } = await supabase
                   .from('kiwify')
                   .select('id')
                   .eq('email', user.email)
-                  .single();
+                  .maybeSingle();
+
+                console.log('Usuário Kiwify encontrado:', { kiwifyUser, kiwifyError });
 
                 if (!kiwifyError && kiwifyUser) {
+                  console.log('Atualizando instância para user_id:', kiwifyUser.id.toString());
                   const { error: saveError } = await supabase
                     .from('evolution_instances')
                     .upsert({
@@ -196,7 +192,8 @@ const Evolution = () => {
                       instance_name: instanceName.trim(),
                       is_connected: true,
                       connected_at: new Date().toISOString(),
-                      phone_number: '+5511910362476' // Número conectado
+                      phone_number: '+5511910362476', // Número conectado
+                      updated_at: new Date().toISOString()
                     });
                   
                   if (saveError) {
@@ -209,6 +206,8 @@ const Evolution = () => {
                       phone_number: '+5511910362476'
                     });
                   }
+                } else {
+                  console.error('Usuário Kiwify não encontrado para email:', user.email);
                 }
               } catch (error) {
                 console.error('Erro ao salvar instância:', error);
@@ -350,6 +349,15 @@ const Evolution = () => {
       return;
     }
 
+    if (!user?.email) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Email do usuário não encontrado. Faça login novamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
@@ -357,6 +365,8 @@ const Evolution = () => {
     
     try {
       console.log('Creating instance with name:', instanceName);
+      console.log('User email:', user.email);
+      
       const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado', {
         method: 'POST',
         headers: {
@@ -379,13 +389,17 @@ const Evolution = () => {
         
         // Salvar instância criada no banco de dados
         try {
+          console.log('Buscando usuário Kiwify com email:', user.email);
           const { data: kiwifyUser, error: kiwifyError } = await supabase
             .from('kiwify')
             .select('id')
-            .eq('email', user?.email)
+            .eq('email', user.email)
             .maybeSingle();
 
+          console.log('Resultado da busca Kiwify:', { kiwifyUser, kiwifyError });
+
           if (!kiwifyError && kiwifyUser) {
+            console.log('Salvando instância para user_id:', kiwifyUser.id.toString());
             const { error: saveError } = await supabase
               .from('evolution_instances')
               .insert({
@@ -402,7 +416,7 @@ const Evolution = () => {
               console.log('Instância salva no banco com sucesso:', instanceName.trim());
             }
           } else {
-            console.error('Usuário Kiwify não encontrado:', kiwifyError);
+            console.error('Usuário Kiwify não encontrado:', kiwifyError || 'Usuário não existe');
           }
         } catch (dbError) {
           console.error('Erro ao acessar banco de dados:', dbError);
