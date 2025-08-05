@@ -384,6 +384,7 @@ export type Database = {
           remojid: string | null
           senha_alterada: boolean | null
           telefone: string | null
+          user_id: string | null
         }
         Insert: {
           connected_at?: string | null
@@ -400,6 +401,7 @@ export type Database = {
           remojid?: string | null
           senha_alterada?: boolean | null
           telefone?: string | null
+          user_id?: string | null
         }
         Update: {
           connected_at?: string | null
@@ -416,6 +418,7 @@ export type Database = {
           remojid?: string | null
           senha_alterada?: boolean | null
           telefone?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
