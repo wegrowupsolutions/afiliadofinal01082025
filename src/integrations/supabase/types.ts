@@ -271,7 +271,7 @@ export type Database = {
           connected_at: string | null
           created_at: string
           disconnected_at: string | null
-          id: string
+          id: number | null
           instance_name: string
           is_connected: boolean
           phone_number: string | null
@@ -282,7 +282,7 @@ export type Database = {
           connected_at?: string | null
           created_at?: string
           disconnected_at?: string | null
-          id?: string
+          id?: number | null
           instance_name: string
           is_connected?: boolean
           phone_number?: string | null
@@ -293,7 +293,7 @@ export type Database = {
           connected_at?: string | null
           created_at?: string
           disconnected_at?: string | null
-          id?: string
+          id?: number | null
           instance_name?: string
           is_connected?: boolean
           phone_number?: string | null
