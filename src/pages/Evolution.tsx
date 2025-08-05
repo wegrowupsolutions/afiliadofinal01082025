@@ -109,6 +109,35 @@ const Evolution = () => {
             }
             setConfirmationStatus('confirmed');
             retryCountRef.current = 0; // Reset retry counter on success
+            
+            // Salvar dados no Supabase
+            try {
+              console.log('Salvando dados da instância no Supabase...');
+              const { error } = await supabase.rpc('mark_instance_connected', {
+                p_user_id: user?.id,
+                p_instance_name: instanceName.trim(),
+                p_phone_number: null // Será atualizado posteriormente se disponível
+              });
+              
+              if (error) {
+                console.error('Erro ao salvar dados no Supabase:', error);
+                toast({
+                  title: "Aviso",
+                  description: "Conexão estabelecida, mas houve um problema ao salvar os dados.",
+                  variant: "destructive"
+                });
+              } else {
+                console.log('Dados salvos com sucesso no Supabase');
+                // Atualizar estado local para mostrar instância conectada
+                setConnectedInstance({
+                  instance_name: instanceName.trim(),
+                  phone_number: undefined
+                });
+              }
+            } catch (error) {
+              console.error('Erro ao chamar RPC mark_instance_connected:', error);
+            }
+            
             toast({
               title: "Conexão estabelecida!",
               description: "Seu WhatsApp foi conectado com sucesso.",
