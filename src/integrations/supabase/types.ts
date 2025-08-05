@@ -95,30 +95,6 @@ export type Database = {
         }
         Relationships: []
       }
-      agent_configurations: {
-        Row: {
-          configuration_data: Json
-          created_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          configuration_data: Json
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          configuration_data?: Json
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       audio_files: {
         Row: {
           bitrate: number | null
@@ -271,7 +247,7 @@ export type Database = {
           connected_at: string | null
           created_at: string
           disconnected_at: string | null
-          id: number
+          id: string
           instance_name: string
           is_connected: boolean
           phone_number: string | null
@@ -282,7 +258,7 @@ export type Database = {
           connected_at?: string | null
           created_at?: string
           disconnected_at?: string | null
-          id: number
+          id?: string
           instance_name: string
           is_connected?: boolean
           phone_number?: string | null
@@ -293,29 +269,14 @@ export type Database = {
           connected_at?: string | null
           created_at?: string
           disconnected_at?: string | null
-          id?: number
+          id?: string
           instance_name?: string
           is_connected?: boolean
           phone_number?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "evolution_instances_id_fkey"
-            columns: ["id"]
-            isOneToOne: false
-            referencedRelation: "kiwify"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "evolution_instances_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       image_files: {
         Row: {
@@ -365,39 +326,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           width?: number | null
-        }
-        Relationships: []
-      }
-      kiwify: {
-        Row: {
-          created_at: string
-          email: string | null
-          id: number
-          Nome: string | null
-          nova_senha: string | null
-          prompt: string | null
-          senha_alterada: boolean | null
-          telefone: string | null
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          id?: number
-          Nome?: string | null
-          nova_senha?: string | null
-          prompt?: string | null
-          senha_alterada?: boolean | null
-          telefone?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          id?: number
-          Nome?: string | null
-          nova_senha?: string | null
-          prompt?: string | null
-          senha_alterada?: boolean | null
-          telefone?: string | null
         }
         Relationships: []
       }
@@ -489,6 +417,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          prompt: string | null
           updated_at: string | null
         }
         Insert: {
@@ -497,6 +426,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          prompt?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -505,6 +435,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          prompt?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -600,25 +531,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_current_user_email: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       get_user_by_phone_number: {
         Args: { input_phone_number: string }
-        Returns: string
-      }
-      get_user_connected_instance: {
-        Args: { p_user_email: string }
-        Returns: {
-          instance_name: string
-          phone_number: string
-          is_connected: boolean
-          connected_at: string
-        }[]
-      }
-      get_user_id_by_email: {
-        Args: { user_email: string }
         Returns: string
       }
       has_role: {
@@ -645,17 +559,11 @@ export type Database = {
         Returns: boolean
       }
       mark_instance_connected: {
-        Args:
-          | {
-              p_user_email: string
-              p_instance_name: string
-              p_phone_number?: string
-            }
-          | {
-              p_user_id: string
-              p_instance_name: string
-              p_phone_number?: string
-            }
+        Args: {
+          p_user_id: string
+          p_instance_name: string
+          p_phone_number?: string
+        }
         Returns: undefined
       }
       user_can_access_lead: {

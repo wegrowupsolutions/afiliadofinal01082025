@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatLayout from '@/components/chat/ChatLayout';
 import { useConversations } from '@/hooks/useConversations';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+
 import { useChatMessages } from '@/hooks/useChatMessages';
 import PauseDurationDialog from '@/components/PauseDurationDialog';
 
@@ -32,12 +32,6 @@ const ChatsDashboard = () => {
     handleNewMessage 
   } = useChatMessages(selectedChat);
   
-  // Enable real-time updates
-  useRealtimeUpdates({
-    updateConversationLastMessage,
-    fetchConversations
-  });
-  
 
   // Find the currently selected conversation
   const selectedConversation = conversations.find(conv => conv.id === selectedChat);
@@ -56,7 +50,7 @@ const ChatsDashboard = () => {
     try {
       setIsLoading(prev => ({ ...prev, [`pause-${selectedPhoneNumber}`]: true }));
       
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/pausa_bot_afiliado', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/pausa_bot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +89,7 @@ const ChatsDashboard = () => {
     try {
       setIsLoading(prev => ({ ...prev, [`start-${phoneNumber}`]: true }));
       
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/inicia_bot_afiliado', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/inicia_bot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

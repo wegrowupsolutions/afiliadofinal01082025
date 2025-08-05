@@ -13,48 +13,44 @@ export function useConversations() {
   const updateConversationLastMessage = async (sessionId: string) => {
     try {
       const { data: historyData, error: historyError } = await supabase
-        .from('n8n_chat_histories')
+        .from('afiliado_mensagens' as any)
         .select('*')
-        .eq('session_id', sessionId)
+        .eq('remotejid', sessionId)
         .order('id', { ascending: false })
         .limit(1);
       
       if (historyError) throw historyError;
       
       if (historyData && historyData.length > 0) {
-        const chatMsg = historyData[0] as any;
+        const afiliadoMsg = historyData[0] as any;
         
         setConversations(currentConversations => {
           return currentConversations.map(conv => {
             if (conv.id === sessionId) {
               let lastMessageContent = 'Sem mensagem';
               
-              if (chatMsg.message) {
+              if (afiliadoMsg.conversation_history) {
                 try {
-                  const messageData = typeof chatMsg.message === 'string' 
-                    ? JSON.parse(chatMsg.message) 
-                    : chatMsg.message;
-                  
-                  if (messageData.content) {
-                    lastMessageContent = messageData.content;
-                  } else if (messageData.text) {
-                    lastMessageContent = messageData.text;
-                  } else if (typeof messageData === 'string') {
-                    lastMessageContent = messageData;
+                  const conversation = JSON.parse(afiliadoMsg.conversation_history);
+                  if (Array.isArray(conversation) && conversation.length > 0) {
+                    const lastMsg = conversation[conversation.length - 1];
+                    lastMessageContent = lastMsg?.content || 'Sem mensagem';
+                  } else if (conversation.content) {
+                    lastMessageContent = conversation.content;
                   }
                 } catch (e) {
-                  lastMessageContent = typeof chatMsg.message === 'string' 
-                    ? chatMsg.message 
-                    : 'Mensagem inválida';
+                  lastMessageContent = afiliadoMsg.conversation_history;
                 }
               }
               
-              const messageDate = chatMsg.hora || chatMsg.created_at || new Date();
+              const messageDate = afiliadoMsg.timestamp 
+                ? new Date(afiliadoMsg.timestamp) 
+                : new Date();
                 
               return {
                 ...conv,
                 lastMessage: lastMessageContent || 'Sem mensagem',
-                time: formatMessageTime(new Date(messageDate)),
+                time: formatMessageTime(messageDate),
                 unread: conv.unread + 1
               };
             }
@@ -71,10 +67,9 @@ export function useConversations() {
     try {
       setLoading(true);
       
-      // Buscar sessões únicas da tabela n8n_chat_histories
       const { data: chatHistoryData, error: chatHistoryError } = await supabase
-        .from('n8n_chat_histories')
-        .select('session_id')
+        .from('afiliado_mensagens' as any)
+        .select('remotejid')
         .order('id', { ascending: false });
       
       if (chatHistoryError) throw chatHistoryError;
@@ -86,68 +81,75 @@ export function useConversations() {
       }
       
       const uniqueSessionIds = Array.from(new Set(
-        chatHistoryData.map((item: any) => item.session_id)
+        chatHistoryData.map((item: any) => item.remotejid)
       ));
       
-      // Criar conversas baseadas nas sessões encontradas
-      const conversationsData: Conversation[] = uniqueSessionIds.map((sessionId: any) => {
-        return {
-          id: sessionId,
-          name: `Chat ${sessionId.substring(0, 8)}...`,
-          lastMessage: 'Carregando...',
-          time: 'Recente',
-          unread: 0,
-          avatar: '🤖',
-          phone: sessionId,
-          email: 'Não informado',
-          petName: 'Não informado',
-          petType: 'Não informado',
-          petBreed: 'Não informado',
-          sessionId: sessionId
-        };
-      });
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('afiliado_base_leads')
+        .select('*')
+        .in('remotejid', uniqueSessionIds)
+        .not('name', 'is', null);
       
-      // Buscar a última mensagem para cada conversa
-      for (const conversation of conversationsData) {
-        const { data: historyData, error: historyError } = await supabase
-          .from('n8n_chat_histories')
-          .select('*')
-          .eq('session_id', conversation.sessionId)
-          .order('id', { ascending: false })
-          .limit(1);
+      if (clientsError) throw clientsError;
+      
+      if (clientsData && clientsData.length > 0) {
+        const conversationsData: Conversation[] = clientsData.map((lead: AfiliadoBaseLead) => {
+          return {
+            id: lead.remotejid,
+            name: lead.name || 'Cliente sem nome',
+            lastMessage: 'Carregando...',
+            time: 'Recente',
+            unread: 0,
+            avatar: '👤',
+            phone: lead.remotejid.replace('@s.whatsapp.net', ''),
+            email: 'Não informado',
+            petName: 'Não informado',
+            petType: 'Não informado',
+            petBreed: 'Não informado',
+            sessionId: lead.remotejid
+          };
+        });
         
-        if (!historyError && historyData && historyData.length > 0) {
-          const chatMsg = historyData[0] as any;
+        for (const conversation of conversationsData) {
+          const { data: historyData, error: historyError } = await supabase
+            .from('afiliado_mensagens' as any)
+            .select('*')
+            .eq('remotejid', conversation.sessionId)
+            .order('id', { ascending: false })
+            .limit(1);
           
-          let lastMessageContent = 'Sem mensagem';
-          if (chatMsg.message) {
-            try {
-              const messageData = typeof chatMsg.message === 'string' 
-                ? JSON.parse(chatMsg.message) 
-                : chatMsg.message;
-              
-              if (messageData.content) {
-                lastMessageContent = messageData.content;
-              } else if (messageData.text) {
-                lastMessageContent = messageData.text;
-              } else if (typeof messageData === 'string') {
-                lastMessageContent = messageData;
+          if (!historyError && historyData && historyData.length > 0) {
+            const afiliadoMsg = historyData[0] as any;
+            
+            let lastMessageContent = 'Sem mensagem';
+            if (afiliadoMsg.conversation_history) {
+              try {
+                const conversation = JSON.parse(afiliadoMsg.conversation_history);
+                if (Array.isArray(conversation) && conversation.length > 0) {
+                  const lastMsg = conversation[conversation.length - 1];
+                  lastMessageContent = lastMsg?.content || 'Sem mensagem';
+                } else if (conversation.content) {
+                  lastMessageContent = conversation.content;
+                }
+              } catch (e) {
+                lastMessageContent = afiliadoMsg.conversation_history;
               }
-            } catch (e) {
-              lastMessageContent = typeof chatMsg.message === 'string' 
-                ? chatMsg.message 
-                : 'Mensagem inválida';
             }
+            
+            conversation.lastMessage = lastMessageContent || 'Sem mensagem';
+            
+            const messageDate = afiliadoMsg.timestamp 
+              ? new Date(afiliadoMsg.timestamp) 
+              : new Date();
+            
+            conversation.time = formatMessageTime(messageDate);
           }
-          
-          conversation.lastMessage = lastMessageContent || 'Sem mensagem';
-          
-          const messageDate = chatMsg.hora || chatMsg.created_at || new Date();
-          conversation.time = formatMessageTime(new Date(messageDate));
         }
+        
+        setConversations(conversationsData);
+      } else {
+        setConversations([]);
       }
-      
-      setConversations(conversationsData);
     } catch (error) {
       console.error('Error fetching conversations:', error);
       toast({

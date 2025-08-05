@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check, List } from 'lucide-react';
+import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,57 +13,52 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Evolution = () => {
   const navigate = useNavigate();
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [instanceName, setInstanceName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
-  const [userInstances, setUserInstances] = useState<any[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [showInstancesList, setShowInstancesList] = useState(false);
+  const [connectedInstance, setConnectedInstance] = useState<{instance_name: string, phone_number?: string} | null>(null);
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
   
   useEffect(() => {
-    if (user) {
-      loadUserInstances();
-    }
+    const checkExistingInstance = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return;
+
+        const { data, error } = await supabase
+          .from('evolution_instances')
+          .select('instance_name, phone_number')
+          .eq('user_id', user.user.id)
+          .eq('is_connected', true)
+          .order('connected_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Erro ao verificar instância existente:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setConnectedInstance(data[0]);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar instância conectada:', error);
+      }
+    };
+
+    checkExistingInstance();
+    
     return () => {
       if (statusCheckIntervalRef.current !== null) {
         clearInterval(statusCheckIntervalRef.current);
       }
     };
-  }, [user]);
-
-  const loadUserInstances = async () => {
-    if (!user?.email) return;
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-evolution-instance', {
-        body: { 
-          action: 'list',
-          userEmail: user.email
-        }
-      });
-
-      if (error) throw error;
-      
-      setUserInstances(data.instances || []);
-      setUserProfile(data.user || null);
-      
-      console.log('Loaded user profile:', data.user);
-      console.log('Loaded instances:', data.instances?.length || 0);
-    } catch (error) {
-      console.error('Error loading user instances:', error);
-      toast({
-        title: "Erro ao carregar instâncias",
-        description: "Não foi possível carregar suas instâncias.",
-        variant: "destructive"
-      });
-    }
-  };
+  }, []);
   
   const checkConnectionStatus = async () => {
     try {
@@ -74,8 +69,7 @@ const Evolution = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          instanceName: instanceName.trim(),
-          userEmail: user?.email // Enviar email do usuário
+          instanceName: instanceName.trim() 
         }),
       });
       
@@ -108,22 +102,8 @@ const Evolution = () => {
               clearInterval(statusCheckIntervalRef.current);
               statusCheckIntervalRef.current = null;
             }
-            
-            // Marcar instância como conectada no banco
-            if (user?.email) {
-              await supabase.functions.invoke('manage-evolution-instance', {
-                body: { 
-                  action: 'connect', 
-                  instanceName: instanceName.trim(),
-                  phoneNumber: responseData.phoneNumber || null,
-                  userEmail: user.email
-                }
-              });
-            }
-            
             setConfirmationStatus('confirmed');
-            retryCountRef.current = 0;
-            loadUserInstances(); // Recarregar lista de instâncias
+            retryCountRef.current = 0; // Reset retry counter on success
             toast({
               title: "Conexão estabelecida!",
               description: "Seu WhatsApp foi conectado com sucesso.",
@@ -140,13 +120,13 @@ const Evolution = () => {
                 statusCheckIntervalRef.current = null;
               }
               setConfirmationStatus('failed');
-              retryCountRef.current = 0;
+              retryCountRef.current = 0; // Reset retry counter
               toast({
                 title: "Falha na conexão",
                 description: "Não foi possível conectar após várias tentativas. Obtendo novo QR code...",
                 variant: "destructive"
               });
-              updateQrCode();
+              updateQrCode(); // Automatically get a new QR code
             } else {
               console.log(`Retrying... (${retryCountRef.current}/${maxRetries})`);
               toast({
@@ -193,14 +173,13 @@ const Evolution = () => {
     try {
       setIsLoading(true);
       console.log('Updating QR code for instance:', instanceName);
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          instanceName: instanceName.trim(),
-          userEmail: user?.email // Enviar email do usuário
+          instanceName: instanceName.trim() 
         }),
       });
       
@@ -213,7 +192,7 @@ const Evolution = () => {
         const qrCodeUrl = URL.createObjectURL(blob);
         setQrCodeData(qrCodeUrl);
         setConfirmationStatus('waiting');
-        retryCountRef.current = 0;
+        retryCountRef.current = 0; // Reset retry counter when getting new QR code
         console.log('QR code updated successfully');
         
         if (statusCheckIntervalRef.current !== null) {
@@ -260,53 +239,20 @@ const Evolution = () => {
       return;
     }
 
-    if (!user?.email) {
-      toast({
-        title: "Erro de autenticação",
-        description: "Usuário não autenticado.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
-    retryCountRef.current = 0;
+    retryCountRef.current = 0; // Reset retry counter for new instance creation
     
     try {
       console.log('Creating instance with name:', instanceName);
-      
-      // Criar instância no banco primeiro
-      const { error: createError } = await supabase.functions.invoke('manage-evolution-instance', {
-        body: { 
-          action: 'create', 
-          instanceName: instanceName.trim(),
-          userEmail: user.email
-        }
-      });
-
-      if (createError) {
-        console.error('Edge function error:', createError);
-        let errorMessage = 'Erro ao criar instância no banco';
-        
-        // Tentar extrair detalhes do erro
-        if (typeof createError === 'object' && createError.message) {
-          errorMessage += ': ' + createError.message;
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      // Depois criar no webhook
       const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          instanceName: instanceName.trim(),
-          userEmail: user?.email // Enviar email do usuário
+          instanceName: instanceName.trim() 
         }),
       });
       
@@ -329,7 +275,6 @@ const Evolution = () => {
           checkConnectionStatus();
         }, 10000);
         
-        loadUserInstances(); // Recarregar lista de instâncias
         toast({
           title: "Instância criada!",
           description: "Escaneie o QR code para conectar seu WhatsApp.",
@@ -341,21 +286,9 @@ const Evolution = () => {
       }
     } catch (error) {
       console.error('Erro ao criar instância:', error);
-      let errorMessage = "Não foi possível criar a instância.";
-      
-      if (error instanceof Error) {
-        if (error.message.includes('Instance name already exists')) {
-          errorMessage = "Já existe uma instância com esse nome. Escolha outro nome.";
-        } else if (error.message.includes('User profile not found')) {
-          errorMessage = "Perfil de usuário não encontrado. Faça login novamente.";
-        } else if (error.message.includes('Failed to create instance')) {
-          errorMessage = "Erro no banco de dados. Tente novamente.";
-        }
-      }
-      
       toast({
         title: "Erro",
-        description: errorMessage,
+        description: "Não foi possível criar a instância. Tente novamente.",
         variant: "destructive"
       });
       setConfirmationStatus(null);
@@ -375,38 +308,10 @@ const Evolution = () => {
   const resetQrCode = () => {
     setQrCodeData(null);
     setConfirmationStatus(null);
-    retryCountRef.current = 0;
-    setShowInstancesList(false);
+    retryCountRef.current = 0; // Reset retry counter
     if (statusCheckIntervalRef.current !== null) {
       clearInterval(statusCheckIntervalRef.current);
       statusCheckIntervalRef.current = null;
-    }
-  };
-
-  const disconnectInstance = async (instance: any) => {
-    if (!user?.email) return;
-    
-    try {
-      await supabase.functions.invoke('manage-evolution-instance', {
-        body: { 
-          action: 'disconnect', 
-          instanceName: instance.instance_name,
-          userEmail: user.email
-        }
-      });
-      
-      loadUserInstances();
-      toast({
-        title: "Instância desconectada",
-        description: `Instância ${instance.instance_name} foi desconectada.`,
-      });
-    } catch (error) {
-      console.error('Error disconnecting instance:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível desconectar a instância.",
-        variant: "destructive"
-      });
     }
   };
   
@@ -424,17 +329,12 @@ const Evolution = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <Bot className="h-8 w-8 text-petshop-gold" />
-            <h1 className="text-2xl font-bold">Afiliado IA</h1>
+            <h1 className="text-2xl font-bold">Afiliado AI</h1>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="bg-white/10 text-white border-0 px-3 py-1">
-              {userProfile?.name || user?.user_metadata?.name || user?.email}
+              {user?.user_metadata?.name || user?.email}
             </Badge>
-            {userProfile?.phone && (
-              <Badge variant="outline" className="bg-white/10 text-white border-0 px-2 py-1 text-xs">
-                📞 {userProfile.phone}
-              </Badge>
-            )}
             <ThemeToggle />
           </div>
         </div>
@@ -446,95 +346,44 @@ const Evolution = () => {
             <Link className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             Conectar Evolution
           </h2>
-          <Button
-            variant="outline"
-            onClick={() => setShowInstancesList(!showInstancesList)}
-            className="flex items-center gap-2"
-          >
-            <List className="h-4 w-4" />
-            {showInstancesList ? 'Ocultar' : 'Ver'} Instâncias
-          </Button>
         </div>
         
-        {showInstancesList && (
-          <Card className="mb-6 dark:bg-gray-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                <List className="h-5 w-5" />
-                Instâncias de {userProfile?.name || user?.email}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {userProfile && (
-                <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <h4 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-2">Informações do Perfil</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                    <div><span className="font-medium">Nome:</span> {userProfile.name}</div>
-                    <div><span className="font-medium">Email:</span> {userProfile.email}</div>
-                    {userProfile.phone && (
-                      <div><span className="font-medium">Telefone:</span> {userProfile.phone}</div>
-                    )}
+        
+        <div className="max-w-xl mx-auto">
+          {connectedInstance && !qrCodeData && confirmationStatus !== 'confirmed' && (
+            <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30 mb-6">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 dark:text-white">Instância Conectada</h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Você já possui uma instância <span className="font-semibold">{connectedInstance.instance_name}</span> conectada
+                    {connectedInstance.phone_number && (
+                      <span> ao número <span className="font-semibold">{connectedInstance.phone_number}</span></span>
+                    )}.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <Button 
+                      onClick={() => navigate('/chats')}
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Ir para Conversas
+                    </Button>
+                    <Button 
+                      onClick={() => setConnectedInstance(null)}
+                      variant="outline"
+                    >
+                      Criar Nova Instância
+                    </Button>
                   </div>
                 </div>
-              )}
-              
-              {userInstances.length === 0 ? (
-                <p className="text-gray-600 dark:text-gray-300 text-center py-4">
-                  Nenhuma instância encontrada.
-                </p>
-              ) : (
-                <div className="space-y-3">{userInstances.map((instance) => (
-                    <div
-                      key={instance.id}
-                      className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-600"
-                    >
-                      <div>
-                        <h4 className="font-semibold">{instance.instance_name}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Status: {instance.is_connected ? 'Conectada' : 'Desconectada'}
-                        </p>
-                        {instance.phone_number && (
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Telefone: {instance.phone_number}
-                          </p>
-                        )}
-                        {instance.connected_at && (
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Conectada em: {new Date(instance.connected_at).toLocaleString('pt-BR')}
-                          </p>
-                        )}
-                        {instance.profiles && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Usuário: {instance.profiles.full_name || instance.profiles.email}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge
-                          variant={instance.is_connected ? "default" : "secondary"}
-                          className={instance.is_connected ? "bg-green-500" : "bg-red-500"}
-                        >
-                          {instance.is_connected ? 'Conectada' : 'Desconectada'}
-                        </Badge>
-                        {instance.is_connected && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => disconnectInstance(instance)}
-                          >
-                            Desconectar
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="max-w-xl mx-auto">
+              </CardContent>
+            </Card>
+          )}
+          
           <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">

@@ -16,9 +16,9 @@ export function useChatMessages(selectedChat: string | null) {
       console.log(`Fetching messages for conversation: ${conversationId}`);
       
       const { data: historyData, error: historyError } = await supabase
-        .from('n8n_chat_histories')
+        .from('afiliado_mensagens' as any)
         .select('*')
-        .eq('session_id', conversationId)
+        .eq('remotejid', conversationId)
         .order('id', { ascending: true });
       
       if (historyError) {
@@ -32,46 +32,11 @@ export function useChatMessages(selectedChat: string | null) {
       let allMessages: ChatMessage[] = [];
       
       if (historyData && historyData.length > 0) {
-        historyData.forEach((chatMsg: any, index: number) => {
-          console.log(`Processing message ${index + 1} with id: ${chatMsg.id}`);
-          
-          try {
-            let messageContent = '';
-            let role = 'user';
-            
-            if (chatMsg.message) {
-              const messageData = typeof chatMsg.message === 'string' 
-                ? JSON.parse(chatMsg.message) 
-                : chatMsg.message;
-              
-              if (messageData.content) {
-                messageContent = messageData.content;
-              } else if (messageData.text) {
-                messageContent = messageData.text;
-              } else if (typeof messageData === 'string') {
-                messageContent = messageData;
-              }
-              
-              // Determinar o papel baseado no conteúdo ou outras propriedades
-              if (messageData.role) {
-                role = messageData.role;
-              } else if (messageData.sender) {
-                role = messageData.sender === 'bot' ? 'assistant' : 'user';
-              }
-            }
-            
-            if (messageContent) {
-              const timestamp = chatMsg.hora || chatMsg.created_at || new Date().toISOString();
-              
-              allMessages.push({
-                role,
-                content: messageContent,
-                timestamp,
-                type: 'text'
-              });
-            }
-          } catch (error) {
-            console.error('Error parsing message:', error, chatMsg);
+        historyData.forEach((afiliadoMsg: any) => {
+          console.log(`Processing message with timestamp: ${afiliadoMsg.timestamp}`);
+          const parsedMessages = parseMessage(afiliadoMsg);
+          if (parsedMessages.length > 0) {
+            allMessages = [...allMessages, ...parsedMessages];
           }
         });
         
@@ -97,85 +62,52 @@ export function useChatMessages(selectedChat: string | null) {
   useEffect(() => {
     if (!selectedChat) return;
     
-    console.log(`Setting up realtime listener for n8n chat messages: ${selectedChat}`);
+    console.log(`Setting up realtime listener for specific chat messages: ${selectedChat}`);
     
     const subscription = supabase
-      .channel(`n8n_chat_messages_${selectedChat}`)
+      .channel(`chat_messages_${selectedChat}`)
       .on('postgres_changes', 
         { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'n8n_chat_histories',
-          filter: `session_id=eq.${selectedChat}`
+          table: 'afiliado_mensagens',
+          filter: `remotejid=eq.${selectedChat}`
         }, 
         (payload) => {
-          console.log('🔥 NEW N8N MESSAGE VIA REALTIME:', payload);
+          console.log('🔥 NEW MESSAGE VIA REALTIME:', payload);
           console.log('🔥 Payload new:', payload.new);
           console.log('🔥 Selected chat:', selectedChat);
           
           // Process the new message
-          const chatMsg = payload.new as any;
-          console.log('🔥 Message session_id:', chatMsg.session_id);
-          console.log('🔥 Message hora:', chatMsg.hora);
-          console.log('🔥 Message data:', chatMsg.message);
+          const afiliadoMsg = payload.new as any;
+          console.log('🔥 Message remotejid:', afiliadoMsg.remotejid);
+          console.log('🔥 Message timestamp:', afiliadoMsg.timestamp);
+          console.log('🔥 Message conversation_history:', afiliadoMsg.conversation_history);
           
-          try {
-            let messageContent = '';
-            let role = 'user';
-            
-            if (chatMsg.message) {
-              const messageData = typeof chatMsg.message === 'string' 
-                ? JSON.parse(chatMsg.message) 
-                : chatMsg.message;
-              
-              if (messageData.content) {
-                messageContent = messageData.content;
-              } else if (messageData.text) {
-                messageContent = messageData.text;
-              } else if (typeof messageData === 'string') {
-                messageContent = messageData;
-              }
-              
-              if (messageData.role) {
-                role = messageData.role;
-              } else if (messageData.sender) {
-                role = messageData.sender === 'bot' ? 'assistant' : 'user';
-              }
-            }
-            
-            if (messageContent) {
-              const timestamp = chatMsg.hora || chatMsg.created_at || new Date().toISOString();
-              
-              const newMessage: ChatMessage = {
-                role,
-                content: messageContent,
-                timestamp,
-                type: 'text'
-              };
-              
-              console.log("🔥 Adding new message from realtime:", newMessage);
-              setMessages(prevMessages => {
-                console.log('🔥 Previous messages count:', prevMessages.length);
-                const updated = [...prevMessages, newMessage];
-                console.log('🔥 Updated messages count:', updated.length);
-                return updated;
-              });
-            } else {
-              console.log('🔥 No valid message content found');
-            }
-          } catch (error) {
-            console.error('🔥 Error processing realtime message:', error);
+          const newMessages = parseMessage(afiliadoMsg);
+          console.log('🔥 Parsed messages:', newMessages);
+          
+          if (newMessages.length > 0) {
+            console.log("🔥 Adding new messages from realtime:", newMessages);
+            setMessages(prevMessages => {
+              console.log('🔥 Previous messages count:', prevMessages.length);
+              const updated = [...prevMessages, ...newMessages];
+              console.log('🔥 Updated messages count:', updated.length);
+              return updated;
+            });
+          } else {
+            console.log('🔥 No messages parsed from realtime data');
           }
         }
       )
       .subscribe((status) => {
-        console.log('🔥 N8N Subscription status:', status);
+        console.log('🔥 Subscription status:', status);
       });
     
-    console.log(`N8N Realtime subscription created for chat: ${selectedChat}`);
+    console.log(`Realtime subscription created for chat: ${selectedChat}`);
       
     return () => {
-      console.log(`Cleaning up N8N realtime subscription for chat: ${selectedChat}`);
+      console.log(`Cleaning up realtime subscription for chat: ${selectedChat}`);
       subscription.unsubscribe();
     };
   }, [selectedChat]);

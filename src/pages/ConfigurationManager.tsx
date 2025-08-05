@@ -12,44 +12,29 @@ import { EndpointsStatusChecker } from '@/components/configuration/EndpointsStat
 // Default webhook base URL
 const DEFAULT_WEBHOOK_BASE = "https://webhook.serverwegrowup.com.br/webhook";
 
-// Default endpoints específicos para afiliados
-const DEFAULT_ENDPOINTS = {
-  envia_mensagem: `${DEFAULT_WEBHOOK_BASE}/envia_mensagem_afiliado`,
-  pausa_bot: `${DEFAULT_WEBHOOK_BASE}/pausa_bot_afiliado`,
-  inicia_bot: `${DEFAULT_WEBHOOK_BASE}/inicia_bot_afiliado`,
-  instancia_evolution: `${DEFAULT_WEBHOOK_BASE}/instancia_evolution_afiliado`,
-  atualizar_qr_code: `${DEFAULT_WEBHOOK_BASE}/atualizar_qr_code_afiliado`,
-  confirma: `${DEFAULT_WEBHOOK_BASE}/confirma_afiliado`,
-  config_agent: `${DEFAULT_WEBHOOK_BASE}/config_agent_afiliado`,
-  envia_rag: `${DEFAULT_WEBHOOK_BASE}/envia_rag_afiliado`,
-  cria_usuario: `${DEFAULT_WEBHOOK_BASE}/cria_usuario_afiliado`,
-  edita_usuario: `${DEFAULT_WEBHOOK_BASE}/edita_usuario_afiliado`,
-  exclui_usuario: `${DEFAULT_WEBHOOK_BASE}/exclui_usuario_afiliado`
-};
-
-// Default endpoints configuration (usando versões afiliado)
+// Default endpoints configuration
 const defaultEndpoints = {
-  mensagem: DEFAULT_ENDPOINTS.envia_mensagem,
-  pausaBot: DEFAULT_ENDPOINTS.pausa_bot,
-  iniciaBot: DEFAULT_ENDPOINTS.inicia_bot,
-  agenda: `${DEFAULT_WEBHOOK_BASE}/agenda_afiliado`,
-  agendaBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/banho_afiliado`,
-  agendaVet: `${DEFAULT_WEBHOOK_BASE}/agenda/vet_afiliado`,
-  agendaAlterar: `${DEFAULT_WEBHOOK_BASE}/agenda/alterar_afiliado`,
-  agendaAdicionarBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/adicionar/banho_afiliado`,
-  agendaAdicionarVet: `${DEFAULT_WEBHOOK_BASE}/agenda/adicionar/vet_afiliado`,
-  agendaAlterarBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/alterar/banho_afiliado`,
-  agendaAlterarVet: `${DEFAULT_WEBHOOK_BASE}/agenda/alterar/vet_afiliado`,
-  agendaAdicionar: `${DEFAULT_WEBHOOK_BASE}/agenda/adicionar_afiliado`,
-  agendaExcluir: `${DEFAULT_WEBHOOK_BASE}/agenda/excluir_afiliado`,
-  agendaExcluirBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/excluir/banho_afiliado`,
-  agendaExcluirVet: `${DEFAULT_WEBHOOK_BASE}/agenda/excluir/vet_afiliado`,
-  enviaRag: DEFAULT_ENDPOINTS.envia_rag,
-  excluirArquivoRag: `${DEFAULT_WEBHOOK_BASE}/excluir-arquivo-rag_afiliado`,
-  excluirRag: `${DEFAULT_WEBHOOK_BASE}/excluir-rag_afiliado`,
-  instanciaEvolution: DEFAULT_ENDPOINTS.instancia_evolution,
-  atualizarQrCode: DEFAULT_ENDPOINTS.atualizar_qr_code,
-  confirma: DEFAULT_ENDPOINTS.confirma,
+  mensagem: `${DEFAULT_WEBHOOK_BASE}/envia_mensagem`,
+  pausaBot: `${DEFAULT_WEBHOOK_BASE}/pausa_bot`,
+  iniciaBot: `${DEFAULT_WEBHOOK_BASE}/inicia_bot`,
+  agenda: `${DEFAULT_WEBHOOK_BASE}/agenda`,
+  agendaBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/banho`,
+  agendaVet: `${DEFAULT_WEBHOOK_BASE}/agenda/vet`,
+  agendaAlterar: `${DEFAULT_WEBHOOK_BASE}/agenda/alterar`,
+  agendaAdicionarBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/adicionar/banho`,
+  agendaAdicionarVet: `${DEFAULT_WEBHOOK_BASE}/agenda/adicionar/vet`,
+  agendaAlterarBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/alterar/banho`,
+  agendaAlterarVet: `${DEFAULT_WEBHOOK_BASE}/agenda/alterar/vet`,
+  agendaAdicionar: `${DEFAULT_WEBHOOK_BASE}/agenda/adicionar`,
+  agendaExcluir: `${DEFAULT_WEBHOOK_BASE}/agenda/excluir`,
+  agendaExcluirBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/excluir/banho`,
+  agendaExcluirVet: `${DEFAULT_WEBHOOK_BASE}/agenda/excluir/vet`,
+  enviaRag: `${DEFAULT_WEBHOOK_BASE}/envia_rag`,
+  excluirArquivoRag: `${DEFAULT_WEBHOOK_BASE}/excluir-arquivo-rag`,
+  excluirRag: `${DEFAULT_WEBHOOK_BASE}/excluir-rag`,
+  instanciaEvolution: `${DEFAULT_WEBHOOK_BASE}/instanciaevolution`,
+  atualizarQrCode: `${DEFAULT_WEBHOOK_BASE}/atualizar-qr-code`,
+  confirma: `${DEFAULT_WEBHOOK_BASE}/confirma`,
 };
 
 const endpointGroups = {

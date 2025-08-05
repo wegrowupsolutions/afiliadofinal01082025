@@ -177,7 +177,7 @@ const AgentConfig = () => {
 
   const sendAgentDataToWebhook = async (agentData: AgentFormValues) => {
     try {
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/config_agent_afiliado', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/config_agent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -16,31 +16,17 @@ export const useIsAdmin = () => {
       }
 
       try {
-        // Primeiro, tentar verificar usando o método padrão do Supabase
         const { data, error } = await supabase.rpc('is_current_user_admin');
         
-        if (error || data === null) {
-          // Se falhar (usuário Kiwify), verificar diretamente por email
-          const adminEmails = [
-            'teste@gmail.com',
-            'rfreitasdc@gmail.com',
-            'viniciushtx@gmail.com'
-          ];
-          
-          setIsAdmin(adminEmails.includes(user.email || ''));
+        if (error) {
+          console.error('Erro ao verificar status de admin:', error);
+          setIsAdmin(false);
         } else {
           setIsAdmin(data === true);
         }
       } catch (error) {
         console.error('Erro ao verificar status de admin:', error);
-        // Fallback para verificação por email
-        const adminEmails = [
-          'teste@gmail.com',
-          'rfreitasdc@gmail.com',
-          'viniciushtx@gmail.com'
-        ];
-        
-        setIsAdmin(adminEmails.includes(user.email || ''));
+        setIsAdmin(false);
       } finally {
         setLoading(false);
       }

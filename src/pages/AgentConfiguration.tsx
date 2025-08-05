@@ -178,72 +178,35 @@ const AgentConfiguration = () => {
   }, [promptData, completionPercentage, isSaving]);
 
   const loadExistingPrompt = async () => {
-    if (!user?.email) return;
+    if (!user) return;
     
     setIsLoading(true);
     try {
-      // Primeiro, tentar carregar da nova tabela agent_configurations
-      const { data: configData, error: configError } = await supabase
-        .from('agent_configurations')
-        .select('configuration_data')
-        .eq('user_id', user.email) // Usando email como user_id para compatibilidade com login Kiwify
-        .maybeSingle();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('prompt')
+        .eq('id', user.id)
+        .single();
 
-      if (configError) {
-        console.error('Erro ao carregar configuração do agente:', configError);
-      }
-
-      if (configData?.configuration_data) {
-        // Carregar dados da nova tabela
-        const savedData = configData.configuration_data as unknown as PromptData;
-        setPromptData(savedData);
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao carregar prompt:', error);
         return;
       }
 
-      // Fallback: tentar carregar da tabela kiwify (dados antigos)
-      const { data: oldData, error: oldError } = await supabase
-        .from('kiwify')
-        .select('id, prompt')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      if (oldError) {
-        console.error('Erro ao carregar prompt antigo:', oldError);
-        return;
-      }
-
-      if (oldData?.prompt) {
+      if (data?.prompt) {
         try {
-          // Tenta carregar como JSON (dados antigos)
-          const parsedData = JSON.parse(oldData.prompt);
+          // Tenta primeiro carregar como JSON (dados antigos)
+          const parsedData = JSON.parse(data.prompt);
           setPromptData({ ...promptData, ...parsedData });
-          // Migrar para nova tabela
-          await migrateToNewTable(parsedData);
         } catch (e) {
-          // Se não for JSON válido, deixa os campos vazios
-          console.log('Prompt em formato não suportado, iniciando nova configuração');
+          // Se não for JSON, assume que já é markdown e deixa os campos vazios para nova edição
+          console.log('Prompt já salvo em markdown, iniciando edição nova');
         }
       }
     } catch (error) {
       console.error('Erro ao carregar configuração:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const migrateToNewTable = async (data: any) => {
-    if (!user?.email) return;
-    
-    try {
-      await supabase
-        .from('agent_configurations')
-        .upsert({
-          user_id: user.email,
-          configuration_data: data
-        });
-      console.log('Dados migrados para nova tabela com sucesso');
-    } catch (error) {
-      console.error('Erro ao migrar dados:', error);
     }
   };
 
@@ -279,26 +242,26 @@ const AgentConfiguration = () => {
 
 ## 1. CONTEXTO
 [Descreva aqui o cenário específico e objetivo do prompt]
-${promptData.contexto.cenarioEspecifico ? promptData.contexto.cenarioEspecifico : ''}
-${promptData.contexto.problemaResolver ? `- Problema a resolver: ${promptData.contexto.problemaResolver}` : '- Qual é o problema que precisa ser resolvido?'}
-${promptData.contexto.resultadoEsperado ? `- Resultado esperado: ${promptData.contexto.resultadoEsperado}` : '- Qual é o resultado esperado?'}
-${promptData.contexto.publicoAlvo ? `- Público-alvo: ${promptData.contexto.publicoAlvo}` : '- Quem é o público-alvo?'}
-${promptData.contexto.ambiente ? `- Ambiente/situação: ${promptData.contexto.ambiente}` : '- Em qual ambiente/situação será utilizado?'}
+${promptData.contexto.cenarioEspecifico || '- Qual é o problema que precisa ser resolvido?'}
+${promptData.contexto.problemaResolver || '- Qual é o resultado esperado?'}
+${promptData.contexto.resultadoEsperado || '- Quem é o público-alvo?'}
+${promptData.contexto.publicoAlvo || '- Em qual ambiente/situação será utilizado?'}
+${promptData.contexto.ambiente || ''}
 
 ## 2. PERSONALIDADE
 [Defina o comportamento e características do agente]
-${promptData.personalidade.tomVoz ? `- Tom de voz: ${promptData.personalidade.tomVoz}` : '- Tom de voz (formal/informal)'}
-${promptData.personalidade.nivelLinguagem ? `- Nível de linguagem: ${promptData.personalidade.nivelLinguagem}` : '- Nível de linguagem'}
-${promptData.personalidade.caracteristicasPersonalidade ? `- Características de personalidade: ${promptData.personalidade.caracteristicasPersonalidade}` : '- Características de personalidade específicas'}
-${promptData.personalidade.conhecimentosEspecificos ? `- Conhecimentos específicos: ${promptData.personalidade.conhecimentosEspecificos}` : '- Conhecimentos específicos necessários'}
+- Tom de voz (formal/informal): ${promptData.personalidade.tomVoz || '[Não definido]'}
+- Nível de linguagem: ${promptData.personalidade.nivelLinguagem || '[Não definido]'}
+- Características de personalidade específicas: ${promptData.personalidade.caracteristicasPersonalidade || '[Não definido]'}
+- Conhecimentos específicos necessários: ${promptData.personalidade.conhecimentosEspecificos || '[Não definido]'}
 
 ## 3. DIRETRIZES
 [Liste as regras e restrições do negócio]
-${promptData.diretrizes.politicasImportantes ? `- Políticas importantes: ${promptData.diretrizes.politicasImportantes}` : '- Políticas importantes'}
-${promptData.diretrizes.limitesAtuacao ? `- Limites de atuação: ${promptData.diretrizes.limitesAtuacao}` : '- Limites de atuação'}
-${promptData.diretrizes.restricoesLegais ? `- Restrições legais ou éticas: ${promptData.diretrizes.restricoesLegais}` : '- Restrições legais ou éticas'}
-${promptData.diretrizes.procedimentosObrigatorios ? `- Procedimentos obrigatórios: ${promptData.diretrizes.procedimentosObrigatorios}` : '- Procedimentos obrigatórios'}
-${promptData.diretrizes.informacoesConfidenciais ? `- Informações confidenciais: ${promptData.diretrizes.informacoesConfidenciais}` : '- Informações confidenciais ou sensíveis'}
+- Políticas importantes: ${promptData.diretrizes.politicasImportantes || '[Não definido]'}
+- Limites de atuação: ${promptData.diretrizes.limitesAtuacao || '[Não definido]'}
+- Restrições legais ou éticas: ${promptData.diretrizes.restricoesLegais || '[Não definido]'}
+- Procedimentos obrigatórios: ${promptData.diretrizes.procedimentosObrigatorios || '[Não definido]'}
+- Informações confidenciais ou sensíveis: ${promptData.diretrizes.informacoesConfidenciais || '[Não definido]'}
 
 ## 4. ESTRUTURA DA CONVERSA
 [Detalhe o passo a passo do raciocínio]
@@ -331,9 +294,9 @@ Exemplo 2:
 
 ## 7. MÉTRICAS DE SUCESSO
 [Defina como medir o sucesso do prompt]
-${promptData.metricasSucesso.indicadoresQualidade ? `- Indicadores de qualidade: ${promptData.metricasSucesso.indicadoresQualidade}` : '- Indicadores de qualidade'}
-${promptData.metricasSucesso.metricasDesempenho ? `- Métricas de desempenho: ${promptData.metricasSucesso.metricasDesempenho}` : '- Métricas de desempenho'}
-${promptData.metricasSucesso.criteriosAvaliacao ? `- Critérios de avaliação: ${promptData.metricasSucesso.criteriosAvaliacao}` : '- Critérios de avaliação'}
+- Indicadores de qualidade: ${promptData.metricasSucesso.indicadoresQualidade || '[Não definido]'}
+- Métricas de desempenho: ${promptData.metricasSucesso.metricasDesempenho || '[Não definido]'}
+- Critérios de avaliação: ${promptData.metricasSucesso.criteriosAvaliacao || '[Não definido]'}
 
 ${promptData.linksPromocao.filter(link => link.link.trim() !== '').length > 0 ? `
 ## 8. LINKS DE DIVULGAÇÃO
@@ -343,23 +306,24 @@ Descrição: ${link.descricao || 'Sem descrição'}
 `).join('')}` : ''}
 
 ---
+
 Com base nas informações acima, gere um prompt completo que atenda aos requisitos especificados. Gere no formato markdown.
-sempre adicione o texto abaixo em todos os prompts gerados
 
 Data e hora atual:
 {{ (() => { const nowNoTimeZone = new Date(); const now = nowNoTimeZone; const daysOfWeek = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']; const today = new Date(); const totimeZone = today.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }); const tomorrow = new Date(now.setDate(now.getDate() + 1)); const dayAfterTomorrow = new Date(now.setDate(now.getDate() + 1)); const nextWeekSameDay = new Date(today); nextWeekSameDay.setDate(today.getDate() + 7); return \`A hora atual é \${new Intl.DateTimeFormat('pt-BR', {    hour: '2-digit',    minute: '2-digit',    timeZone: 'America/Sao_Paulo'  }).format(today)} e a data é \${today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' })}, hoje o dia da semana é \${daysOfWeek[today.getDay()]}. A próxima \${daysOfWeek[today.getDay()]} será dia \${nextWeekSameDay.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.  Amanhã é \${daysOfWeek[tomorrow.getDay()]} dia \${tomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}. Depois de amanhã é \${daysOfWeek[dayAfterTomorrow.getDay()]} dia \${dayAfterTomorrow.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.\`; })() }}, use isso!`;
   };
 
   const handleAutoSave = async () => {
-    if (!user?.email) return;
+    if (!user) return;
 
     try {
-      // Salvar configuração na nova tabela
+      const markdownPrompt = generateMarkdownPrompt();
+      
       const { error } = await supabase
-        .from('agent_configurations')
+        .from('profiles')
         .upsert({
-          user_id: user.email,
-          configuration_data: promptData as any
+          id: user.id,
+          prompt: markdownPrompt
         });
 
       if (!error) {
@@ -371,38 +335,23 @@ Data e hora atual:
   };
 
   const handleSave = async () => {
-    if (!user?.email) return;
+    if (!user) return;
 
     setSaving(true);
     try {
-      // Salvar configuração na nova tabela
-      const { error: configError } = await supabase
-        .from('agent_configurations')
+      const markdownPrompt = generateMarkdownPrompt();
+
+      const { error } = await supabase
+        .from('profiles')
         .upsert({
-          user_id: user.email,
-          configuration_data: promptData as any
+          id: user.id,
+          prompt: markdownPrompt
         });
 
-      if (configError) {
-        console.error('Erro ao salvar configuração:', configError);
+      if (error) {
+        console.error('Erro ao salvar:', error);
         toast.error('Erro ao salvar configuração');
         return;
-      }
-
-      // Também salvar o prompt em markdown na tabela kiwify (para compatibilidade)
-      const markdownPrompt = generateMarkdownPrompt();
-      
-      const { data: existingRecord, error: fetchError } = await supabase
-        .from('kiwify')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      if (!fetchError && existingRecord) {
-        await supabase
-          .from('kiwify')
-          .update({ prompt: markdownPrompt })
-          .eq('id', existingRecord.id);
       }
 
       setLastSaved(new Date());

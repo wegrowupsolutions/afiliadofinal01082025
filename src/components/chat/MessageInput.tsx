@@ -147,7 +147,7 @@ const MessageInput = ({ selectedChat, selectedConversation }: MessageInputProps)
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
       
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/envia_mensagem', {
         method: 'POST',
         headers,
         body: JSON.stringify({

@@ -14,7 +14,7 @@ const loginSchema = z.object({
 
 const Index = () => {
   const navigate = useNavigate();
-  const { signIn, signInWithKiwify, user, isLoading: authLoading } = useAuth();
+  const { signIn, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -89,15 +89,14 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      // Usar autenticação via tabela kiwify
-      const { error, data } = await signInWithKiwify(formData.email, formData.password);
+      const { error } = await signIn(formData.email, formData.password);
       
       if (error) {
         console.error('Login error:', error);
-        toast.error(error || 'Email ou senha incorretos. Verifique suas credenciais.');
+        toast.error(error.message || 'Erro ao fazer login. Tente novamente.');
       } else {
         toast.success('Login realizado com sucesso!');
-        navigate('/dashboard');
+        // Navigate is handled by the auth state change in AuthContext
       }
     } catch (error) {
       console.error('Unexpected error:', error);

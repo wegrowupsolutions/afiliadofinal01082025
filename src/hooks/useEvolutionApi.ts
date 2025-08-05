@@ -19,7 +19,7 @@ export const useEvolutionApi = () => {
       case 'instance':
         return 'https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado';
       case 'qr_code':
-        return 'https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado';
+        return 'https://webhook.serverwegrowup.com.br/webhook/atualizar-qr-code-afiliado';
       case 'confirm':
         return 'https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado';
       default:
@@ -193,29 +193,11 @@ export const useEvolutionApi = () => {
 
   const getInstanceStatus = async (instanceName: string) => {
     try {
-      // Buscar o ID do usuário Kiwify primeiro
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user?.email) {
-        console.error('Usuário não encontrado ou email não disponível');
-        return null;
-      }
-
-      const { data: kiwifyUser, error: kiwifyError } = await supabase
-        .from('kiwify')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      if (kiwifyError || !kiwifyUser) {
-        console.error('Usuário Kiwify não encontrado:', kiwifyError);
-        return null;
-      }
-
       const { data, error } = await supabase
         .from('evolution_instances')
         .select('*')
         .eq('instance_name', instanceName.trim())
-        .eq('id', kiwifyUser.id)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
         .order('created_at', { ascending: false })
         .limit(1);
 
