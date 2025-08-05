@@ -170,7 +170,7 @@ export const useClientManagement = () => {
         });
         
         try {
-          await fetch('https://webhook.serverwegrowup.com.br/webhook/cria_usuario', {
+          await fetch('https://webhook.serverwegrowup.com.br/webhook/cria_usuario_afiliado', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ export const useClientManagement = () => {
       });
       
       try {
-        await fetch('https://webhook.serverwegrowup.com.br/webhook/edita_usuario', {
+        await fetch('https://webhook.serverwegrowup.com.br/webhook/edita_usuario_afiliado', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -289,7 +289,7 @@ export const useClientManagement = () => {
       });
       
       try {
-        await fetch('https://webhook.serverwegrowup.com.br/webhook/exclui_usuario', {
+        await fetch('https://webhook.serverwegrowup.com.br/webhook/exclui_usuario_afiliado', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
