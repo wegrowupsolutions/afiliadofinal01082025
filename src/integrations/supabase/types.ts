@@ -615,17 +615,11 @@ export type Database = {
         Returns: boolean
       }
       mark_instance_connected: {
-        Args:
-          | {
-              p_user_email: string
-              p_instance_name: string
-              p_phone_number?: string
-            }
-          | {
-              p_user_id: string
-              p_instance_name: string
-              p_phone_number?: string
-            }
+        Args: {
+          p_user_id: string
+          p_instance_name: string
+          p_phone_number?: string
+        }
         Returns: undefined
       }
       user_can_access_lead: {
