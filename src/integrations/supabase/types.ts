@@ -633,6 +633,10 @@ export type Database = {
           kiwify_data: Json
         }[]
       }
+      sync_unlinked_instances: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       update_kiwify_password: {
         Args: { user_email: string; new_password: string }
         Returns: boolean

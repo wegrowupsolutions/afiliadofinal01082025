@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ConnectedInstancesList } from '@/components/evolution/ConnectedInstancesList';
 import { EvolutionEndpointsStatus } from '@/components/evolution/EvolutionEndpointsStatus';
+import { EvolutionDebugPanel } from '@/components/evolution/EvolutionDebugPanel';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 
 const Evolution = () => {
@@ -605,7 +606,10 @@ const Evolution = () => {
         {/* Lista de Instâncias Conectadas */}
         <div className="max-w-4xl mx-auto mt-8 space-y-6">
           <ConnectedInstancesList />
-          <EvolutionEndpointsStatus />
+          <div className="grid md:grid-cols-2 gap-6">
+            <EvolutionEndpointsStatus />
+            <EvolutionDebugPanel />
+          </div>
         </div>
       </main>
     </div>
