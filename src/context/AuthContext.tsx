@@ -114,19 +114,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const fakeUser = {
         id: email, // usando email como ID único
         email: email,
+        aud: 'authenticated',
+        role: 'authenticated',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        email_confirmed_at: new Date().toISOString(),
+        last_sign_in_at: new Date().toISOString(),
+        app_metadata: {},
+        user_metadata: {}
       };
 
-      setUser(fakeUser as User);
-      setSession({
+      const fakeSession = {
         access_token: 'fake-token',
         refresh_token: 'fake-refresh',
         expires_in: 3600,
         expires_at: Math.floor(Date.now() / 1000) + 3600,
         token_type: 'bearer',
         user: fakeUser as User
-      } as Session);
+      };
+
+      setUser(fakeUser as User);
+      setSession(fakeSession as Session);
 
       return {
         error: null,
