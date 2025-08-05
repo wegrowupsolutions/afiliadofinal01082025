@@ -33,7 +33,7 @@ const Evolution = () => {
   const checkConnectionStatus = async () => {
     try {
       console.log('Checking connection status for:', instanceName);
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/confirma', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ const Evolution = () => {
     try {
       setIsLoading(true);
       console.log('Updating QR code for instance:', instanceName);
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/atualizar-qr-code', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/atualizar_qr_code_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ const Evolution = () => {
     
     try {
       console.log('Creating instance with name:', instanceName);
-      const response = await fetch('https://webhook.n8nlabz.com.br/webhook/instanciaevolution', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
