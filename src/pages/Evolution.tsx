@@ -287,7 +287,15 @@ const Evolution = () => {
       });
 
       if (createError) {
-        throw new Error('Erro ao criar instância no banco: ' + createError.message);
+        console.error('Edge function error:', createError);
+        let errorMessage = 'Erro ao criar instância no banco';
+        
+        // Tentar extrair detalhes do erro
+        if (typeof createError === 'object' && createError.message) {
+          errorMessage += ': ' + createError.message;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Depois criar no webhook
@@ -333,9 +341,21 @@ const Evolution = () => {
       }
     } catch (error) {
       console.error('Erro ao criar instância:', error);
+      let errorMessage = "Não foi possível criar a instância.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Instance name already exists')) {
+          errorMessage = "Já existe uma instância com esse nome. Escolha outro nome.";
+        } else if (error.message.includes('User profile not found')) {
+          errorMessage = "Perfil de usuário não encontrado. Faça login novamente.";
+        } else if (error.message.includes('Failed to create instance')) {
+          errorMessage = "Erro no banco de dados. Tente novamente.";
+        }
+      }
+      
       toast({
         title: "Erro",
-        description: "Não foi possível criar a instância. Tente novamente.",
+        description: errorMessage,
         variant: "destructive"
       });
       setConfirmationStatus(null);

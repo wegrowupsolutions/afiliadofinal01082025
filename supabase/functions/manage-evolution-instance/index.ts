@@ -22,23 +22,45 @@ serve(async (req) => {
     console.log('Received request:', { action, instanceName, userEmail })
 
     if (!userEmail) {
+      console.error('Missing userEmail in request')
       return new Response(
         JSON.stringify({ error: 'userEmail is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    if (!instanceName && action !== 'list') {
+      console.error('Missing instanceName in request')
+      return new Response(
+        JSON.stringify({ error: 'instanceName is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Buscar o usuário pelo email na tabela profiles
+    console.log('Searching for profile with email:', userEmail)
     const { data: profileData, error: profileError } = await supabaseClient
       .from('profiles')
       .select('id, email, full_name, phone, created_at, updated_at')
       .eq('email', userEmail)
       .single()
 
-    if (profileError || !profileData) {
-      console.error('Profile not found:', profileError)
+    if (profileError) {
+      console.error('Profile error:', profileError)
       return new Response(
-        JSON.stringify({ error: 'User profile not found', details: `No profile found for email: ${userEmail}` }),
+        JSON.stringify({ 
+          error: 'User profile not found', 
+          details: profileError.message,
+          email: userEmail 
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!profileData) {
+      console.error('No profile data found for email:', userEmail)
+      return new Response(
+        JSON.stringify({ error: 'User profile not found', email: userEmail }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -53,15 +75,26 @@ serve(async (req) => {
 
     switch (action) {
       case 'create':
+        console.log('Creating instance for user:', userId, 'with name:', instanceName)
+        
         // Verificar se já existe uma instância com esse nome para o usuário
         const { data: existingInstance, error: checkError } = await supabaseClient
           .from('evolution_instances')
           .select('instance_name')
           .eq('user_id', userId)
           .eq('instance_name', instanceName)
-          .single()
+          .maybeSingle()
+
+        if (checkError) {
+          console.error('Error checking existing instance:', checkError)
+          return new Response(
+            JSON.stringify({ error: 'Failed to check existing instances', details: checkError.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
 
         if (existingInstance) {
+          console.log('Instance already exists:', existingInstance)
           return new Response(
             JSON.stringify({ error: 'Instance name already exists for this user' }),
             { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -69,6 +102,7 @@ serve(async (req) => {
         }
 
         // Criar nova instância
+        console.log('Inserting new instance:', { user_id: userId, instance_name: instanceName })
         const { error: insertError } = await supabaseClient
           .from('evolution_instances')
           .insert({
@@ -81,7 +115,12 @@ serve(async (req) => {
         if (insertError) {
           console.error('Error creating instance:', insertError)
           return new Response(
-            JSON.stringify({ error: 'Failed to create instance', details: insertError.message }),
+            JSON.stringify({ 
+              error: 'Failed to create instance', 
+              details: insertError.message,
+              code: insertError.code,
+              hint: insertError.hint
+            }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
