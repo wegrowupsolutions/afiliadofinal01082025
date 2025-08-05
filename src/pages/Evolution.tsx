@@ -20,6 +20,7 @@ const Evolution = () => {
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
   const [connectedInstance, setConnectedInstance] = useState<{instance_name: string, phone_number?: string} | null>(null);
+  const [showActiveConnectionMessage, setShowActiveConnectionMessage] = useState(false);
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
@@ -50,6 +51,17 @@ const Evolution = () => {
             phone_number: data[0].remojid
           };
           setConnectedInstance(instance);
+          
+          // Verificar se o usuário retornou à página (se veio de outra página)
+          const hasVisitedBefore = sessionStorage.getItem('visitedEvolution');
+          if (hasVisitedBefore) {
+            setShowActiveConnectionMessage(true);
+            // Auto-hide message after 5 seconds
+            setTimeout(() => {
+              setShowActiveConnectionMessage(false);
+            }, 5000);
+          }
+          sessionStorage.setItem('visitedEvolution', 'true');
         }
       } catch (error) {
         console.error('Erro ao verificar instância conectada:', error);
@@ -382,6 +394,34 @@ const Evolution = () => {
           </h2>
         </div>
         
+        {/* Mensagem de conexão ativa quando usuário retorna */}
+        {showActiveConnectionMessage && connectedInstance && (
+          <div className="max-w-xl mx-auto mb-6">
+            <Card className="border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg animate-pulse">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-3">
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 rounded-full flex items-center justify-center mx-auto">
+                    <Bot className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                    🔗 Conexão Ativa Detectada!
+                  </h3>
+                  <p className="text-blue-700 dark:text-blue-300 text-sm">
+                    Sua instância <span className="font-semibold">{connectedInstance.instance_name}</span> está ativa e funcionando.
+                  </p>
+                  <Button 
+                    onClick={() => setShowActiveConnectionMessage(false)}
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-300 text-blue-600 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-800/30"
+                  >
+                    Entendi
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
         
         <div className="max-w-xl mx-auto">
           {connectedInstance && !qrCodeData && confirmationStatus !== 'confirmed' && (
