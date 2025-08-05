@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check } from 'lucide-react';
+import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check, List } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,26 +9,50 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Evolution = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [instanceName, setInstanceName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [confirmationStatus, setConfirmationStatus] = useState<'waiting' | 'confirmed' | 'failed' | null>(null);
+  const [userInstances, setUserInstances] = useState<any[]>([]);
+  const [showInstancesList, setShowInstancesList] = useState(false);
   const statusCheckIntervalRef = useRef<number | null>(null);
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
   
   useEffect(() => {
+    if (user) {
+      loadUserInstances();
+    }
     return () => {
       if (statusCheckIntervalRef.current !== null) {
         clearInterval(statusCheckIntervalRef.current);
       }
     };
-  }, []);
+  }, [user]);
+
+  const loadUserInstances = async () => {
+    if (!session?.access_token) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-evolution-instance', {
+        body: { action: 'list' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      setUserInstances(data.instances || []);
+    } catch (error) {
+      console.error('Error loading user instances:', error);
+    }
+  };
   
   const checkConnectionStatus = async () => {
     try {
@@ -39,7 +63,8 @@ const Evolution = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          instanceName: instanceName.trim() 
+          instanceName: instanceName.trim(),
+          userEmail: user?.email // Enviar email do usuário
         }),
       });
       
@@ -72,8 +97,24 @@ const Evolution = () => {
               clearInterval(statusCheckIntervalRef.current);
               statusCheckIntervalRef.current = null;
             }
+            
+            // Marcar instância como conectada no banco
+            if (session?.access_token) {
+              await supabase.functions.invoke('manage-evolution-instance', {
+                body: { 
+                  action: 'connect', 
+                  instanceName: instanceName.trim(),
+                  phoneNumber: responseData.phoneNumber || null
+                },
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+              });
+            }
+            
             setConfirmationStatus('confirmed');
-            retryCountRef.current = 0; // Reset retry counter on success
+            retryCountRef.current = 0;
+            loadUserInstances(); // Recarregar lista de instâncias
             toast({
               title: "Conexão estabelecida!",
               description: "Seu WhatsApp foi conectado com sucesso.",
@@ -90,13 +131,13 @@ const Evolution = () => {
                 statusCheckIntervalRef.current = null;
               }
               setConfirmationStatus('failed');
-              retryCountRef.current = 0; // Reset retry counter
+              retryCountRef.current = 0;
               toast({
                 title: "Falha na conexão",
                 description: "Não foi possível conectar após várias tentativas. Obtendo novo QR code...",
                 variant: "destructive"
               });
-              updateQrCode(); // Automatically get a new QR code
+              updateQrCode();
             } else {
               console.log(`Retrying... (${retryCountRef.current}/${maxRetries})`);
               toast({
@@ -149,7 +190,8 @@ const Evolution = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          instanceName: instanceName.trim() 
+          instanceName: instanceName.trim(),
+          userEmail: user?.email // Enviar email do usuário
         }),
       });
       
@@ -162,7 +204,7 @@ const Evolution = () => {
         const qrCodeUrl = URL.createObjectURL(blob);
         setQrCodeData(qrCodeUrl);
         setConfirmationStatus('waiting');
-        retryCountRef.current = 0; // Reset retry counter when getting new QR code
+        retryCountRef.current = 0;
         console.log('QR code updated successfully');
         
         if (statusCheckIntervalRef.current !== null) {
@@ -209,20 +251,47 @@ const Evolution = () => {
       return;
     }
 
+    if (!session?.access_token) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Usuário não autenticado.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
-    retryCountRef.current = 0; // Reset retry counter for new instance creation
+    retryCountRef.current = 0;
     
     try {
       console.log('Creating instance with name:', instanceName);
+      
+      // Criar instância no banco primeiro
+      const { error: createError } = await supabase.functions.invoke('manage-evolution-instance', {
+        body: { 
+          action: 'create', 
+          instanceName: instanceName.trim()
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (createError) {
+        throw new Error('Erro ao criar instância no banco: ' + createError.message);
+      }
+
+      // Depois criar no webhook
       const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/instancia_evolution_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          instanceName: instanceName.trim() 
+          instanceName: instanceName.trim(),
+          userEmail: user?.email // Enviar email do usuário
         }),
       });
       
@@ -245,6 +314,7 @@ const Evolution = () => {
           checkConnectionStatus();
         }, 10000);
         
+        loadUserInstances(); // Recarregar lista de instâncias
         toast({
           title: "Instância criada!",
           description: "Escaneie o QR code para conectar seu WhatsApp.",
@@ -278,10 +348,40 @@ const Evolution = () => {
   const resetQrCode = () => {
     setQrCodeData(null);
     setConfirmationStatus(null);
-    retryCountRef.current = 0; // Reset retry counter
+    retryCountRef.current = 0;
+    setShowInstancesList(false);
     if (statusCheckIntervalRef.current !== null) {
       clearInterval(statusCheckIntervalRef.current);
       statusCheckIntervalRef.current = null;
+    }
+  };
+
+  const disconnectInstance = async (instance: any) => {
+    if (!session?.access_token) return;
+    
+    try {
+      await supabase.functions.invoke('manage-evolution-instance', {
+        body: { 
+          action: 'disconnect', 
+          instanceName: instance.instance_name
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      
+      loadUserInstances();
+      toast({
+        title: "Instância desconectada",
+        description: `Instância ${instance.instance_name} foi desconectada.`,
+      });
+    } catch (error) {
+      console.error('Error disconnecting instance:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível desconectar a instância.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -316,8 +416,77 @@ const Evolution = () => {
             <Link className="h-6 w-6 text-blue-500 dark:text-blue-400" />
             Conectar Evolution
           </h2>
+          <Button
+            variant="outline"
+            onClick={() => setShowInstancesList(!showInstancesList)}
+            className="flex items-center gap-2"
+          >
+            <List className="h-4 w-4" />
+            {showInstancesList ? 'Ocultar' : 'Ver'} Instâncias
+          </Button>
         </div>
         
+        {showInstancesList && (
+          <Card className="mb-6 dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                <List className="h-5 w-5" />
+                Suas Instâncias
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {userInstances.length === 0 ? (
+                <p className="text-gray-600 dark:text-gray-300 text-center py-4">
+                  Nenhuma instância encontrada.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {userInstances.map((instance) => (
+                    <div
+                      key={instance.id}
+                      className="flex items-center justify-between p-3 border rounded-lg dark:border-gray-600"
+                    >
+                      <div>
+                        <h4 className="font-semibold">{instance.instance_name}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          Status: {instance.is_connected ? 'Conectada' : 'Desconectada'}
+                        </p>
+                        {instance.phone_number && (
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Telefone: {instance.phone_number}
+                          </p>
+                        )}
+                        {instance.connected_at && (
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Conectada em: {new Date(instance.connected_at).toLocaleString('pt-BR')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Badge
+                          variant={instance.is_connected ? "default" : "secondary"}
+                          className={instance.is_connected ? "bg-green-500" : "bg-red-500"}
+                        >
+                          {instance.is_connected ? 'Conectada' : 'Desconectada'}
+                        </Badge>
+                        {instance.is_connected && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => disconnectInstance(instance)}
+                          >
+                            Desconectar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="max-w-xl mx-auto">
           <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
             <CardHeader>
