@@ -438,19 +438,13 @@ const Evolution = () => {
                       <span> ao número <span className="font-semibold">{connectedInstance.phone_number}</span></span>
                     )}.
                   </p>
-                  <div className="flex gap-3 justify-center">
+                   <div className="flex gap-3 justify-center">
                     <Button 
                       onClick={() => navigate('/chats')}
                       variant="default"
                       className="bg-green-600 hover:bg-green-700"
                     >
                       Ir para Conversas
-                    </Button>
-                    <Button 
-                      onClick={() => setConnectedInstance(null)}
-                      variant="outline"
-                    >
-                      Criar Nova Instância
                     </Button>
                   </div>
                 </div>
