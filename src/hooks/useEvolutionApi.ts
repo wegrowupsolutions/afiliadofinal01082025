@@ -81,17 +81,6 @@ export const useEvolutionApi = () => {
       const blob = await response.blob();
       console.log('QR Code recebido, tipo:', blob.type);
       
-      // Salvar no Supabase usando tabela kiwify
-      const { error } = await supabase.rpc('mark_instance_connected', {
-        p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
-        p_instance_name: instanceName.trim(),
-        p_phone_number: null
-      });
-
-      if (error) {
-        console.error('Erro ao salvar instância no Supabase:', error);
-      }
-
       setConnectionStatus('connecting');
       return blob;
     } catch (error) {
@@ -167,6 +156,7 @@ export const useEvolutionApi = () => {
         setConnectionStatus('connected');
         
         // Atualizar status no Supabase usando tabela kiwify
+        console.log('Salvando instância conectada:', instanceName.trim());
         const { error } = await supabase.rpc('mark_instance_connected', {
           p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
           p_instance_name: instanceName.trim(),
@@ -175,6 +165,8 @@ export const useEvolutionApi = () => {
 
         if (error) {
           console.error('Erro ao atualizar status no Supabase:', error);
+        } else {
+          console.log('Instância salva com sucesso no Supabase');
         }
 
         return true;
