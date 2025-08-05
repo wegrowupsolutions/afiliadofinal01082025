@@ -33,7 +33,7 @@ const Evolution = () => {
         const { data, error } = await supabase
           .from('kiwify')
           .select('"Nome da instancia da Evolution", remojid, is_connected')
-          .eq('id', parseInt(user.user.id))
+          .eq('user_id', user.user.id)
           .eq('is_connected', true)
           .order('connected_at', { ascending: false })
           .limit(1);

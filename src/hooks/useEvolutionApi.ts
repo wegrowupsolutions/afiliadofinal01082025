@@ -155,18 +155,32 @@ export const useEvolutionApi = () => {
         console.log('Conexão confirmada!');
         setConnectionStatus('connected');
         
+        // Obter user_id atual
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.error('Erro ao obter usuário:', userError);
+          return true; // Continuar mesmo com erro de usuário
+        }
+
         // Atualizar status no Supabase usando tabela kiwify
         console.log('Salvando instância conectada:', instanceName.trim());
-        const { error } = await supabase.rpc('mark_instance_connected', {
-          p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
-          p_instance_name: instanceName.trim(),
-          p_phone_number: responseData.instance?.owner || responseData.owner || null
-        });
+        console.log('User ID:', userData.user?.id);
+        console.log('Phone number:', responseData.instance?.owner || responseData.owner);
+        
+        try {
+          const { error } = await supabase.rpc('mark_instance_connected', {
+            p_user_id: userData.user?.id || '',
+            p_instance_name: instanceName.trim(),
+            p_phone_number: responseData.instance?.owner || responseData.owner || null
+          });
 
-        if (error) {
-          console.error('Erro ao atualizar status no Supabase:', error);
-        } else {
-          console.log('Instância salva com sucesso no Supabase');
+          if (error) {
+            console.error('Erro ao atualizar status no Supabase:', error);
+          } else {
+            console.log('Instância salva com sucesso no Supabase');
+          }
+        } catch (rpcError) {
+          console.error('Erro na chamada RPC:', rpcError);
         }
 
         return true;
@@ -192,7 +206,7 @@ export const useEvolutionApi = () => {
         .from('kiwify')
         .select('*')
         .eq('Nome da instancia da Evolution', instanceName.trim())
-        .eq('id', parseInt(userId))
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(1);
 
