@@ -129,200 +129,204 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Animated gradients */}
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-accent/20 to-primary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-        
-        {/* Circuit patterns */}
-        <div className="absolute top-20 left-20 w-32 h-32 opacity-10">
-          <div className="w-full h-full border border-primary/30 rounded-lg"></div>
-          <div className="absolute top-4 left-4 w-6 h-6 border border-primary/50 rounded-full"></div>
-          <div className="absolute bottom-4 right-4 w-4 h-4 bg-primary/30 rounded-sm"></div>
-        </div>
-        
-        {/* Tech icons floating */}
-        <div className="absolute top-1/4 right-1/4 animate-pulse">
-          <Lock className="h-8 w-8 text-primary/20 animate-bounce" />
-        </div>
-        <div className="absolute bottom-1/3 left-1/3 animate-pulse" style={{ animationDelay: '1s' }}>
-          <Mail className="h-6 w-6 text-accent/30" />
-        </div>
-      </div>
-
+    <div className="min-h-screen flex relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900">
       {/* Theme Toggle */}
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 right-4 z-30">
         <ThemeToggle />
+      </div>
+      
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 z-0">
+        {/* Circuit pattern overlay */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 0 10 L 20 10 M 10 0 L 10 20" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-cyan-400"/>
+                <circle cx="10" cy="10" r="1" fill="currentColor" className="text-cyan-400"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#circuit)"/>
+          </svg>
+        </div>
+        
+        {/* Floating tech elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          {/* Glowing orbs */}
+          <div className="absolute top-[15%] left-[10%] w-32 h-32 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 opacity-20 animate-pulse blur-xl"></div>
+          <div className="absolute bottom-[25%] right-[15%] w-40 h-40 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500 opacity-15 animate-pulse blur-xl" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-[45%] right-[25%] w-24 h-24 rounded-full bg-gradient-to-r from-blue-400 to-teal-500 opacity-25 animate-pulse blur-xl" style={{ animationDelay: '4s' }}></div>
+          
+          {/* Tech icons with glow effect */}
+          <Lock className="absolute top-[20%] right-[30%] w-16 h-16 text-cyan-400 opacity-30 animate-float drop-shadow-glow" style={{ animationDelay: '1s' }} />
+          <Mail className="absolute bottom-[35%] left-[20%] w-20 h-20 text-teal-400 opacity-25 animate-float drop-shadow-glow" style={{ animationDelay: '3s' }} />
+          <CheckCircle className="absolute top-[65%] right-[15%] w-14 h-14 text-blue-400 opacity-30 animate-pulse drop-shadow-glow" style={{ animationDelay: '0.5s' }} />
+        </div>
+        
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-slate-900/30 to-transparent"></div>
       </div>
 
       {/* Main Content */}
-      <div className="w-full max-w-md relative z-10">
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-border/50 p-8 animate-slide-up">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="bg-primary/10 p-4 rounded-full">
-                <Lock className="h-8 w-8 text-primary drop-shadow-glow" />
+      <div className="m-auto z-20 px-6 py-8 transition-all duration-700 transform animate-fade-in">
+        <div className="w-full max-w-md mx-auto">
+          <form 
+            onSubmit={handleSubmit} 
+            className="relative backdrop-blur-xl bg-slate-900/40 border border-cyan-400/20 rounded-2xl p-8 space-y-6 shadow-2xl shadow-cyan-500/10 animate-fade-in"
+          >
+            {/* Header with AI theme */}
+            <div className="text-center mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div className="flex items-center justify-center mb-4">
+                <div className="relative">
+                  <Lock className="h-12 w-12 text-cyan-400 drop-shadow-glow animate-pulse" />
+                  <div className="absolute inset-0 h-12 w-12 bg-cyan-400/20 rounded-full blur-md"></div>
+                </div>
               </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-400 bg-clip-text text-transparent mb-2">
+                Definir Nova Senha
+              </h1>
+              <p className="text-slate-300 text-sm">
+                Digite seu email e crie uma nova senha para acessar a plataforma
+              </p>
+              <div className="mt-4 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Definir Nova Senha
-            </h1>
-            <p className="text-muted-foreground">
-              Digite seu email e crie uma nova senha para acessar a plataforma
-            </p>
-          </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email
-              </Label>
-              <div className="relative">
+            <div className="space-y-5 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+              {/* Email */}
+              <div className="relative group">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 group-hover:text-cyan-400 transition-colors duration-300" />
                 <Input
                   id="email"
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="pl-10 h-12 bg-background/50 border-border/60 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                  className={`pl-10 h-12 bg-slate-800/50 border-slate-600/50 text-white placeholder-slate-400 rounded-lg transition-all duration-300 hover:border-cyan-400/50 focus:border-cyan-400 focus:bg-slate-800/70 ${errors.email ? 'border-red-400' : ''}`}
                   placeholder="seu@email.com"
                   required
                 />
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                {errors.email && (
+                  <p className="text-red-400 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
-              {errors.email && (
-                <Alert className="border-destructive/20 bg-destructive/5">
-                  <AlertDescription className="text-destructive text-sm">
-                    {errors.email}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                Nova Senha
-              </Label>
-              <div className="relative">
+              {/* Password */}
+              <div className="relative group">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 group-hover:text-cyan-400 transition-colors duration-300" />
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleChange}
-                  className="pl-10 pr-10 h-12 bg-background/50 border-border/60 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                  className={`pl-10 pr-10 h-12 bg-slate-800/50 border-slate-600/50 text-white placeholder-slate-400 rounded-lg transition-all duration-300 hover:border-cyan-400/50 focus:border-cyan-400 focus:bg-slate-800/70 ${errors.password ? 'border-red-400' : ''}`}
                   placeholder="Mínimo 6 caracteres"
                   required
                 />
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 hover:text-cyan-400 transition-colors duration-300"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
+                {errors.password && (
+                  <p className="text-red-400 text-sm mt-1">{errors.password}</p>
+                )}
               </div>
-              {errors.password && (
-                <Alert className="border-destructive/20 bg-destructive/5">
-                  <AlertDescription className="text-destructive text-sm">
-                    {errors.password}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
 
-            {/* Confirm Password */}
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-                Confirmar Senha
-              </Label>
-              <div className="relative">
+              {/* Confirm Password */}
+              <div className="relative group">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 group-hover:text-cyan-400 transition-colors duration-300" />
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="pl-10 pr-10 h-12 bg-background/50 border-border/60 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                  className={`pl-10 pr-10 h-12 bg-slate-800/50 border-slate-600/50 text-white placeholder-slate-400 rounded-lg transition-all duration-300 hover:border-cyan-400/50 focus:border-cyan-400 focus:bg-slate-800/70 ${errors.confirmPassword ? 'border-red-400' : ''}`}
                   placeholder="Digite a senha novamente"
                   required
                 />
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 hover:text-cyan-400 transition-colors duration-300"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
+                {errors.confirmPassword && (
+                  <p className="text-red-400 text-sm mt-1">{errors.confirmPassword}</p>
+                )}
               </div>
-              {errors.confirmPassword && (
-                <Alert className="border-destructive/20 bg-destructive/5">
-                  <AlertDescription className="text-destructive text-sm">
-                    {errors.confirmPassword}
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
 
             {/* Submit Button */}
-            <Button
+            <button
               type="submit"
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg button-hover-effect"
               disabled={isLoading}
+              className="w-full relative overflow-hidden bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-900 font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-all duration-300 animate-slide-up shadow-lg shadow-cyan-500/25 hover:shadow-xl hover:shadow-cyan-500/30 group"
+              style={{ animationDelay: '0.6s' }}
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               {isLoading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                  <div className="h-5 w-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
                   <span>Alterando senha...</span>
                 </div>
               ) : (
-                'Alterar Senha'
+                <>
+                  <Lock className="mr-2 h-5 w-5" />
+                  Alterar Senha
+                </>
               )}
-            </Button>
-          </form>
-
-          {/* Back to Login */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => navigate('/')}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Voltar para o login
             </button>
-          </div>
+
+            {/* Back to Login */}
+            <div className="text-center animate-slide-up" style={{ animationDelay: '0.7s' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
+              >
+                Voltar para o login
+              </button>
+            </div>
+
+            {/* Tech decoration at bottom */}
+            <div className="mt-6 flex items-center justify-center space-x-4 opacity-30">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+              <div className="w-1 h-1 bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+            </div>
+          </form>
         </div>
       </div>
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full mx-4 animate-slide-up">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="relative backdrop-blur-xl bg-slate-900/40 border border-cyan-400/20 rounded-2xl p-8 max-w-md w-full mx-4 animate-slide-up shadow-2xl shadow-cyan-500/10">
             <div className="text-center">
               <div className="flex justify-center mb-4">
-                <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-full">
-                  <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
+                <div className="relative">
+                  <CheckCircle className="h-12 w-12 text-cyan-400 drop-shadow-glow" />
+                  <div className="absolute inset-0 h-12 w-12 bg-cyan-400/20 rounded-full blur-md"></div>
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-400 bg-clip-text text-transparent mb-4">
                 Senha Alterada com Sucesso!
               </h2>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-slate-300 mb-6">
                 Sua senha foi definida com sucesso. Agora você pode fazer login na plataforma.
               </p>
-              <Button
+              <button
                 onClick={handleSuccessOk}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                className="w-full relative overflow-hidden bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-900 font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-lg shadow-cyan-500/25 hover:shadow-xl hover:shadow-cyan-500/30 group"
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 OK
-              </Button>
+              </button>
             </div>
           </div>
         </div>
