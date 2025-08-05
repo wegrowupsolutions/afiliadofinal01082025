@@ -81,14 +81,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Erro na sincronização Kiwify:', syncError);
       }
 
-      // Se há dados do Kiwify e não há conta no auth.users, criar conta
+      // Se há dados do Kiwify, verificar se precisa criar conta
       if (kiwifySync && kiwifySync.length > 0) {
-        const kiwifyData = kiwifySync[0];
+        const kiwifyData = kiwifySync[0] as any;
         
-        // Verificar se usuário já existe no auth.users
-        const { data: existingUser } = await supabase.auth.getUser();
-        
-        if (!existingUser.user || !kiwifyData.user_id) {
+        // A função agora retorna should_create_account que indica se precisa criar
+        if (kiwifyData.should_create_account) {
           // Criar conta no Supabase Auth
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: email,
@@ -120,6 +118,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
           }
 
+          // Atualizar kiwify com o novo user_id
+          if (signUpData.user) {
+            await supabase
+              .from('kiwify')
+              .update({ 
+                user_id: signUpData.user.id,
+                senha_alterada: true 
+              })
+              .eq('email', email);
+              
+            // Criar perfil
+            await supabase
+              .from('profiles')
+              .upsert({ 
+                id: signUpData.user.id,
+                email: email,
+                full_name: (kiwifyData.kiwify_data as any)?.nome || ''
+              });
+          }
+
           // Conta criada, fazer login
           const loginResponse = await supabase.auth.signInWithPassword({ email, password });
           setIsLoading(false);
@@ -130,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // Login normal para usuários já existentes
+      // Login normal para usuários já existentes (incluindo Kiwify já sincronizados)
       const response = await supabase.auth.signInWithPassword({ email, password });
       setIsLoading(false);
       
