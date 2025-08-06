@@ -16,9 +16,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    console.log('🔄 Iniciando sincronização Evolution → Supabase (Multi-usuário)...')
+    console.log('🔄 Buscando dados da Evolution API...')
 
-    // 1. Buscar TODAS as instâncias da Evolution API
+    // 1. Buscar dados da Evolution API usando fetchInstances
     const evolutionResponse = await fetch('https://evolution.serverwegrowup.com.br/instance/fetchInstances', {
       method: 'GET',
       headers: {
@@ -28,13 +28,36 @@ serve(async (req) => {
     })
 
     if (!evolutionResponse.ok) {
-      throw new Error(`Evolution API falhou: ${evolutionResponse.status}`)
+      const errorText = await evolutionResponse.text()
+      console.error('❌ Erro Evolution API:', errorText)
+      throw new Error(`Evolution API erro ${evolutionResponse.status}: ${errorText}`)
     }
 
     const evolutionData = await evolutionResponse.json()
-    console.log(`📊 ${evolutionData.length} instâncias encontradas na Evolution`)
+    console.log('📊 Evolution data recebido:', JSON.stringify(evolutionData, null, 2))
 
-    // 2. Buscar TODOS os usuários com instâncias cadastradas no Supabase
+    // 2. Verificar se evolutionData é array ou objeto
+    let instances = []
+    if (Array.isArray(evolutionData)) {
+      instances = evolutionData
+    } else if (evolutionData.instances && Array.isArray(evolutionData.instances)) {
+      instances = evolutionData.instances
+    } else if (evolutionData.instance) {
+      instances = [evolutionData]
+    } else {
+      console.log('⚠️ Formato inesperado dos dados da Evolution:', evolutionData)
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Formato de dados Evolution inesperado'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    console.log(`📊 ${instances.length} instâncias encontradas na Evolution`)
+
+    // 3. Buscar usuários com instâncias na tabela kiwify
     const { data: users, error: usersError } = await supabase
       .from('kiwify')
       .select('user_id, "Nome da instancia da Evolution"')
@@ -48,89 +71,97 @@ serve(async (req) => {
     console.log(`👥 ${users?.length || 0} usuários com instâncias encontrados`)
 
     let syncCount = 0
-    let processedUsers = []
+    let processedInstances = []
 
-    // 3. Para cada instância da Evolution, sincronizar com usuário correspondente
-    for (const evolutionItem of evolutionData) {
-      const instance = evolutionItem.instance
+    // 4. Processar cada instância
+    for (const instanceItem of instances) {
+      const instance = instanceItem.instance || instanceItem
       
-      // Capturar nome da instância (flexível para instanceName ou name)
-      const instanceName = instance.instanceName || instance.name
+      // Extrair nome da instância de diferentes formatos possíveis
+      const instanceName = instance.instanceName || instance.name || instance.id
       
       if (!instanceName) {
-        console.log('⚠️ Instância sem nome encontrada, pulando...')
+        console.log('⚠️ Instância sem nome, pulando...')
         continue
       }
 
-      // Encontrar usuário específico que possui esta instância (ISOLAMENTO)
+      console.log(`🔍 Processando instância: ${instanceName}`)
+      console.log(`📋 Dados da instância:`, JSON.stringify(instance, null, 2))
+
+      // Encontrar usuário correspondente
       const user = users?.find(u => u["Nome da instancia da Evolution"] === instanceName)
       
       if (user) {
-        console.log(`🔗 Sincronizando ${instanceName} para user ${user.user_id}`)
+        console.log(`✅ Match encontrado: ${instanceName} → User ${user.user_id}`)
         
-        // 4. Atualizar APENAS OS DADOS DESTE USUÁRIO ESPECÍFICO
+        // Preparar dados para atualização
         const updateData = {
           // Status de conexão
-          is_connected: instance.status === 'open',
-          connected_at: instance.status === 'open' ? new Date().toISOString() : null,
-          disconnected_at: instance.status !== 'open' ? new Date().toISOString() : null,
+          is_connected: instance.status === 'open' || instance.state === 'open',
+          connected_at: (instance.status === 'open' || instance.state === 'open') ? new Date().toISOString() : null,
+          disconnected_at: (instance.status !== 'open' && instance.state !== 'open') ? new Date().toISOString() : null,
           
-          // Dados completos da Evolution (com fallbacks)
-          evolution_instance_id: instance.instanceId || instance.id,
-          evolution_profile_name: instance.profileName || instance.profile?.name,
-          evolution_profile_picture_url: instance.profilePictureURL || instance.profile?.pictureUrl,
-          evolution_profile_status: instance.profileStatus || instance.profile?.status,
-          evolution_server_url: instance.serverUrl || instance.server?.url,
-          evolution_api_key: instance.apikey || instance.apiKey,
-          evolution_integration_data: instance.integration,
-          evolution_raw_data: evolutionItem,
+          // Dados da Evolution
+          evolution_instance_id: instance.instanceId || instance.id || instance.key,
+          evolution_profile_name: instance.profileName || instance.profile?.name || instance.displayName,
+          evolution_profile_picture_url: instance.profilePictureURL || instance.profile?.pictureUrl || instance.profilePicture,
+          evolution_profile_status: instance.profileStatus || instance.profile?.status || instance.status,
+          evolution_server_url: instance.serverUrl || instance.server || 'https://evolution.serverwegrowup.com.br',
+          evolution_api_key: instance.apikey || instance.apiKey || '066327121bd64f8356c26e9edfa1799d',
+          evolution_integration_data: instance.integration || null,
+          evolution_raw_data: instanceItem,
           evolution_last_sync: new Date().toISOString(),
           
           // Campos específicos
-          remojid: instance.owner,
+          remojid: instance.owner || instance.phone || instance.number,
           evo_instance: instanceName
         }
 
-        // ATUALIZAR APENAS ESTE USUÁRIO ESPECÍFICO (ISOLAMENTO GARANTIDO)
-        const { error } = await supabase
+        console.log(`📝 Dados para atualização:`, JSON.stringify(updateData, null, 2))
+
+        // Atualizar usuário específico
+        const { error: updateError } = await supabase
           .from('kiwify')
           .update(updateData)
-          .eq('user_id', user.user_id) // ← ISOLAMENTO: só afeta este usuário
+          .eq('user_id', user.user_id)
 
-        if (error) {
-          console.error(`❌ Erro ao atualizar ${instanceName} (user: ${user.user_id}):`, error)
+        if (updateError) {
+          console.error(`❌ Erro ao atualizar ${instanceName}:`, updateError)
         } else {
-          console.log(`✅ ${instanceName} sincronizado com sucesso (user: ${user.user_id})`)
+          console.log(`✅ ${instanceName} atualizado com sucesso para user ${user.user_id}`)
           syncCount++
-          processedUsers.push({
-            user_id: user.user_id,
+          processedInstances.push({
             instance_name: instanceName,
-            status: instance.status
+            user_id: user.user_id,
+            status: instance.status || instance.state || 'unknown'
           })
         }
       } else {
-        console.log(`⚠️ Instância ${instanceName} não tem usuário correspondente no banco`)
+        console.log(`⚠️ Nenhum usuário encontrado para instância: ${instanceName}`)
+        console.log(`📋 Usuários disponíveis:`, users?.map(u => u["Nome da instancia da Evolution"]))
       }
     }
 
-    console.log(`🎯 Sincronização concluída: ${syncCount} usuários atualizados`)
-
-    return new Response(JSON.stringify({
+    const result = {
       success: true,
-      message: `Sincronização multi-usuário completa`,
-      total_evolution_instances: evolutionData.length,
-      total_users_with_instances: users?.length || 0,
-      synced_users: syncCount,
-      processed_users: processedUsers
-    }), {
+      message: `Sincronização concluída: ${syncCount}/${instances.length}`,
+      total_instances: instances.length,
+      synced_count: syncCount,
+      processed_instances: processedInstances
+    }
+
+    console.log('🎯 Resultado final:', JSON.stringify(result, null, 2))
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
 
   } catch (error) {
-    console.error('💥 Erro na sincronização multi-usuário:', error)
+    console.error('💥 Erro na sincronização:', error)
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error.message,
+      stack: error.stack
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
