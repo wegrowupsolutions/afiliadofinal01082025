@@ -15,9 +15,12 @@ export function useEvolutionConnection() {
     isConnected: false
   });
   const [loading, setLoading] = useState(true);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const { user } = useAuth();
   const { configurations } = useSystemConfigurations();
   const isManualDisconnection = useRef(false);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastCheckTime = useRef<number>(0);
 
   // Configurações globais com fallbacks
   const realtimeEnabled = configurations.evolution_realtime_enabled !== 'false';
@@ -26,31 +29,82 @@ export function useEvolutionConnection() {
   const autoCleanupOnDisconnect = configurations.evolution_auto_cleanup_on_disconnect !== 'false';
   const visibilityCheckEnabled = configurations.evolution_visibility_check_enabled !== 'false';
 
-  // Check initial connection status
-  const checkConnectionStatus = async () => {
-    if (!user?.id) {
+  // Debounced check connection status
+  const debouncedCheckConnectionStatus = async (source = 'unknown') => {
+    const now = Date.now();
+    const timeSinceLastCheck = now - lastCheckTime.current;
+    
+    // Skip if less than 2 seconds since last check and not manual
+    if (timeSinceLastCheck < 2000 && source !== 'manual') {
+      console.log(`⏩ Pulando verificação de conexão (debounce ${timeSinceLastCheck}ms) - source: ${source}`);
+      return;
+    }
+    
+    // Clear existing debounce timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+    }
+    
+    // Set debounce for automatic checks
+    if (source !== 'manual') {
+      debounceTimer.current = setTimeout(() => {
+        checkConnectionStatusInternal(source);
+      }, 2000);
+      return;
+    }
+    
+    // Execute immediately for manual checks
+    await checkConnectionStatusInternal(source);
+  };
+
+  // Internal check connection status
+  const checkConnectionStatusInternal = async (source = 'unknown') => {
+    if (!user?.id || isDisconnecting) {
       setLoading(false);
       return;
     }
 
+    lastCheckTime.current = Date.now();
+
     try {
-      console.log('🔍 Verificando status inicial da conexão Evolution');
+      console.log(`🔍 [${source}] Verificando status da conexão Evolution - timestamp: ${new Date().toISOString()}`);
+      
+      // Check if we're in manual disconnection mode
+      if (manualDisconnectProtection && isManualDisconnection.current) {
+        console.log(`🛡️ [${source}] Bloqueado por proteção de desconexão manual`);
+        return;
+      }
       
       const { data, error } = await supabase
         .from('kiwify')
-        .select('is_connected, "Nome da instancia da Evolution", remojid, connected_at')
+        .select('is_connected, "Nome da instancia da Evolution", remojid, connected_at, disconnected_at')
         .eq('user_id', user.id)
         .eq('is_connected', true)
         .maybeSingle();
 
       if (error) {
-        console.error('❌ Erro ao verificar status da conexão:', error);
-        setConnectionStatus({ isConnected: false });
+        console.error(`❌ [${source}] Erro ao verificar status da conexão:`, error);
+        if (!isManualDisconnection.current) {
+          setConnectionStatus({ isConnected: false });
+        }
         return;
       }
 
+      const currentLocalState = connectionStatus.isConnected;
+      const dbState = !!data;
+      
+      // Log state comparison
+      console.log(`📊 [${source}] Estado local: ${currentLocalState}, Estado DB: ${dbState}, Manual: ${isManualDisconnection.current}`);
+
       if (data) {
-        console.log('✅ Instância conectada encontrada:', data);
+        console.log(`✅ [${source}] Instância conectada encontrada:`, {
+          name: data['Nome da instancia da Evolution'],
+          phone: data.remojid,
+          connected_at: data.connected_at,
+          disconnected_at: data.disconnected_at
+        });
+        
         if (!isManualDisconnection.current) {
           setConnectionStatus({
             isConnected: true,
@@ -58,15 +112,19 @@ export function useEvolutionConnection() {
             phoneNumber: data.remojid,
             connectedAt: data.connected_at
           });
+        } else {
+          console.log(`🛡️ [${source}] Estado local mantido devido à proteção manual`);
         }
       } else {
-        console.log('ℹ️ Nenhuma instância conectada encontrada');
-        if (!isManualDisconnection.current) {
+        console.log(`ℹ️ [${source}] Nenhuma instância conectada encontrada`);
+        if (!isManualDisconnection.current && !isDisconnecting) {
           setConnectionStatus({ isConnected: false });
+        } else {
+          console.log(`🛡️ [${source}] Estado local mantido devido à proteção manual ou processo de desconexão`);
         }
       }
     } catch (error) {
-      console.error('❌ Erro ao verificar conexão:', error);
+      console.error(`❌ [${source}] Erro ao verificar conexão:`, error);
       if (!isManualDisconnection.current) {
         setConnectionStatus({ isConnected: false });
       }
@@ -75,22 +133,34 @@ export function useEvolutionConnection() {
     }
   };
 
-  // Function to mark manual disconnection
+  // Public check function
+  const checkConnectionStatus = () => debouncedCheckConnectionStatus('manual');
+
+  // Function to mark manual disconnection with enhanced protection
   const markManualDisconnection = () => {
     if (!manualDisconnectProtection) return;
     
-    console.log('🔄 Marcando desconexão manual (proteção global ativada)');
+    console.log('🔄 Marcando desconexão manual (proteção global ativada) - timestamp:', new Date().toISOString());
     isManualDisconnection.current = true;
+    setIsDisconnecting(true);
+    
+    // Clear any pending debounce timers
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+    }
     
     if (autoCleanupOnDisconnect) {
+      console.log('🧹 Limpando estado local devido à desconexão manual');
       setConnectionStatus({ isConnected: false });
     }
     
-    // Reset flag after 5 seconds to allow normal operation
+    // Enhanced timeout for manual disconnection protection (15 seconds)
     setTimeout(() => {
       isManualDisconnection.current = false;
-      console.log('🔄 Flag de desconexão manual resetada');
-    }, 5000);
+      setIsDisconnecting(false);
+      console.log('🔄 Flag de desconexão manual resetada após 15s - timestamp:', new Date().toISOString());
+    }, 15000);
   };
 
   // Set up realtime subscription for connection updates
@@ -140,7 +210,7 @@ export function useEvolutionConnection() {
       .subscribe();
 
     // Check initial status
-    checkConnectionStatus();
+    debouncedCheckConnectionStatus('initial');
 
     // Refresh status when page becomes visible (global rule)
     let visibilityHandler: (() => void) | null = null;
@@ -148,7 +218,7 @@ export function useEvolutionConnection() {
       visibilityHandler = () => {
         if (!document.hidden && (!manualDisconnectProtection || !isManualDisconnection.current)) {
           console.log('📱 Página ficou visível, verificando status da conexão (regra global)...');
-          setTimeout(checkConnectionStatus, 1000);
+          setTimeout(() => debouncedCheckConnectionStatus('visibility'), 1000);
         }
       };
       document.addEventListener('visibilitychange', visibilityHandler);
@@ -158,17 +228,23 @@ export function useEvolutionConnection() {
     const interval = setInterval(() => {
       if (!manualDisconnectProtection || !isManualDisconnection.current) {
         console.log(`⏰ Verificação periódica do status da conexão (intervalo global: ${periodicCheckInterval}ms)`);
-        checkConnectionStatus();
+        debouncedCheckConnectionStatus('periodic');
       }
     }, periodicCheckInterval);
 
     return () => {
-      console.log('🔄 Removendo subscription realtime');
+      console.log('🔄 Removendo subscription realtime e limpando timers');
       supabase.removeChannel(channel);
       if (visibilityHandler) {
         document.removeEventListener('visibilitychange', visibilityHandler);
       }
       clearInterval(interval);
+      
+      // Clean up debounce timer
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+      }
     };
   }, [user?.id, realtimeEnabled, periodicCheckInterval, manualDisconnectProtection, autoCleanupOnDisconnect, visibilityCheckEnabled]);
 
