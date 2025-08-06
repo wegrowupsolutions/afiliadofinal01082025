@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import { useEvolutionConnection } from '@/hooks/useEvolutionConnection';
 
 const Evolution = () => {
   const navigate = useNavigate();
@@ -26,59 +27,57 @@ const Evolution = () => {
   const retryCountRef = useRef<number>(0);
   const maxRetries = 3;
   
-  // Usar o hook useEvolutionApi para APIs
+  // Usar hooks para APIs e conexão
   const { 
     createInstance: createEvolutionInstance, 
     updateQrCode: updateEvolutionQrCode, 
     checkConnectionStatus: checkEvolutionConnectionStatus 
   } = useEvolutionApi();
   
+  const { connectionStatus, loading: connectionLoading } = useEvolutionConnection();
+  
+  // Atualizar estado baseado na conexão realtime
   useEffect(() => {
-    const checkExistingInstance = async () => {
-      try {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) return;
-
-        const { data, error } = await supabase
-          .from('kiwify')
-          .select('"Nome da instancia da Evolution", remojid, is_connected, disconnected_at')
-          .eq('user_id', user.user.id)
-          .eq('is_connected', true)
-          .is('disconnected_at', null)
-          .order('connected_at', { ascending: false })
-          .limit(1);
-
-        if (error) {
-          console.error('Erro ao verificar instância existente:', error);
-          return;
+    if (connectionStatus.isConnected && connectionStatus.instanceName) {
+      console.log('✅ Conexão detectada via realtime:', connectionStatus);
+      setConnectedInstance({
+        instance_name: connectionStatus.instanceName,
+        phone_number: connectionStatus.phoneNumber
+      });
+      
+      // Se estava esperando confirmação, marcar como confirmado
+      if (confirmationStatus === 'waiting') {
+        setConfirmationStatus('confirmed');
+        
+        // Clear any existing interval
+        if (statusCheckIntervalRef.current !== null) {
+          clearInterval(statusCheckIntervalRef.current);
+          statusCheckIntervalRef.current = null;
         }
-
-        if (data && data.length > 0) {
-          // Mapear campos da tabela kiwify para o formato esperado
-          const instance = {
-            instance_name: data[0]["Nome da instancia da Evolution"],
-            phone_number: data[0].remojid
-          };
-          setConnectedInstance(instance);
-          
-          // Verificar se o usuário retornou à página (se veio de outra página)
-          const hasVisitedBefore = sessionStorage.getItem('visitedEvolution');
-          if (hasVisitedBefore) {
-            setShowActiveConnectionMessage(true);
-            // Auto-hide message after 5 seconds
-            setTimeout(() => {
-              setShowActiveConnectionMessage(false);
-            }, 5000);
-          }
-          sessionStorage.setItem('visitedEvolution', 'true');
-        }
-      } catch (error) {
-        console.error('Erro ao verificar instância conectada:', error);
+        
+        toast({
+          title: "Conexão estabelecida!",
+          description: "Seu WhatsApp foi conectado com sucesso via realtime.",
+        });
       }
-    };
-
-    checkExistingInstance();
-    
+      
+      // Mostrar mensagem se usuário retornou à página
+      const hasVisitedBefore = sessionStorage.getItem('visitedEvolution');
+      if (hasVisitedBefore && !qrCodeData) {
+        setShowActiveConnectionMessage(true);
+        setTimeout(() => {
+          setShowActiveConnectionMessage(false);
+        }, 5000);
+      }
+      sessionStorage.setItem('visitedEvolution', 'true');
+    } else if (!connectionStatus.isConnected) {
+      console.log('ℹ️ Nenhuma conexão ativa detectada');
+      setConnectedInstance(null);
+    }
+  }, [connectionStatus, confirmationStatus, qrCodeData, toast]);
+  
+  // Cleanup interval on unmount
+  useEffect(() => {
     return () => {
       if (statusCheckIntervalRef.current !== null) {
         clearInterval(statusCheckIntervalRef.current);

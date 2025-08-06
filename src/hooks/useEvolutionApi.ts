@@ -205,14 +205,23 @@ export const useEvolutionApi = () => {
             p_phone_number: responseData.instance?.owner || responseData.owner || null
           });
 
-          console.log('Resposta RPC:', { data, error });
+          console.log('Resposta RPC (melhorada):', { data, error });
 
           if (error) {
-            console.error('Erro ao atualizar status no Supabase:', error);
+            console.error('❌ Erro ao atualizar status no Supabase:', error);
             console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
           } else {
-            console.log('Instância salva com sucesso no Supabase');
-            console.log('Dados retornados:', data);
+            console.log('✅ Instância salva com sucesso no Supabase');
+            console.log('📊 Dados retornados:', data);
+            
+            // Log estruturado do resultado
+            if (data && typeof data === 'object' && !Array.isArray(data)) {
+              const resultData = data as Record<string, any>;
+              console.log('🔄 Ação realizada:', resultData.action || 'unknown');
+              console.log('👤 User ID usado:', resultData.user_id || 'N/A');
+              console.log('📱 Instance Name:', resultData.instance_name || 'N/A');
+              console.log('📞 Phone Number:', resultData.phone_number || 'N/A');
+            }
           }
         } catch (rpcError) {
           console.error('Erro na chamada RPC (catch):', rpcError);

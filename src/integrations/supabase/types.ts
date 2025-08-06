@@ -624,7 +624,7 @@ export type Database = {
           p_instance_name: string
           p_phone_number?: string
         }
-        Returns: undefined
+        Returns: Json
       }
       sync_kiwify_user_on_login: {
         Args: { user_email: string; user_password: string }
