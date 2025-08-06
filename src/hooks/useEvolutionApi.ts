@@ -136,6 +136,73 @@ export const useEvolutionApi = () => {
     }
   };
 
+  // Função para salvar dados completos da conexão na tabela kiwify
+  const saveConnectionData = async (instanceName: string, userId?: string) => {
+    try {
+      console.log('🔄 Salvando dados completos da conexão para:', instanceName);
+      
+      if (!userId) {
+        console.error('❌ User ID não disponível para salvar dados');
+        return;
+      }
+
+      // 1. Buscar dados completos da instância conectada
+      const instanceData = await checkConnectionState(instanceName);
+      console.log('📊 Dados da instância obtidos:', instanceData);
+      
+      // 2. Extrair número do WhatsApp e outros dados
+      const phoneNumber = instanceData?.instance?.owner || 
+                         instanceData?.instance?.profileName || 
+                         instanceData?.owner ||
+                         instanceData?.profileName ||
+                         null;
+      
+      console.log('📞 Número extraído:', phoneNumber);
+      
+      // 3. Salvar/atualizar na tabela kiwify
+      const updateData = {
+        user_id: userId,
+        'Nome da instancia da Evolution': instanceName,
+        is_connected: true,
+        connected_at: new Date().toISOString(),
+        remojid: phoneNumber, // Usando a coluna existente para phone number
+        evolution_raw_data: instanceData, // Salvar JSON completo para referência
+        evolution_last_sync: new Date().toISOString()
+      };
+
+      console.log('💾 Dados para salvar:', updateData);
+
+      const { data, error } = await supabase
+        .from('kiwify')
+        .upsert(updateData, {
+          onConflict: 'user_id'
+        });
+        
+      if (error) {
+        console.error('❌ Erro ao salvar dados completos:', error);
+      } else {
+        console.log('✅ Dados completos salvos no Supabase com sucesso');
+        console.log('📊 Resposta da atualização:', data);
+        
+        // Sincronizar dados Evolution após salvamento
+        try {
+          console.log('🔄 Iniciando sincronização de dados Evolution...');
+          const syncResponse = await supabase.functions.invoke('sync-evolution-kiwify');
+          
+          if (syncResponse.error) {
+            console.error('⚠️ Erro na sincronização Evolution:', syncResponse.error);
+          } else {
+            console.log('✅ Dados Evolution sincronizados:', syncResponse.data);
+          }
+        } catch (syncError) {
+          console.error('⚠️ Falha ao sincronizar dados Evolution:', syncError);
+        }
+      }
+    } catch (error) {
+      console.error('💥 Erro geral ao salvar dados da conexão:', error);
+    }
+  };
+
   const checkConnectionStatus = async (instanceName: string): Promise<boolean> => {
     try {
       console.log('Verificando status da conexão para:', instanceName);
@@ -186,62 +253,8 @@ export const useEvolutionApi = () => {
           return true; // Continuar mesmo com erro de usuário
         }
 
-        // Atualizar status no Supabase usando tabela kiwify
-        console.log('Salvando instância conectada:', instanceName.trim());
-        console.log('User ID:', userData.user?.id);
-        console.log('Phone number:', responseData.instance?.owner || responseData.owner);
-        
-        try {
-          console.log('Iniciando chamada RPC mark_instance_connected...');
-          console.log('Parâmetros RPC:', {
-            p_user_id: userData.user?.id || '',
-            p_instance_name: instanceName.trim(),
-            p_phone_number: responseData.instance?.owner || responseData.owner || null
-          });
-          
-          const { data, error } = await supabase.rpc('mark_instance_connected', {
-            p_user_id: userData.user?.id || '',
-            p_instance_name: instanceName.trim(),
-            p_phone_number: responseData.instance?.owner || responseData.owner || null
-          });
-
-          console.log('Resposta RPC (melhorada):', { data, error });
-
-          if (error) {
-            console.error('❌ Erro ao atualizar status no Supabase:', error);
-            console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
-          } else {
-            console.log('✅ Instância salva com sucesso no Supabase');
-            console.log('📊 Dados retornados:', data);
-            
-            // Log estruturado do resultado
-            if (data && typeof data === 'object' && !Array.isArray(data)) {
-              const resultData = data as Record<string, any>;
-              console.log('🔄 Ação realizada:', resultData.action || 'unknown');
-              console.log('👤 User ID usado:', resultData.user_id || 'N/A');
-              console.log('📱 Instance Name:', resultData.instance_name || 'N/A');
-              console.log('📞 Phone Number:', resultData.phone_number || 'N/A');
-            }
-
-            // Sincronizar dados Evolution após conexão bem-sucedida
-            try {
-              console.log('🔄 Iniciando sincronização de dados Evolution...');
-              const syncResponse = await supabase.functions.invoke('sync-evolution-kiwify');
-              
-              if (syncResponse.error) {
-                console.error('⚠️ Erro na sincronização Evolution:', syncResponse.error);
-              } else {
-                console.log('✅ Dados Evolution sincronizados:', syncResponse.data);
-              }
-            } catch (syncError) {
-              console.error('⚠️ Falha ao sincronizar dados Evolution:', syncError);
-              // Não falhar o fluxo principal se sync falhar
-            }
-          }
-        } catch (rpcError) {
-          console.error('Erro na chamada RPC (catch):', rpcError);
-          console.error('Stack trace:', rpcError instanceof Error ? rpcError.stack : 'N/A');
-        }
+        // NOVO: Buscar dados completos da instância e salvar na tabela kiwify
+        await saveConnectionData(instanceName.trim(), userData.user?.id);
 
         return true;
       } else if (responseData && (responseData.state === "close" || responseData.status === "close" || responseData.instance?.state === "close")) {
