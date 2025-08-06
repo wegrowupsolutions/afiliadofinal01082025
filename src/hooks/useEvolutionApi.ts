@@ -25,7 +25,7 @@ export const useEvolutionApi = () => {
         console.log('✅ Endpoint qr_code:', qrUrl);
         return qrUrl;
       case 'confirm':
-        const confirmUrl = configurations['webhook_confirma'] || 'https://webhook.serverwegrowup.com.br/webhook/pop-up';
+        const confirmUrl = configurations['webhook_confirma'] || 'https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado';
         console.log('✅ Endpoint confirm:', confirmUrl);
         return confirmUrl;
       default:
