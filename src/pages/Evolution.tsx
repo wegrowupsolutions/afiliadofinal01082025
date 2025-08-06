@@ -101,8 +101,8 @@ const Evolution = () => {
         }
         
         toast({
-          title: "Conexão estabelecida!",
-          description: "Seu WhatsApp foi conectado com sucesso via realtime.",
+          title: "✅ Instância Conectada!",
+          description: `WhatsApp conectado com sucesso: ${connectionStatus.instanceName || 'Instância'}`,
         });
       }
       
