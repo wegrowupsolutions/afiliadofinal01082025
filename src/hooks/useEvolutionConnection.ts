@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { useSystemConfigurations } from '@/hooks/useSystemConfigurations';
 
 interface ConnectionStatus {
   isConnected: boolean;
@@ -15,7 +16,15 @@ export function useEvolutionConnection() {
   });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { configurations } = useSystemConfigurations();
   const isManualDisconnection = useRef(false);
+
+  // Configurações globais com fallbacks
+  const realtimeEnabled = configurations.evolution_realtime_enabled !== 'false';
+  const periodicCheckInterval = parseInt(configurations.evolution_periodic_check_interval || '30000');
+  const manualDisconnectProtection = configurations.evolution_manual_disconnect_protection !== 'false';
+  const autoCleanupOnDisconnect = configurations.evolution_auto_cleanup_on_disconnect !== 'false';
+  const visibilityCheckEnabled = configurations.evolution_visibility_check_enabled !== 'false';
 
   // Check initial connection status
   const checkConnectionStatus = async () => {
@@ -68,9 +77,14 @@ export function useEvolutionConnection() {
 
   // Function to mark manual disconnection
   const markManualDisconnection = () => {
-    console.log('🔄 Marcando desconexão manual');
+    if (!manualDisconnectProtection) return;
+    
+    console.log('🔄 Marcando desconexão manual (proteção global ativada)');
     isManualDisconnection.current = true;
-    setConnectionStatus({ isConnected: false });
+    
+    if (autoCleanupOnDisconnect) {
+      setConnectionStatus({ isConnected: false });
+    }
     
     // Reset flag after 5 seconds to allow normal operation
     setTimeout(() => {
@@ -81,9 +95,9 @@ export function useEvolutionConnection() {
 
   // Set up realtime subscription for connection updates
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !realtimeEnabled) return;
 
-    console.log('🔄 Configurando subscription realtime para conexões Evolution');
+    console.log('🔄 Configurando subscription realtime para conexões Evolution (aplicando regras globais)');
 
     const channel = supabase
       .channel('evolution_connection_updates')
@@ -95,9 +109,9 @@ export function useEvolutionConnection() {
       }, (payload) => {
         console.log('🔄 Atualização realtime da conexão Evolution:', payload);
         
-        // Ignorar atualizações se estamos em processo de desconexão manual
-        if (isManualDisconnection.current) {
-          console.log('🔄 Ignorando atualização realtime devido à desconexão manual');
+        // Ignorar atualizações se estamos em processo de desconexão manual (regra global)
+        if (manualDisconnectProtection && isManualDisconnection.current) {
+          console.log('🔄 Ignorando atualização realtime devido à desconexão manual (proteção global)');
           return;
         }
         
@@ -107,19 +121,19 @@ export function useEvolutionConnection() {
 
         if (eventType === 'UPDATE' || eventType === 'INSERT') {
           if (newData?.is_connected) {
-            console.log('✅ Conexão estabelecida via realtime');
+            console.log('✅ Conexão estabelecida via realtime (regras globais aplicadas)');
             setConnectionStatus({
               isConnected: true,
               instanceName: newData['Nome da instancia da Evolution'],
               phoneNumber: newData.remojid,
               connectedAt: newData.connected_at
             });
-          } else {
-            console.log('❌ Conexão perdida via realtime');
+          } else if (autoCleanupOnDisconnect) {
+            console.log('❌ Conexão perdida via realtime (limpeza automática ativada)');
             setConnectionStatus({ isConnected: false });
           }
-        } else if (eventType === 'DELETE') {
-          console.log('🗑️ Registro removido via realtime');
+        } else if (eventType === 'DELETE' && autoCleanupOnDisconnect) {
+          console.log('🗑️ Registro removido via realtime (limpeza automática ativada)');
           setConnectionStatus({ isConnected: false });
         }
       })
@@ -128,31 +142,35 @@ export function useEvolutionConnection() {
     // Check initial status
     checkConnectionStatus();
 
-    // Refresh status when page becomes visible (helps catch disconnections)
-    const handleVisibilityChange = () => {
-      if (!document.hidden && !isManualDisconnection.current) {
-        console.log('📱 Página ficou visível, verificando status da conexão...');
-        setTimeout(checkConnectionStatus, 1000);
-      }
-    };
+    // Refresh status when page becomes visible (global rule)
+    let visibilityHandler: (() => void) | null = null;
+    if (visibilityCheckEnabled) {
+      visibilityHandler = () => {
+        if (!document.hidden && (!manualDisconnectProtection || !isManualDisconnection.current)) {
+          console.log('📱 Página ficou visível, verificando status da conexão (regra global)...');
+          setTimeout(checkConnectionStatus, 1000);
+        }
+      };
+      document.addEventListener('visibilitychange', visibilityHandler);
+    }
 
-    // Refresh status periodically to catch disconnections from Evolution API
+    // Refresh status periodically (global interval configuration)
     const interval = setInterval(() => {
-      if (!isManualDisconnection.current) {
-        console.log('⏰ Verificação periódica do status da conexão');
+      if (!manualDisconnectProtection || !isManualDisconnection.current) {
+        console.log(`⏰ Verificação periódica do status da conexão (intervalo global: ${periodicCheckInterval}ms)`);
         checkConnectionStatus();
       }
-    }, 30000); // Check every 30 seconds
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    }, periodicCheckInterval);
 
     return () => {
       console.log('🔄 Removendo subscription realtime');
       supabase.removeChannel(channel);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (visibilityHandler) {
+        document.removeEventListener('visibilitychange', visibilityHandler);
+      }
       clearInterval(interval);
     };
-  }, [user?.id]);
+  }, [user?.id, realtimeEnabled, periodicCheckInterval, manualDisconnectProtection, autoCleanupOnDisconnect, visibilityCheckEnabled]);
 
   return {
     connectionStatus,
