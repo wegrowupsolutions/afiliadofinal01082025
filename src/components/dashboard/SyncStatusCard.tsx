@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sync, Clock, CheckCircle, AlertCircle, Users } from 'lucide-react';
+import { RefreshCw, Clock, CheckCircle, AlertCircle, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -133,7 +133,7 @@ const SyncStatusCard = () => {
       <CardHeader className="pb-2 bg-gradient-to-r from-blue-400 to-cyan-500 dark:from-blue-500 dark:to-cyan-600 text-white rounded-t-lg">
         <CardTitle className="flex items-center gap-2 justify-between">
           <div className="flex items-center gap-2">
-            <Sync className="h-5 w-5" />
+            <RefreshCw className="h-5 w-5" />
             Status da Sincronização
           </div>
           {getSyncStatusBadge()}
@@ -183,12 +183,12 @@ const SyncStatusCard = () => {
           >
             {isManualSyncing ? (
               <>
-                <Sync className="h-4 w-4 mr-2 animate-spin" />
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 Sincronizando...
               </>
             ) : (
               <>
-                <Sync className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Sincronizar Agora
               </>
             )}
