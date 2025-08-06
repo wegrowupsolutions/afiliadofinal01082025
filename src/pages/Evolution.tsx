@@ -156,51 +156,78 @@ const Evolution = () => {
   // Estado para controlar processo de conexão e evitar race conditions
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // useEffect para verificar e limpar instâncias órfãs (apenas se não há conexão ativa e não está conectando)
-  useEffect(() => {
-    const checkOrphanInstances = async () => {
-      // Bloquear verificação durante conexão ativa, processo de conexão ou sem usuário
-      if (!user?.id || connectionStatus?.isConnected || isConnecting) {
-        console.log('🔍 Pulando verificação de órfãs - usuário não logado, conexão ativa ou conectando');
-        return;
-      }
+  const checkOrphanInstances = async () => {
+    if (!user?.id || isConnecting) {
+      console.log('🚫 Verificação de órfãs pausada:', {
+        hasUser: !!user?.id,
+        isConnecting
+      });
+      return;
+    }
+    
+    // Additional protection during data saving
+    if (confirmationStatus === 'confirmed') {
+      console.log('🚫 Verificação de órfãs pausada durante confirmação');
+      return;
+    }
+    
+    try {
+      console.log('🔍 Verificando instâncias órfãs para usuário:', user.id);
       
-      try {
-        console.log('🔍 Verificando instâncias órfãs para usuário:', user.id);
+      // 1. Buscar dados do usuário no Supabase
+      const { data: userData } = await supabase
+        .from('kiwify')
+        .select(`
+          "Nome da instancia da Evolution",
+          is_connected,
+          connected_at
+        `)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (userData?.['Nome da instancia da Evolution'] && userData?.is_connected) {
+        const instanceName = userData['Nome da instancia da Evolution'];
+        console.log('🔎 Verificando instância na Evolution API:', instanceName);
         
-        // 1. Buscar dados do usuário no Supabase
-        const { data: userData } = await supabase
-          .from('kiwify')
-          .select(`
-            "Nome da instancia da Evolution",
-            is_connected,
-            connected_at
-          `)
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (userData?.['Nome da instancia da Evolution'] && userData?.is_connected) {
-          const instanceName = userData['Nome da instancia da Evolution'];
-          console.log('🔎 Verificando instância na Evolution API:', instanceName);
-          
-          // Aguardar mais tempo se a conexão foi recente (últimos 30 segundos)
-          const connectedAt = userData.connected_at;
-          if (connectedAt) {
-            const timeSinceConnection = Date.now() - new Date(connectedAt).getTime();
-            if (timeSinceConnection < 30000) {
-              console.log('⏱️ Conexão muito recente, aguardando para verificar órfãs');
-              return;
-            }
+        // Aguardar mais tempo se a conexão foi recente (últimos 30 segundos)
+        const connectedAt = userData.connected_at;
+        if (connectedAt) {
+          const timeSinceConnection = Date.now() - new Date(connectedAt).getTime();
+          if (timeSinceConnection < 30000) {
+            console.log('⏱️ Conexão muito recente, aguardando para verificar órfãs');
+            return;
           }
+        }
+        
+        // 2. Verificar se instância existe na Evolution API
+        try {
+          // Fazer uma chamada direta à API Evolution para verificar status
+          const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/confirma_afiliado', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              instanceName: instanceName.trim() 
+            }),
+          });
           
-          // 2. Verificar se instância existe na Evolution usando checkEvolutionConnectionStatus
-          try {
-            const evolutionStatus = await checkEvolutionConnectionStatus(instanceName);
-            console.log('📊 Status da instância na Evolution:', evolutionStatus);
+          if (response.ok) {
+            const responseText = await response.text();
+            let responseData;
             
-            if (!evolutionStatus) {
-              // Instância não existe ou não está conectada na Evolution
-              console.log('🧹 Instância não existe na Evolution API, limpando dados do Supabase');
+            try {
+              responseData = JSON.parse(responseText);
+            } catch (parseError) {
+              console.log('⚠️ Erro ao parsear resposta, considerando instância offline');
+              responseData = { respond: "negativo" };
+            }
+            
+            console.log('📊 Status da instância na Evolution:', responseData);
+            
+            if (responseData.respond !== "positivo") {
+              // Instância não está conectada na Evolution
+              console.log('🧹 Instância não está conectada na Evolution API, limpando dados do Supabase');
               
               // Limpar no Supabase
               await supabase
@@ -223,25 +250,35 @@ const Evolution = () => {
             } else {
               console.log('✅ Instância válida e conectada na Evolution API');
             }
-          } catch (error) {
-            console.error('❌ Erro ao verificar instância na Evolution:', error);
-            // Em caso de erro na verificação, não limpar automaticamente
-            // pode ser um erro temporário de rede
+          } else {
+            console.log('⚠️ Erro na verificação da Evolution API, mantendo dados');
           }
-        } else {
-          console.log('ℹ️ Nenhuma instância conectada encontrada no Supabase para verificar');
+        } catch (error) {
+          console.error('❌ Erro ao verificar instância na Evolution:', error);
+          // Em caso de erro na verificação, não limpar automaticamente
+          // pode ser um erro temporário de rede
         }
-      } catch (error) {
-        console.error('❌ Erro ao verificar instâncias órfãs:', error);
+      } else {
+        console.log('ℹ️ Nenhuma instância conectada encontrada no Supabase para verificar');
       }
-    };
-    
-    // Executar verificação apenas se não há conexão ativa, não está conectando e após delay maior
-    if (!connectionStatus?.isConnected && !isConnecting) {
-      const timer = setTimeout(checkOrphanInstances, 10000); // Aumentado para 10 segundos
-      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error('❌ Erro ao verificar instâncias órfãs:', error);
     }
-  }, [user?.id, connectionStatus?.isConnected, isConnecting, checkEvolutionConnectionStatus, refreshStatus]);
+  };
+
+  // Check for orphan instances when user changes - with improved timing
+  useEffect(() => {
+    if (user?.id && !isConnecting && !connectionStatus?.isConnected && confirmationStatus !== 'confirmed') {
+      console.log('🔍 Verificando instâncias órfãs para usuário:', user.id);
+      
+      // Longer delay to avoid conflicts with connection process
+      const delayTimer = setTimeout(() => {
+        checkOrphanInstances();
+      }, 10000); // Increased from 2s to 10s
+      
+      return () => clearTimeout(delayTimer);
+    }
+  }, [user?.id, isConnecting, connectionStatus?.isConnected, confirmationStatus]);
   
   const checkConnectionStatus = async () => {
     try {
@@ -279,125 +316,119 @@ const Evolution = () => {
           const status = responseData.respond;
           console.log('Response status value:', status);
           
-          if (status === "positivo") {
-            console.log('Connection confirmed - stopping interval');
-            setIsConnecting(true); // Bloquear verificação de órfãs durante salvamento
-            
-            if (statusCheckIntervalRef.current !== null) {
-              clearInterval(statusCheckIntervalRef.current);
-              statusCheckIntervalRef.current = null;
-            }
-            setConfirmationStatus('confirmed');
-            
-            // Consolidated connection data saving
-            try {
-              console.log('🔄 Iniciando salvamento consolidado de dados de conexão...');
+            if (status === "positivo") {
+              console.log('🎉 Connection confirmed - stopping interval');
               
-              // 1. Buscar dados completos da instância conectada
-              const instanceData = await checkConnectionState(instanceName.trim());
-              let phoneNumber = null;
+              // Prevent orphan cleanup during connection process
+              setIsConnecting(true); 
               
-              if (instanceData?.instance) {
-                // Extrair número limpo do WhatsApp
-                phoneNumber = instanceData.instance.owner
-                  ?.replace('@s.whatsapp.net', '')
-                  ?.replace('@c.us', '');
-                console.log('📞 Número extraído:', phoneNumber);
+              if (statusCheckIntervalRef.current !== null) {
+                clearInterval(statusCheckIntervalRef.current);
+                statusCheckIntervalRef.current = null;
               }
+              setConfirmationStatus('confirmed');
               
-              // 2. Salvar dados usando RPC com retry
-              let saveSuccess = false;
-              let retryCount = 0;
-              const maxRetries = 3;
-              
-              while (!saveSuccess && retryCount < maxRetries) {
-                try {
-                  console.log(`🔄 Tentativa ${retryCount + 1} de salvar dados no Supabase...`);
-                  const { data: rpcResult, error } = await supabase.rpc('mark_instance_connected', {
-                    p_user_id: user?.id,
-                    p_instance_name: instanceName.trim(),
-                    p_phone_number: phoneNumber
-                  });
-                  
-                  if (error) {
-                    throw error;
-                  }
-                  
-                  console.log('✅ RPC mark_instance_connected executada com sucesso:', rpcResult);
-                  saveSuccess = true;
-                  
-                } catch (error) {
-                  retryCount++;
-                  console.error(`❌ Erro na tentativa ${retryCount} de salvar dados:`, error);
-                  
-                  if (retryCount >= maxRetries) {
-                    throw error;
-                  }
-                  
-                  // Aguardar antes de tentar novamente
-                  await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-                }
-              }
-              
-              // 3. Salvar dados completos da instância
-              if (instanceData) {
-                const { error: updateError } = await supabase
-                  .from('kiwify')
-                  .update({
-                    evolution_raw_data: instanceData,
-                    evolution_last_sync: new Date().toISOString()
-                  })
-                  .eq('user_id', user?.id);
+              // ========== SIMPLIFIED AND IMPROVED DATA SAVING ==========
+              try {
+                console.log('🔄 [SAVE_DATA] Iniciando processo de salvamento...');
                 
-                if (updateError) {
-                  console.error('⚠️ Erro ao salvar dados completos da instância:', updateError);
+                // 1. Get complete instance data
+                const instanceData = await checkConnectionState(instanceName.trim());
+                let phoneNumber = null;
+                
+                if (instanceData?.instance?.owner) {
+                  phoneNumber = instanceData.instance.owner
+                    .replace('@s.whatsapp.net', '')
+                    .replace('@c.us', '');
+                  console.log('📞 [SAVE_DATA] Número extraído:', phoneNumber);
                 } else {
-                  console.log('✅ Dados completos da instância salvos');
+                  console.log('⚠️ [SAVE_DATA] Número não encontrado nos dados da instância');
                 }
-              }
-              
-              // 4. Verificar se dados foram salvos corretamente
-              const { data: verifyData } = await supabase
-                .from('kiwify')
-                .select('"Nome da instancia da Evolution", is_connected, remojid')
-                .eq('user_id', user?.id)
-                .maybeSingle();
-              
-              if (verifyData?.['Nome da instancia da Evolution'] === instanceName.trim() && verifyData?.is_connected) {
-                console.log('✅ Verificação: Dados salvos corretamente no Supabase');
                 
-                // 5. Sincronizar dados Evolution após verificação bem-sucedida
+                // 2. Save using improved RPC with validation and retry
+                console.log('💾 [SAVE_DATA] Salvando via RPC mark_instance_connected...');
+                const { data: rpcResult, error: rpcError } = await supabase.rpc('mark_instance_connected', {
+                  p_user_id: user?.id,
+                  p_instance_name: instanceName.trim(),
+                  p_phone_number: phoneNumber
+                });
+                
+                if (rpcError) {
+                  console.error('❌ [SAVE_DATA] Erro na RPC:', rpcError);
+                  throw new Error(`RPC failed: ${rpcError.message}`);
+                }
+                
+                console.log('✅ [SAVE_DATA] RPC executada com sucesso:', rpcResult);
+                
+                // Check if RPC was successful
+                if (rpcResult && typeof rpcResult === 'object' && 'verification' in rpcResult && rpcResult.verification !== 'success') {
+                  console.error('❌ [SAVE_DATA] RPC verification failed:', rpcResult);
+                  throw new Error('Data persistence verification failed');
+                }
+                
+                // 3. Update with complete instance data
+                if (instanceData) {
+                  console.log('🔄 [SAVE_DATA] Salvando dados completos da instância...');
+                  const { error: updateError } = await supabase
+                    .from('kiwify')
+                    .update({
+                      evolution_raw_data: instanceData,
+                      evolution_last_sync: new Date().toISOString()
+                    })
+                    .eq('user_id', user?.id)
+                    .eq('Nome da instancia da Evolution', instanceName.trim());
+                  
+                  if (updateError) {
+                    console.error('⚠️ [SAVE_DATA] Erro ao atualizar dados completos:', updateError);
+                  } else {
+                    console.log('✅ [SAVE_DATA] Dados completos atualizados');
+                  }
+                }
+                
+                // 4. Final verification
+                console.log('🔍 [SAVE_DATA] Verificação final...');
+                const { data: finalVerify, error: verifyError } = await supabase
+                  .from('kiwify')
+                  .select('is_connected, user_id')
+                  .eq('user_id', user?.id)
+                  .limit(1)
+                  .maybeSingle();
+                
+                if (verifyError) {
+                  console.error('❌ [SAVE_DATA] Erro na verificação final:', verifyError);
+                  throw new Error(`Verification failed: ${verifyError.message}`);
+                }
+                
+                if (!finalVerify || !finalVerify.is_connected) {
+                  console.error('❌ [SAVE_DATA] Dados não encontrados ou não conectados:', finalVerify);
+                  throw new Error('Final verification failed - data not properly saved');
+                }
+                
+                console.log('✅ [SAVE_DATA] Verificação final bem-sucedida:', finalVerify);
+                
+                // 5. Trigger sync after successful save
+                console.log('🔄 [SAVE_DATA] Disparando sincronização Evolution...');
                 try {
-                  console.log('🔄 Iniciando sincronização de dados Evolution...');
-                  const syncResponse = await supabase.functions.invoke('sync-evolution-kiwify', {
+                  await supabase.functions.invoke('sync-evolution-kiwify', {
                     body: { 
                       user_id: user?.id,
                       instance_name: instanceName.trim(),
-                      source: 'post_connection'
+                      source: 'post_connection_verified'
                     }
                   });
-                  
-                  if (syncResponse.error) {
-                    console.error('⚠️ Erro na sincronização Evolution:', syncResponse.error);
-                  } else {
-                    console.log('✅ Dados Evolution sincronizados:', syncResponse.data);
-                  }
+                  console.log('✅ [SAVE_DATA] Sincronização disparada');
                 } catch (syncError) {
-                  console.error('⚠️ Falha ao sincronizar dados Evolution:', syncError);
+                  console.warn('⚠️ [SAVE_DATA] Sync failed but continuing:', syncError);
                 }
                 
-                // 6. Atualizar estado local
+                // 6. Update local state
                 setConnectedInstance({
                   instance_name: instanceName.trim(),
                   phone_number: phoneNumber
                 });
                 
-                retryCountRef.current = 0; // Reset retry counter on success
-                
-              } else {
-                console.error('❌ Verificação falhou: Dados não foram salvos corretamente');
-                throw new Error('Dados não foram salvos corretamente no Supabase');
-              }
+                console.log('🎉 [SAVE_DATA] Processo de salvamento concluído com sucesso!');
+                retryCountRef.current = 0;
               
             } catch (error) {
               console.error('💥 Erro no salvamento consolidado:', error);
