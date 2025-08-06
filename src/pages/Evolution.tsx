@@ -409,9 +409,20 @@ const Evolution = () => {
         .from('kiwify')
         .update({
           "Nome da instancia da Evolution": null,
+          remojid: null,
+          evo_instance: null,
           is_connected: false,
           connected_at: null,
-          disconnected_at: new Date().toISOString()
+          disconnected_at: new Date().toISOString(),
+          evolution_instance_id: null,
+          evolution_profile_name: null,
+          evolution_profile_picture_url: null,
+          evolution_profile_status: null,
+          evolution_server_url: null,
+          evolution_api_key: null,
+          evolution_integration_data: null,
+          evolution_raw_data: null,
+          evolution_last_sync: null
         })
         .eq('user_id', user.id);
 
