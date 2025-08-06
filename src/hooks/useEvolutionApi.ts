@@ -53,7 +53,7 @@ export const useEvolutionApi = () => {
       console.log('Criando instância Evolution:', { instanceName });
       
       const endpoint = getEvolutionEndpoint('instance');
-      const webhookUrl = configurations['webhook_mensagem'] || 'https://webhook.serverwegrowup.com.br/webhook/envia_mensagem-afiliado';
+      const webhookUrl = configurations['webhook_mensagem'] || 'https://webhook.serverwegrowup.com.br/webhook/envia_mensagem_afiliado';
       
       console.log('🚀 Criando instância Evolution');
       console.log('📍 Endpoint:', endpoint);
