@@ -497,8 +497,8 @@ const Evolution = () => {
           </h2>
         </div>
         
-        {/* Mensagem de conexão ativa quando usuário retorna */}
-        {showActiveConnectionMessage && connectedInstance && (
+        {/* Card azul de notificação removido conforme solicitado */}
+        {false && showActiveConnectionMessage && connectedInstance && (
           <div className="max-w-xl mx-auto mb-6">
             <Card className="border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg animate-pulse">
               <CardContent className="pt-6">
