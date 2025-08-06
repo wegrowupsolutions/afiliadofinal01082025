@@ -222,6 +222,21 @@ export const useEvolutionApi = () => {
               console.log('📱 Instance Name:', resultData.instance_name || 'N/A');
               console.log('📞 Phone Number:', resultData.phone_number || 'N/A');
             }
+
+            // Sincronizar dados Evolution após conexão bem-sucedida
+            try {
+              console.log('🔄 Iniciando sincronização de dados Evolution...');
+              const syncResponse = await supabase.functions.invoke('sync-evolution-kiwify');
+              
+              if (syncResponse.error) {
+                console.error('⚠️ Erro na sincronização Evolution:', syncResponse.error);
+              } else {
+                console.log('✅ Dados Evolution sincronizados:', syncResponse.data);
+              }
+            } catch (syncError) {
+              console.error('⚠️ Falha ao sincronizar dados Evolution:', syncError);
+              // Não falhar o fluxo principal se sync falhar
+            }
           }
         } catch (rpcError) {
           console.error('Erro na chamada RPC (catch):', rpcError);

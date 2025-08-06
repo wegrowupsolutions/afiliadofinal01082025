@@ -148,6 +148,22 @@ const Evolution = () => {
                 });
               } else {
                 console.log('Dados salvos com sucesso no Supabase');
+                
+                // Sincronizar dados Evolution após conexão bem-sucedida
+                try {
+                  console.log('🔄 Iniciando sincronização de dados Evolution...');
+                  const syncResponse = await supabase.functions.invoke('sync-evolution-kiwify');
+                  
+                  if (syncResponse.error) {
+                    console.error('⚠️ Erro na sincronização Evolution:', syncResponse.error);
+                  } else {
+                    console.log('✅ Dados Evolution sincronizados:', syncResponse.data);
+                  }
+                } catch (syncError) {
+                  console.error('⚠️ Falha ao sincronizar dados Evolution:', syncError);
+                  // Não falhar o fluxo principal se sync falhar
+                }
+                
                 // Atualizar estado local para mostrar instância conectada
                 setConnectedInstance({
                   instance_name: instanceName.trim(),

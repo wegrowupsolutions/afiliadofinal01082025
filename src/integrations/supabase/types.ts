@@ -324,6 +324,15 @@ export type Database = {
           disconnected_at: string | null
           email: string | null
           evo_instance: string | null
+          evolution_api_key: string | null
+          evolution_instance_id: string | null
+          evolution_integration_data: Json | null
+          evolution_last_sync: string | null
+          evolution_profile_name: string | null
+          evolution_profile_picture_url: string | null
+          evolution_profile_status: string | null
+          evolution_raw_data: Json | null
+          evolution_server_url: string | null
           id: number
           is_connected: boolean | null
           Nome: string | null
@@ -341,6 +350,15 @@ export type Database = {
           disconnected_at?: string | null
           email?: string | null
           evo_instance?: string | null
+          evolution_api_key?: string | null
+          evolution_instance_id?: string | null
+          evolution_integration_data?: Json | null
+          evolution_last_sync?: string | null
+          evolution_profile_name?: string | null
+          evolution_profile_picture_url?: string | null
+          evolution_profile_status?: string | null
+          evolution_raw_data?: Json | null
+          evolution_server_url?: string | null
           id?: number
           is_connected?: boolean | null
           Nome?: string | null
@@ -358,6 +376,15 @@ export type Database = {
           disconnected_at?: string | null
           email?: string | null
           evo_instance?: string | null
+          evolution_api_key?: string | null
+          evolution_instance_id?: string | null
+          evolution_integration_data?: Json | null
+          evolution_last_sync?: string | null
+          evolution_profile_name?: string | null
+          evolution_profile_picture_url?: string | null
+          evolution_profile_status?: string | null
+          evolution_raw_data?: Json | null
+          evolution_server_url?: string | null
           id?: number
           is_connected?: boolean | null
           Nome?: string | null
