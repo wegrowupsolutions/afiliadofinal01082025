@@ -605,12 +605,14 @@ const Evolution = () => {
   };
   
   const handleCreateInstance = useCallback(async () => {
-    console.log('🔍 handleCreateInstance chamado');
-    console.log('🔍 instanceName:', instanceName);
-    console.log('🔍 user?.id:', user?.id);
+    console.log('🔍 [BUTTON] handleCreateInstance iniciado');
+    console.log('🔍 [BUTTON] instanceName:', instanceName);
+    console.log('🔍 [BUTTON] user?.id:', user?.id);
+    console.log('🔍 [BUTTON] isLoading atual:', isLoading);
     
-    if (!instanceName.trim()) {
-      console.log('❌ Nome vazio');
+    // Validações básicas
+    if (!instanceName?.trim()) {
+      console.log('❌ [BUTTON] Nome da instância vazio');
       toast({
         title: "Nome obrigatório",
         description: "Por favor, informe um nome para a instância.",
@@ -619,142 +621,153 @@ const Evolution = () => {
       return;
     }
 
-    // Validar nome da instância antes de criar
-    const validInstanceName = instanceName.trim().replace(/[^a-zA-Z0-9-_]/g, '');
-    if (validInstanceName.length < 3) {
-      console.log('❌ Nome inválido:', validInstanceName);
+    if (!user?.id) {
+      console.log('❌ [BUTTON] Usuário não identificado');
       toast({
-        title: "Nome inválido",
-        description: "Use apenas letras, números, - ou _. Mínimo 3 caracteres.",
+        title: "Erro de autenticação",
+        description: "Usuário não identificado. Faça login novamente.",
         variant: "destructive"
       });
       return;
     }
 
-    // Verificar se já existe instância antes de criar nova
-    try {
-      const { data: existingData } = await supabase
-        .from('kiwify')
-        .select('"Nome da instancia da Evolution"')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (existingData?.['Nome da instancia da Evolution']) {
-        console.log('❌ Instância já existe:', existingData);
-        toast({
-          title: "Instância existente",
-          description: "Você já possui uma instância. Desconecte-a primeiro.",
-          variant: "destructive"
-        });
-        return;
-      }
-    } catch (error) {
-      console.error('Erro ao verificar instância existente:', error);
+    // Validar e limpar nome da instância
+    const validInstanceName = instanceName.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
+    console.log('🔍 [BUTTON] Nome validado:', validInstanceName);
+    
+    if (validInstanceName.length < 3) {
+      console.log('❌ [BUTTON] Nome muito curto:', validInstanceName);
+      toast({
+        title: "Nome inválido",
+        description: "Nome deve ter pelo menos 3 caracteres (letras, números, - ou _).",
+        variant: "destructive"
+      });
+      return;
     }
 
-    console.log('✅ Iniciando criação da instância...');
+    console.log('✅ [BUTTON] Validações passaram, iniciando criação...');
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
     retryCountRef.current = 0;
     
     try {
-      console.log('🚀 Criando instância usando useEvolutionApi:', validInstanceName);
+      console.log('🚀 [BUTTON] Chamando createEvolutionInstance com:', validInstanceName);
       const blob = await createEvolutionInstance(validInstanceName);
+      console.log('🔍 [BUTTON] Resultado do createEvolutionInstance:', !!blob);
       
-      if (blob) {
-        const qrCodeUrl = URL.createObjectURL(blob);
-        setQrCodeData(qrCodeUrl);
-        setConfirmationStatus('waiting');
+      if (!blob) {
+        throw new Error('Falha ao obter QR code da instância');
+      }
+
+      // Processar QR code
+      const qrCodeUrl = URL.createObjectURL(blob);
+      setQrCodeData(qrCodeUrl);
+      setConfirmationStatus('waiting');
+      
+      console.log('✅ [BUTTON] QR code definido, iniciando monitoramento...');
+      
+      // Limpar verificação anterior se existir
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current);
+      }
+      
+      // Configurar verificação de status
+      let checkCount = 0;
+      const maxChecks = 30; // 5 minutos
+      
+      statusCheckIntervalRef.current = window.setInterval(async () => {
+        checkCount++;
+        console.log(`🔍 [MONITOR] Verificação ${checkCount}/${maxChecks}`);
         
-        if (statusCheckIntervalRef.current !== null) {
-          clearInterval(statusCheckIntervalRef.current);
-        }
-        
-        // Adicionar timeout para verificação de conexão
-        let checkCount = 0;
-        const maxChecks = 30; // 30 * 10 segundos = 5 minutos
-        
-        console.log('✅ Iniciando verificação de status a cada 10 segundos');
-        statusCheckIntervalRef.current = window.setInterval(async () => {
-          try {
-            checkCount++;
+        try {
+          // Timeout após 5 minutos
+          if (checkCount >= maxChecks) {
+            console.log('⏰ [MONITOR] Timeout atingido');
+            clearInterval(statusCheckIntervalRef.current!);
+            statusCheckIntervalRef.current = null;
+            setConfirmationStatus('failed');
+            toast({
+              title: "Tempo esgotado",
+              description: "Conexão não estabelecida em 5 minutos. Tente novamente.",
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          // Verificar se conectou
+          const isConnected = await checkEvolutionConnectionStatus(validInstanceName);
+          console.log(`🔍 [MONITOR] Status conexão:`, isConnected);
+          
+          if (isConnected) {
+            console.log('✅ [MONITOR] Conexão confirmada!');
+            clearInterval(statusCheckIntervalRef.current!);
+            statusCheckIntervalRef.current = null;
+            setConfirmationStatus('confirmed');
             
-            // Parar verificação após 5 minutos
-            if (checkCount >= maxChecks) {
-              clearInterval(statusCheckIntervalRef.current!);
-              statusCheckIntervalRef.current = null;
-              setConfirmationStatus('failed');
-              toast({
-                title: "Tempo esgotado",
-                description: "Não foi possível conectar. Tente novamente.",
-                variant: "destructive"
-              });
-              return;
-            }
-            
-            const isConnected = await checkEvolutionConnectionStatus(validInstanceName);
-            if (isConnected) {
-              clearInterval(statusCheckIntervalRef.current!);
-              statusCheckIntervalRef.current = null;
-              setConfirmationStatus('confirmed');
+            // Buscar e salvar dados completos
+            try {
+              const instanceData = await checkConnectionState(validInstanceName);
+              console.log('🔍 [MONITOR] Dados da instância:', instanceData);
               
-              // Buscar dados completos da instância conectada
-              try {
-                const instanceData = await checkConnectionState(validInstanceName);
-                if (instanceData?.instance) {
-                  // Extrair número limpo do WhatsApp
-                  const phoneNumber = instanceData.instance.owner
-                    ?.replace('@s.whatsapp.net', '')
-                    ?.replace('@c.us', '');
-                  
-                  // Salvar dados adicionais no Supabase
-                  const { error } = await supabase
-                    .from('kiwify')
-                    .update({
-                      remojid: phoneNumber,
-                      evolution_raw_data: instanceData
-                    })
-                    .eq('user_id', user?.id);
-                  
-                  if (!error) {
-                    console.log('✅ Dados completos da instância salvos:', phoneNumber);
-                    
-                    // Atualizar estado local com o número
-                    setConnectedInstance({
-                      instance_name: validInstanceName,
-                      phone_number: phoneNumber
-                    });
-                  }
-                }
-              } catch (error) {
-                console.error('Erro ao buscar/salvar dados completos:', error);
+              let phoneNumber = null;
+              if (instanceData?.instance?.owner) {
+                phoneNumber = instanceData.instance.owner
+                  .replace('@s.whatsapp.net', '')
+                  .replace('@c.us', '');
+                console.log('📱 [MONITOR] Número extraído:', phoneNumber);
               }
               
-              toast({
-                title: "Conexão estabelecida!",
-                description: "Seu WhatsApp foi conectado com sucesso.",
-              });
+              // Atualizar dados no Supabase
+              const { error } = await supabase
+                .from('kiwify')
+                .update({
+                  remojid: phoneNumber,
+                  evolution_raw_data: instanceData,
+                  connected_at: new Date().toISOString()
+                })
+                .eq('user_id', user.id);
+              
+              if (error) {
+                console.error('❌ [MONITOR] Erro ao salvar dados:', error);
+              } else {
+                console.log('✅ [MONITOR] Dados salvos com sucesso');
+                
+                // Atualizar estado local
+                setConnectedInstance({
+                  instance_name: validInstanceName,
+                  phone_number: phoneNumber
+                });
+              }
+            } catch (dataError) {
+              console.error('❌ [MONITOR] Erro ao processar dados da instância:', dataError);
             }
-          } catch (error) {
-            console.error('Erro na verificação de status:', error);
+            
+            toast({
+              title: "Conexão estabelecida!",
+              description: "Seu WhatsApp foi conectado com sucesso.",
+            });
           }
-        }, 10000);
-        
-        toast({
-          title: "Instância criada!",
-          description: "Escaneie o QR code para conectar seu WhatsApp.",
-        });
-      }
-    } catch (error) {
-      console.error('❌ Erro ao criar instância:', error);
+        } catch (monitorError) {
+          console.error('❌ [MONITOR] Erro na verificação:', monitorError);
+        }
+      }, 10000);
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível criar a instância. Tente novamente.",
+        title: "Instância criada!",
+        description: "Escaneie o QR code com seu WhatsApp para conectar.",
+      });
+      
+    } catch (error) {
+      console.error('❌ [BUTTON] Erro crítico:', error);
+      setConfirmationStatus('failed');
+      toast({
+        title: "Erro na criação",
+        description: error instanceof Error ? error.message : "Erro desconhecido. Tente novamente.",
         variant: "destructive"
       });
-      setConfirmationStatus(null);
     } finally {
+      console.log('🏁 [BUTTON] Finalizando, setIsLoading(false)');
       setIsLoading(false);
     }
   }, [instanceName, user?.id, createEvolutionInstance, checkEvolutionConnectionStatus, checkConnectionState, toast]);
