@@ -21,6 +21,13 @@ import ConfigurationManager from "./pages/ConfigurationManager";
 import AgentConfiguration from "./pages/AgentConfiguration";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { useGlobalEvolutionRules } from "./hooks/useGlobalEvolutionRules";
+
+// Componente para aplicar regras globais após o AuthProvider estar disponível
+const GlobalRulesProvider = ({ children }: { children: React.ReactNode }) => {
+  useGlobalEvolutionRules();
+  return <>{children}</>;
+};
 
 const queryClient = new QueryClient();
 
@@ -32,24 +39,26 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-          <Route path="/pvafiliado" element={<PVAfiliado />} />
-          <Route path="/" element={<Index />} />
-          <Route path="/change-password" element={<ChangePassword />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/metrics" element={<MetricsDashboard />} />
-              <Route path="/chats" element={<ChatsDashboard />} />
-              <Route path="/knowledge" element={<KnowledgeManager />} />
-              <Route path="/clients" element={<ClientsDashboard />} />
-              <Route path="/evolution" element={<Evolution />} />
-              <Route path="/schedule" element={<Schedule />} />
-              <Route path="/academia" element={<Academia />} />
-              <Route path="/academia/:courseSlug" element={<Course />} />
-              <Route path="/configuration-manager" element={<ConfigurationManager />} />
-              <Route path="/agent-configuration" element={<AgentConfiguration />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <GlobalRulesProvider>
+              <Routes>
+                <Route path="/pvafiliado" element={<PVAfiliado />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/metrics" element={<MetricsDashboard />} />
+                <Route path="/chats" element={<ChatsDashboard />} />
+                <Route path="/knowledge" element={<KnowledgeManager />} />
+                <Route path="/clients" element={<ClientsDashboard />} />
+                <Route path="/evolution" element={<Evolution />} />
+                <Route path="/schedule" element={<Schedule />} />
+                <Route path="/academia" element={<Academia />} />
+                <Route path="/academia/:courseSlug" element={<Course />} />
+                <Route path="/configuration-manager" element={<ConfigurationManager />} />
+                <Route path="/agent-configuration" element={<AgentConfiguration />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </GlobalRulesProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

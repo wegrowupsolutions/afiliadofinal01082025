@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User, AuthError, AuthTokenResponsePassword } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { useGlobalEvolutionRules } from '@/hooks/useGlobalEvolutionRules';
 
 type AuthContextType = {
   session: Session | null;
@@ -23,9 +22,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
-  // Aplicar regras globais Evolution para todos os usuários
-  useGlobalEvolutionRules();
 
   useEffect(() => {
     // Set up auth state listener FIRST
