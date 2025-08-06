@@ -16,9 +16,17 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    console.log('🔄 Buscando dados da Evolution API...')
+    // Pegar dados do request se enviados (instância específica)
+    let requestData = null
+    try {
+      requestData = await req.json()
+    } catch {
+      // Sem dados no request, buscar todas as instâncias
+    }
 
-    // 1. Buscar dados da Evolution API usando fetchInstances
+    console.log('🔄 Iniciando sincronização Evolution → Kiwify...', requestData)
+
+    // 1. Buscar todas as instâncias da Evolution API
     const evolutionResponse = await fetch('https://evolution.serverwegrowup.com.br/instance/fetchInstances', {
       method: 'GET',
       headers: {
@@ -28,56 +36,48 @@ serve(async (req) => {
     })
 
     if (!evolutionResponse.ok) {
-      const errorText = await evolutionResponse.text()
-      console.error('❌ Erro Evolution API:', errorText)
-      throw new Error(`Evolution API erro ${evolutionResponse.status}: ${errorText}`)
+      throw new Error(`Evolution API erro: ${evolutionResponse.status}`)
     }
 
     const evolutionData = await evolutionResponse.json()
-    console.log('📊 Evolution data recebido:', JSON.stringify(evolutionData, null, 2))
+    console.log('📊 Dados Evolution recebidos:', evolutionData)
 
-    // 2. Verificar se evolutionData é array ou objeto
+    // 2. Processar dados da Evolution
     let instances = []
     if (Array.isArray(evolutionData)) {
       instances = evolutionData
-    } else if (evolutionData.instances && Array.isArray(evolutionData.instances)) {
+    } else if (evolutionData.instances) {
       instances = evolutionData.instances
     } else if (evolutionData.instance) {
       instances = [evolutionData]
     } else {
-      console.log('⚠️ Formato inesperado dos dados da Evolution:', evolutionData)
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Formato de dados Evolution inesperado'
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      console.error('❌ Formato inválido da Evolution API:', evolutionData)
+      throw new Error('Formato de resposta Evolution inválido')
     }
 
-    console.log(`📊 ${instances.length} instâncias encontradas na Evolution`)
+    console.log(`📊 ${instances.length} instâncias encontradas`)
 
-    // 3. Buscar usuários com instâncias na tabela kiwify
+    // 3. Buscar usuários na tabela kiwify
     const { data: users, error: usersError } = await supabase
       .from('kiwify')
       .select('user_id, "Nome da instancia da Evolution"')
       .not('"Nome da instancia da Evolution"', 'is', null)
 
     if (usersError) {
-      console.error('❌ Erro ao buscar usuários:', usersError)
+      console.error('❌ Erro buscar usuários:', usersError)
       throw usersError
     }
 
-    console.log(`👥 ${users?.length || 0} usuários com instâncias encontrados`)
+    console.log(`👥 ${users?.length || 0} usuários encontrados`)
 
     let syncCount = 0
-    let processedInstances = []
+    const processedInstances = []
 
-    // 4. Processar cada instância
+    // 4. Para cada instância, sincronizar com usuário correspondente
     for (const instanceItem of instances) {
       const instance = instanceItem.instance || instanceItem
       
-      // Extrair nome da instância de diferentes formatos possíveis
+      // Extrair nome da instância
       const instanceName = instance.instanceName || instance.name || instance.id
       
       if (!instanceName) {
@@ -85,75 +85,98 @@ serve(async (req) => {
         continue
       }
 
-      console.log(`🔍 Processando instância: ${instanceName}`)
-      console.log(`📋 Dados da instância:`, JSON.stringify(instance, null, 2))
+      console.log(`🔍 Processando: ${instanceName}`)
 
-      // Encontrar usuário correspondente
-      const user = users?.find(u => u["Nome da instancia da Evolution"] === instanceName)
-      
-      if (user) {
-        console.log(`✅ Match encontrado: ${instanceName} → User ${user.user_id}`)
+      // Buscar usuário correspondente
+      const matchedUser = users?.find(u => 
+        u["Nome da instancia da Evolution"] === instanceName
+      )
+
+      if (matchedUser) {
+        console.log(`✅ Match: ${instanceName} → User ${matchedUser.user_id}`)
+
+        // Para instância específica, buscar dados detalhados
+        let instanceDetails = instance
         
-        // Preparar dados para atualização
-        const isConnected = instance.connectionStatus === 'open' || instance.status === 'open' || instance.state === 'open'
+        // Se temos o nome da instância, buscar detalhes específicos
+        try {
+          const detailResponse = await fetch(`https://evolution.serverwegrowup.com.br/instance/connect/${instanceName}`, {
+            method: 'GET',
+            headers: {
+              'apikey': '066327121bd64f8356c26e9edfa1799d',
+              'Content-Type': 'application/json'
+            }
+          })
+          
+          if (detailResponse.ok) {
+            const detailData = await detailResponse.json()
+            console.log(`📋 Detalhes da instância ${instanceName}:`, detailData)
+            
+            // Merge dos dados se disponível
+            if (detailData.instance) {
+              instanceDetails = { ...instance, ...detailData.instance }
+            }
+          }
+        } catch (error) {
+          console.log(`⚠️ Erro ao buscar detalhes de ${instanceName}:`, error.message)
+          // Continuar com dados básicos
+        }
+
+        // Preparar dados para update
         const updateData = {
           // Status de conexão
-          is_connected: isConnected,
-          connected_at: isConnected ? new Date().toISOString() : null,
-          disconnected_at: !isConnected ? new Date().toISOString() : null,
+          is_connected: instanceDetails.connectionStatus === 'open' || instanceDetails.status === 'open' || instanceDetails.state === 'open',
+          connected_at: (instanceDetails.connectionStatus === 'open' || instanceDetails.status === 'open' || instanceDetails.state === 'open') 
+            ? new Date().toISOString() : null,
+          disconnected_at: (instanceDetails.connectionStatus !== 'open' && instanceDetails.status !== 'open' && instanceDetails.state !== 'open') 
+            ? new Date().toISOString() : null,
           
           // Dados da Evolution
-          evolution_instance_id: instance.instanceId || instance.id || instance.key,
-          evolution_profile_name: instance.profileName || instance.profile?.name || instance.displayName,
-          evolution_profile_picture_url: instance.profilePictureURL || instance.profile?.pictureUrl || instance.profilePicture,
-          evolution_profile_status: instance.profileStatus || instance.profile?.status || instance.status,
-          evolution_server_url: instance.serverUrl || instance.server || 'https://evolution.serverwegrowup.com.br',
-          evolution_api_key: instance.apikey || instance.apiKey || '066327121bd64f8356c26e9edfa1799d',
-          evolution_integration_data: instance.integration || null,
+          evolution_instance_id: instanceDetails.instanceId || instanceDetails.id || instanceName,
+          evolution_profile_name: instanceDetails.profileName || instanceDetails.profile?.name || instanceDetails.displayName,
+          evolution_profile_picture_url: instanceDetails.profilePictureURL || instanceDetails.profile?.pictureUrl,
+          evolution_profile_status: instanceDetails.profileStatus || instanceDetails.profile?.status,
+          evolution_server_url: instanceDetails.serverUrl || 'https://evolution.serverwegrowup.com.br',
+          evolution_api_key: instanceDetails.apikey || instanceDetails.apiKey || '066327121bd64f8356c26e9edfa1799d',
+          evolution_integration_data: instanceDetails.integration || null,
           evolution_raw_data: instanceItem,
           evolution_last_sync: new Date().toISOString(),
           
           // Campos específicos
-          remojid: instance.owner || instance.phone || instance.number,
+          remojid: instanceDetails.owner || instanceDetails.phone,
           evo_instance: instanceName
         }
 
-        console.log(`📝 Dados para atualização:`, JSON.stringify(updateData, null, 2))
+        console.log(`📝 Atualizando user ${matchedUser.user_id}:`, updateData)
 
-        // Atualizar usuário específico
+        // Atualizar dados do usuário
         const { error: updateError } = await supabase
           .from('kiwify')
           .update(updateData)
-          .eq('user_id', user.user_id)
+          .eq('user_id', matchedUser.user_id)
 
         if (updateError) {
-          console.error(`❌ Erro ao atualizar ${instanceName}:`, updateError)
+          console.error(`❌ Erro update ${instanceName}:`, updateError)
         } else {
-          console.log(`✅ ${instanceName} atualizado com sucesso para user ${user.user_id}`)
+          console.log(`✅ ${instanceName} sincronizado com sucesso`)
           syncCount++
           processedInstances.push({
             instance_name: instanceName,
-            user_id: user.user_id,
-            status: instance.connectionStatus || instance.status || instance.state || 'unknown'
+            user_id: matchedUser.user_id,
+            status: instanceDetails.connectionStatus || instanceDetails.status || instanceDetails.state
           })
         }
       } else {
-        console.log(`⚠️ Nenhum usuário encontrado para instância: ${instanceName}`)
-        console.log(`📋 Usuários disponíveis:`, users?.map(u => u["Nome da instancia da Evolution"]))
+        console.log(`⚠️ Nenhum usuário para instância: ${instanceName}`)
       }
     }
 
-    const result = {
+    return new Response(JSON.stringify({
       success: true,
-      message: `Sincronização concluída: ${syncCount}/${instances.length}`,
-      total_instances: instances.length,
+      message: `Sincronização completa: ${syncCount}/${instances.length}`,
       synced_count: syncCount,
       processed_instances: processedInstances
-    }
-
-    console.log('🎯 Resultado final:', JSON.stringify(result, null, 2))
-
-    return new Response(JSON.stringify(result), {
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
 
@@ -161,8 +184,7 @@ serve(async (req) => {
     console.error('💥 Erro na sincronização:', error)
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
-      stack: error.stack
+      error: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
