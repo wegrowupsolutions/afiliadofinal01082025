@@ -15,8 +15,8 @@ const DEFAULT_WEBHOOK_BASE = "https://webhook.serverwegrowup.com.br/webhook";
 // Default endpoints configuration
 const defaultEndpoints = {
   mensagem: `${DEFAULT_WEBHOOK_BASE}/envia_mensagem`,
-  pausaBot: `${DEFAULT_WEBHOOK_BASE}/pausa_bot`,
-  iniciaBot: `${DEFAULT_WEBHOOK_BASE}/inicia_bot`,
+  pausaBot: `${DEFAULT_WEBHOOK_BASE}/pausa_bot_afiliado`,
+  iniciaBot: `${DEFAULT_WEBHOOK_BASE}/inicia_bot_afiliado`,
   agenda: `${DEFAULT_WEBHOOK_BASE}/agenda`,
   agendaBanho: `${DEFAULT_WEBHOOK_BASE}/agenda/banho`,
   agendaVet: `${DEFAULT_WEBHOOK_BASE}/agenda/vet`,

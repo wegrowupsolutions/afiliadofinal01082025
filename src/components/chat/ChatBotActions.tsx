@@ -25,7 +25,7 @@ const ChatBotActions = ({ selectedPhoneNumber, selectedChat, isLoading }: ChatBo
 
   const pauseBot = async (phoneNumber: string, duration: number | null) => {
     try {
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/pausa_bot', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/pausa_bot_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ const ChatBotActions = ({ selectedPhoneNumber, selectedChat, isLoading }: ChatBo
   const startBot = async (phoneNumber: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/inicia_bot', {
+      const response = await fetch('https://webhook.serverwegrowup.com.br/webhook/inicia_bot_afiliado', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
