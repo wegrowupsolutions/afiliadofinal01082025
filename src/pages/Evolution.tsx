@@ -421,14 +421,45 @@ const Evolution = () => {
       return;
     }
 
+    // Validar nome da instância antes de criar
+    const validInstanceName = instanceName.trim().replace(/[^a-zA-Z0-9-_]/g, '');
+    if (validInstanceName.length < 3) {
+      toast({
+        title: "Nome inválido",
+        description: "Use apenas letras, números, - ou _. Mínimo 3 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Verificar se já existe instância antes de criar nova
+    try {
+      const { data: existingData } = await supabase
+        .from('kiwify')
+        .select('"Nome da instancia da Evolution"')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (existingData?.['Nome da instancia da Evolution']) {
+        toast({
+          title: "Instância existente",
+          description: "Você já possui uma instância. Desconecte-a primeiro.",
+          variant: "destructive"
+        });
+        return;
+      }
+    } catch (error) {
+      console.error('Erro ao verificar instância existente:', error);
+    }
+
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
     retryCountRef.current = 0;
     
     try {
-      console.log('🚀 Criando instância usando useEvolutionApi:', instanceName.trim());
-      const blob = await createEvolutionInstance(instanceName.trim());
+      console.log('🚀 Criando instância usando useEvolutionApi:', validInstanceName);
+      const blob = await createEvolutionInstance(validInstanceName);
       
       if (blob) {
         const qrCodeUrl = URL.createObjectURL(blob);
@@ -439,16 +470,35 @@ const Evolution = () => {
           clearInterval(statusCheckIntervalRef.current);
         }
         
+        // Adicionar timeout para verificação de conexão
+        let checkCount = 0;
+        const maxChecks = 30; // 30 * 10 segundos = 5 minutos
+        
         console.log('✅ Iniciando verificação de status a cada 10 segundos');
         statusCheckIntervalRef.current = window.setInterval(async () => {
           try {
-            const isConnected = await checkEvolutionConnectionStatus(instanceName.trim());
+            checkCount++;
+            
+            // Parar verificação após 5 minutos
+            if (checkCount >= maxChecks) {
+              clearInterval(statusCheckIntervalRef.current!);
+              statusCheckIntervalRef.current = null;
+              setConfirmationStatus('failed');
+              toast({
+                title: "Tempo esgotado",
+                description: "Não foi possível conectar. Tente novamente.",
+                variant: "destructive"
+              });
+              return;
+            }
+            
+            const isConnected = await checkEvolutionConnectionStatus(validInstanceName);
             if (isConnected) {
               clearInterval(statusCheckIntervalRef.current!);
               statusCheckIntervalRef.current = null;
               setConfirmationStatus('confirmed');
               setConnectedInstance({
-                instance_name: instanceName.trim(),
+                instance_name: validInstanceName,
                 phone_number: undefined
               });
               
