@@ -50,6 +50,7 @@ const Evolution = () => {
   
   // Atualizar estado baseado na conexão realtime
   useEffect(() => {
+    const handleConnectionUpdate = async () => {
     if (connectionStatus.isConnected && connectionStatus.instanceName) {
       console.log('✅ Conexão detectada via realtime:', connectionStatus);
       setConnectedInstance({
@@ -60,6 +61,38 @@ const Evolution = () => {
       // Se estava esperando confirmação, marcar como confirmado
       if (confirmationStatus === 'waiting') {
         setConfirmationStatus('confirmed');
+        
+        // Buscar dados completos da instância conectada
+        try {
+          const instanceData = await checkConnectionState(connectionStatus.instanceName);
+          if (instanceData?.instance) {
+            // Extrair número limpo do WhatsApp
+            const phoneNumber = instanceData.instance.owner
+              ?.replace('@s.whatsapp.net', '')
+              ?.replace('@c.us', '');
+            
+            // Salvar dados adicionais no Supabase
+            const { error } = await supabase
+              .from('kiwify')
+              .update({
+                remojid: phoneNumber,
+                evolution_raw_data: instanceData
+              })
+              .eq('user_id', user?.id);
+            
+            if (!error) {
+              console.log('✅ Dados completos da instância salvos:', phoneNumber);
+              
+              // Atualizar estado local com o número
+              setConnectedInstance({
+                instance_name: connectionStatus.instanceName,
+                phone_number: phoneNumber
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao buscar/salvar dados completos:', error);
+        }
         
         // Clear any existing interval
         if (statusCheckIntervalRef.current !== null) {
@@ -106,6 +139,9 @@ const Evolution = () => {
         });
       }
     }
+    };
+    
+    handleConnectionUpdate();
   }, [connectionStatus, confirmationStatus, qrCodeData, toast, connectedInstance]);
   
   // Cleanup interval on unmount
@@ -243,6 +279,39 @@ const Evolution = () => {
               statusCheckIntervalRef.current = null;
             }
             setConfirmationStatus('confirmed');
+            
+            // Buscar dados completos da instância conectada
+            try {
+              const instanceData = await checkConnectionState(instanceName.trim());
+              if (instanceData?.instance) {
+                // Extrair número limpo do WhatsApp
+                const phoneNumber = instanceData.instance.owner
+                  ?.replace('@s.whatsapp.net', '')
+                  ?.replace('@c.us', '');
+                
+                // Salvar dados adicionais no Supabase
+                const { error } = await supabase
+                  .from('kiwify')
+                  .update({
+                    remojid: phoneNumber,
+                    evolution_raw_data: instanceData
+                  })
+                  .eq('user_id', user?.id);
+                
+                if (!error) {
+                  console.log('✅ Dados completos da instância salvos:', phoneNumber);
+                  
+                  // Atualizar estado local com o número
+                  setConnectedInstance({
+                    instance_name: instanceName.trim(),
+                    phone_number: phoneNumber
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('Erro ao buscar/salvar dados completos:', error);
+            }
+            
             retryCountRef.current = 0; // Reset retry counter on success
             
             // Salvar dados no Supabase
@@ -379,6 +448,39 @@ const Evolution = () => {
               clearInterval(statusCheckIntervalRef.current!);
               statusCheckIntervalRef.current = null;
               setConfirmationStatus('confirmed');
+              
+              // Buscar dados completos da instância conectada
+              try {
+                const instanceData = await checkConnectionState(instanceName.trim());
+                if (instanceData?.instance) {
+                  // Extrair número limpo do WhatsApp
+                  const phoneNumber = instanceData.instance.owner
+                    ?.replace('@s.whatsapp.net', '')
+                    ?.replace('@c.us', '');
+                  
+                  // Salvar dados adicionais no Supabase
+                  const { error } = await supabase
+                    .from('kiwify')
+                    .update({
+                      remojid: phoneNumber,
+                      evolution_raw_data: instanceData
+                    })
+                    .eq('user_id', user?.id);
+                  
+                  if (!error) {
+                    console.log('✅ Dados completos da instância salvos:', phoneNumber);
+                    
+                    // Atualizar estado local com o número
+                    setConnectedInstance({
+                      instance_name: instanceName.trim(),
+                      phone_number: phoneNumber
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error('Erro ao buscar/salvar dados completos:', error);
+              }
+              
               setConnectedInstance({
                 instance_name: instanceName.trim(),
                 phone_number: undefined
@@ -497,10 +599,38 @@ const Evolution = () => {
               clearInterval(statusCheckIntervalRef.current!);
               statusCheckIntervalRef.current = null;
               setConfirmationStatus('confirmed');
-              setConnectedInstance({
-                instance_name: validInstanceName,
-                phone_number: undefined
-              });
+              
+              // Buscar dados completos da instância conectada
+              try {
+                const instanceData = await checkConnectionState(validInstanceName);
+                if (instanceData?.instance) {
+                  // Extrair número limpo do WhatsApp
+                  const phoneNumber = instanceData.instance.owner
+                    ?.replace('@s.whatsapp.net', '')
+                    ?.replace('@c.us', '');
+                  
+                  // Salvar dados adicionais no Supabase
+                  const { error } = await supabase
+                    .from('kiwify')
+                    .update({
+                      remojid: phoneNumber,
+                      evolution_raw_data: instanceData
+                    })
+                    .eq('user_id', user?.id);
+                  
+                  if (!error) {
+                    console.log('✅ Dados completos da instância salvos:', phoneNumber);
+                    
+                    // Atualizar estado local com o número
+                    setConnectedInstance({
+                      instance_name: validInstanceName,
+                      phone_number: phoneNumber
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error('Erro ao buscar/salvar dados completos:', error);
+              }
               
               toast({
                 title: "Conexão estabelecida!",
