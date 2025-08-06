@@ -95,11 +95,12 @@ serve(async (req) => {
         console.log(`✅ Match encontrado: ${instanceName} → User ${user.user_id}`)
         
         // Preparar dados para atualização
+        const isConnected = instance.connectionStatus === 'open' || instance.status === 'open' || instance.state === 'open'
         const updateData = {
           // Status de conexão
-          is_connected: instance.status === 'open' || instance.state === 'open',
-          connected_at: (instance.status === 'open' || instance.state === 'open') ? new Date().toISOString() : null,
-          disconnected_at: (instance.status !== 'open' && instance.state !== 'open') ? new Date().toISOString() : null,
+          is_connected: isConnected,
+          connected_at: isConnected ? new Date().toISOString() : null,
+          disconnected_at: !isConnected ? new Date().toISOString() : null,
           
           // Dados da Evolution
           evolution_instance_id: instance.instanceId || instance.id || instance.key,
@@ -133,7 +134,7 @@ serve(async (req) => {
           processedInstances.push({
             instance_name: instanceName,
             user_id: user.user_id,
-            status: instance.status || instance.state || 'unknown'
+            status: instance.connectionStatus || instance.status || instance.state || 'unknown'
           })
         }
       } else {
