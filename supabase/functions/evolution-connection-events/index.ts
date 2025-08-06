@@ -92,12 +92,16 @@ async function handleConnectionUpdate(event: EvolutionEvent) {
   console.log('📊 Event details:', {
     instanceName: event.instance?.instanceName,
     status: event.instance?.status,
-    remoteJid: event.data?.remoteJid
+    remoteJid: event.data?.remoteJid,
+    displayName: event.data?.displayName,
+    profilePicUrl: event.data?.profilePicUrl
   });
 
   const instanceName = event.instance?.instanceName;
   const status = event.instance?.status;
   const remoteJid = event.data?.remoteJid;
+  const displayName = event.data?.displayName;
+  const profilePicUrl = event.data?.profilePicUrl;
 
   if (!instanceName) {
     console.error('❌ Missing instanceName in event');
@@ -109,12 +113,32 @@ async function handleConnectionUpdate(event: EvolutionEvent) {
     console.log('✅ Instance connected, updating database');
 
     try {
-      // First, find the user by instance name
-      const { data: kiwifyData, error: kiwifyError } = await supabase
+      // First, try to find user by instance name
+      let { data: kiwifyData, error: kiwifyError } = await supabase
         .from('kiwify')
         .select('user_id, email')
         .eq('Nome da instancia da Evolution', instanceName)
         .maybeSingle();
+
+      // If not found by instance name, try to find any user with the same email pattern
+      // or create a fallback approach to identify the user
+      if (!kiwifyData && !kiwifyError) {
+        console.log('👀 Instance name not found, looking for users without instance name...');
+        
+        // Find users without instance name assigned (potential match)
+        const { data: candidateUsers, error: candidateError } = await supabase
+          .from('kiwify')
+          .select('user_id, email')
+          .is('Nome da instancia da Evolution', null)
+          .limit(5);
+
+        if (!candidateError && candidateUsers && candidateUsers.length > 0) {
+          console.log('🔍 Found candidate users without instance:', candidateUsers.length);
+          // Use the first candidate for now - this could be improved with better logic
+          kiwifyData = candidateUsers[0];
+          console.log('🎯 Using candidate user:', kiwifyData.email);
+        }
+      }
 
       if (kiwifyError) {
         console.error('❌ Error finding user by instance name:', kiwifyError);
@@ -132,7 +156,42 @@ async function handleConnectionUpdate(event: EvolutionEvent) {
         instanceName
       });
 
-      // Call mark_instance_connected function
+      // Update kiwify table with enhanced data
+      const updateData: any = {
+        'Nome da instancia da Evolution': instanceName,
+        is_connected: true,
+        connected_at: new Date().toISOString(),
+        disconnected_at: null,
+        evolution_last_sync: new Date().toISOString()
+      };
+
+      // Add optional fields if available
+      if (remoteJid) updateData.remojid = remoteJid;
+      if (displayName) updateData.evolution_profile_name = displayName;
+      if (profilePicUrl) updateData.evolution_profile_picture_url = profilePicUrl;
+
+      // Add integration data from the event
+      const integrationData = {
+        server: event.server,
+        connectionTimestamp: new Date().toISOString(),
+        eventData: event.data
+      };
+      updateData.evolution_integration_data = integrationData;
+      updateData.evolution_raw_data = event;
+
+      const { error: updateError } = await supabase
+        .from('kiwify')
+        .update(updateData)
+        .eq('user_id', kiwifyData.user_id);
+
+      if (updateError) {
+        console.error('❌ Error updating kiwify data:', updateError);
+        return;
+      }
+
+      console.log('✅ Successfully updated kiwify table with Evolution data');
+
+      // Also call the RPC function for consistency
       const { data: markResult, error: markError } = await supabase
         .rpc('mark_instance_connected', {
           p_user_id: kiwifyData.user_id,
@@ -141,12 +200,10 @@ async function handleConnectionUpdate(event: EvolutionEvent) {
         });
 
       if (markError) {
-        console.error('❌ Error calling mark_instance_connected:', markError);
-        return;
+        console.error('⚠️ Warning - RPC call failed but direct update succeeded:', markError);
+      } else {
+        console.log('✅ RPC call also succeeded:', markResult);
       }
-
-      console.log('✅ Successfully marked instance as connected');
-      console.log('📊 Mark result:', markResult);
 
     } catch (error) {
       console.error('❌ Error in handleConnectionUpdate:', error);

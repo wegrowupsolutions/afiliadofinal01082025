@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { useEvolutionConnection } from '@/hooks/useEvolutionConnection';
+import { ManualSyncButton } from '@/components/evolution/ManualSyncButton';
 
 const Evolution = () => {
   const navigate = useNavigate();
@@ -612,10 +613,22 @@ const Evolution = () => {
                             Aguardando conexão
                             {retryCountRef.current > 0 ? ` (Tentativa ${retryCountRef.current}/${maxRetries})` : '...'}
                           </span>
-                        </div>
-                      </div>
-                    </>
-                  ) : confirmationStatus === 'confirmed' ? (
+                         </div>
+                         
+                         <div className="mt-4 flex justify-center">
+                           <ManualSyncButton 
+                             instanceName={instanceName} 
+                             onSyncComplete={() => {
+                               // Verificar se conexão foi estabelecida após sync
+                               setTimeout(() => {
+                                 window.location.reload();
+                               }, 2000);
+                             }}
+                           />
+                         </div>
+                       </div>
+                     </>
+                   ) : confirmationStatus === 'confirmed' ? (
                     <div className="p-6 text-center">
                       <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
