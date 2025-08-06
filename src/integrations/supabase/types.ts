@@ -50,6 +50,7 @@ export type Database = {
       afiliado_base_leads: {
         Row: {
           id: number
+          instance_id: string | null
           name: string | null
           remotejid: string | null
           timestamp: string | null
@@ -57,6 +58,7 @@ export type Database = {
         }
         Insert: {
           id?: number
+          instance_id?: string | null
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
@@ -64,6 +66,7 @@ export type Database = {
         }
         Update: {
           id?: number
+          instance_id?: string | null
           name?: string | null
           remotejid?: string | null
           timestamp?: string | null
@@ -75,6 +78,7 @@ export type Database = {
         Row: {
           conversation_history: string | null
           id: number
+          instance_id: string | null
           remotejid: string | null
           timestamp: string | null
           user_id: string | null
@@ -82,6 +86,7 @@ export type Database = {
         Insert: {
           conversation_history?: string | null
           id?: number
+          instance_id?: string | null
           remotejid?: string | null
           timestamp?: string | null
           user_id?: string | null
@@ -89,6 +94,7 @@ export type Database = {
         Update: {
           conversation_history?: string | null
           id?: number
+          instance_id?: string | null
           remotejid?: string | null
           timestamp?: string | null
           user_id?: string | null
@@ -621,6 +627,13 @@ export type Database = {
       get_user_id_by_email: {
         Args: { user_email: string }
         Returns: string
+      }
+      get_user_instance_by_phone_number: {
+        Args: { phone_number: string }
+        Returns: {
+          user_id: string
+          instance_id: string
+        }[]
       }
       has_role: {
         Args: {
