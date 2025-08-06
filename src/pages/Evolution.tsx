@@ -373,6 +373,22 @@ const Evolution = () => {
     try {
       setIsLoading(true);
       
+      // NOVA: Chamar Evolution API primeiro
+      const instanceName = connectionStatus.instanceName;
+      if (instanceName) {
+        try {
+          console.log('🔌 Calling Evolution API to logout/delete instance:', instanceName);
+          await supabase.functions.invoke('evolution-logout-delete', {
+            body: { instanceName }
+          });
+          console.log('✅ Evolution API cleanup completed');
+        } catch (error) {
+          console.log('⚠️ Evolution API error (continuing with Supabase):', error);
+          // Continuar mesmo se Evolution falhar
+        }
+      }
+      
+      // MANTER: Todas as operações Supabase existentes
       const { error } = await supabase
         .from('kiwify')
         .update({
