@@ -181,40 +181,92 @@ serve(async (req) => {
           continue
         }
 
-        // Atualizar dados do usuário
-        const { error: updateError } = await supabase
-          .from('kiwify')
-          .update(updateData)
-          .eq('user_id', matchedUser.user_id)
+        // Atualizar dados do usuário com retry logic
+        let updateSuccess = false;
+        let retryCount = 0;
+        const maxRetries = 3;
 
-        if (updateError) {
-          console.error(`❌ Erro ao atualizar ${instanceName}:`, updateError)
-        } else {
-          console.log(`✅ ${instanceName} sincronizado com sucesso para user ${matchedUser.user_id}`)
-          
-          // Verificar se os dados foram salvos corretamente
-          const { data: verifyData, error: verifyError } = await supabase
-            .from('kiwify')
-            .select('*')
-            .eq('user_id', matchedUser.user_id)
-            .single();
-          
-          if (verifyError) {
-            console.error(`❌ Erro ao verificar dados salvos para ${instanceName}:`, verifyError);
-          } else {
-            console.log(`🔍 Dados verificados para ${instanceName}:`, {
-              is_connected: verifyData.is_connected,
-              instance_name: verifyData['Nome da instancia da Evolution'],
-              phone: verifyData.remojid
+        while (!updateSuccess && retryCount < maxRetries) {
+          try {
+            const { data: updateResult, error: updateError } = await supabase
+              .from('kiwify')
+              .update(updateData)
+              .eq('user_id', matchedUser.user_id)
+              .select();
+
+            if (updateError) {
+              throw updateError;
+            }
+
+            console.log(`✅ ${instanceName} sincronizado com sucesso para user ${matchedUser.user_id} (tentativa ${retryCount + 1})`);
+            
+            // Verificar se os dados críticos foram salvos corretamente
+            const updatedUser = updateResult?.[0];
+            if (updatedUser) {
+              const criticalFields = {
+                instanceName: updatedUser['Nome da instancia da Evolution'],
+                isConnected: updatedUser.is_connected,
+                userId: updatedUser.user_id,
+                remojid: updatedUser.remojid
+              };
+              
+              console.log(`🔍 Verificação pós-salvamento para ${instanceName}:`, criticalFields);
+              
+              // Verificar consistência dos dados críticos
+              let hasInconsistency = false;
+              
+              if (instanceName && criticalFields.instanceName !== instanceName) {
+                console.error(`⚠️ INCONSISTÊNCIA: Campo 'Nome da instancia da Evolution' não foi salvo corretamente!`);
+                console.error(`   Esperado: ${instanceName}, Salvo: ${criticalFields.instanceName}`);
+                hasInconsistency = true;
+              }
+              
+              if (isConnected !== undefined && criticalFields.isConnected !== isConnected) {
+                console.error(`⚠️ INCONSISTÊNCIA: Campo 'is_connected' não foi salvo corretamente!`);
+                console.error(`   Esperado: ${isConnected}, Salvo: ${criticalFields.isConnected}`);
+                hasInconsistency = true;
+              }
+              
+              if (hasInconsistency && retryCount < maxRetries - 1) {
+                throw new Error(`Inconsistência nos dados salvos para ${instanceName}`);
+              }
+              
+              if (!hasInconsistency) {
+                console.log(`✅ Verificação bem-sucedida: Todos os dados críticos salvos corretamente para ${instanceName}`);
+              }
+              
+            } else {
+              console.error(`⚠️ Não foi possível verificar dados salvos para ${instanceName}`);
+            }
+            
+            updateSuccess = true;
+            syncCount++;
+            processedInstances.push({
+              instance_name: instanceName,
+              user_id: matchedUser.user_id,
+              status: instanceDetails.connectionStatus || instanceDetails.status || instanceDetails.state,
+              retry_count: retryCount + 1
             });
+            
+          } catch (error) {
+            retryCount++;
+            console.error(`❌ Erro na tentativa ${retryCount} de atualizar ${instanceName}:`, error);
+            
+            if (retryCount >= maxRetries) {
+              console.error(`💥 Falha definitiva ao atualizar ${instanceName} após ${maxRetries} tentativas`);
+              processedInstances.push({
+                instance_name: instanceName,
+                user_id: matchedUser.user_id,
+                status: 'error',
+                error: error.message,
+                retry_count: retryCount
+              });
+              break;
+            }
+            
+            // Aguardar antes de tentar novamente
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
           }
-          
-          syncCount++
-          processedInstances.push({
-            instance_name: instanceName,
-            user_id: matchedUser.user_id,
-            status: instanceDetails.connectionStatus || instanceDetails.status || instanceDetails.state
-          })
         }
       } else {
         console.log(`⚠️ Nenhum usuário para instância: ${instanceName}`)
