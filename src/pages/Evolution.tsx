@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { useEvolutionConnection } from '@/hooks/useEvolutionConnection';
-import { ManualSyncButton } from '@/components/evolution/ManualSyncButton';
+
 
 const Evolution = () => {
   const navigate = useNavigate();
@@ -650,18 +650,6 @@ const Evolution = () => {
                             Aguardando conexão
                             {retryCountRef.current > 0 ? ` (Tentativa ${retryCountRef.current}/${maxRetries})` : '...'}
                           </span>
-                         </div>
-                         
-                         <div className="mt-4 flex justify-center">
-                           <ManualSyncButton 
-                             instanceName={instanceName} 
-                             onSyncComplete={() => {
-                               // Verificar se conexão foi estabelecida após sync
-                               setTimeout(() => {
-                                 window.location.reload();
-                               }, 2000);
-                             }}
-                           />
                          </div>
                        </div>
                      </>
