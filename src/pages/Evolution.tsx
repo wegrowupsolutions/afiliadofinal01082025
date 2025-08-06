@@ -417,49 +417,34 @@ const Evolution = () => {
     
     try {
       setIsLoading(true);
-      console.log('🔌 Iniciando processo de desconexão...');
+      console.log('🔌 Iniciando desconexão manual...');
       
-      // Marcar desconexão manual para evitar interferência do hook realtime
-      if (markManualDisconnection) {
-        markManualDisconnection();
+      // 1. PARAR todas as verificações automáticas imediatamente
+      if (statusCheckIntervalRef.current !== null) {
+        clearInterval(statusCheckIntervalRef.current);
+        statusCheckIntervalRef.current = null;
       }
-      // Tentar identificar instância para limpar na Evolution API
-      let instanceNameToDelete = connectionStatus.instanceName || connectedInstance?.instance_name;
       
-      console.log('🔍 Nome da instância a ser desconectada:', instanceNameToDelete);
+      // 2. Obter nome da instância atual
+      const instanceName = connectionStatus.instanceName || connectedInstance?.instance_name;
       
-      // Se não tem nome da instância no status, buscar no banco
-      if (!instanceNameToDelete) {
-        console.log('🔍 Buscando nome da instância no banco...');
-        const { data: kiwifyData } = await supabase
-          .from('kiwify')
-          .select('"Nome da instancia da Evolution"')
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        instanceNameToDelete = kiwifyData?.['Nome da instancia da Evolution'];
-        console.log('📊 Nome da instância encontrado no banco:', instanceNameToDelete);
-      }
-
-      // Chamar Evolution API se temos nome da instância
-      if (instanceNameToDelete) {
+      if (instanceName) {
+        console.log('🔌 Desconectando da Evolution API:', instanceName);
+        
+        // 3. Chamar Evolution API para logout/delete (sem aguardar resposta)
         try {
-          console.log('🔌 Calling Evolution API to logout/delete instance:', instanceNameToDelete);
           await supabase.functions.invoke('evolution-logout-delete', {
-            body: { instanceName: instanceNameToDelete }
+            body: { instanceName }
           });
-          console.log('✅ Evolution API cleanup completed');
-        } catch (error) {
-          console.log('⚠️ Evolution API error (continuing with Supabase):', error);
+          console.log('✅ Evolution API cleanup concluído');
+        } catch (evolutionError) {
+          console.log('⚠️ Evolution API error (continuando):', evolutionError);
           // Continuar mesmo se Evolution falhar
         }
-      } else {
-        console.log('⚠️ Nenhuma instância encontrada para deletar da Evolution API');
       }
       
-      console.log('💾 Atualizando dados no Supabase...');
-      
-      // Atualizar dados no Supabase
+      // 4. Limpar dados no Supabase (operação atômica)
+      console.log('🧹 Limpando dados do Supabase...');
       const { error } = await supabase
         .from('kiwify')
         .update({
@@ -482,42 +467,41 @@ const Evolution = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('❌ Erro ao desconectar instância:', error);
-        toast({
-          title: "Erro ao desconectar",
-          description: "Não foi possível desconectar a instância. Tente novamente.",
-          variant: "destructive"
-        });
-        return;
+        console.error('❌ Erro ao limpar dados Supabase:', error);
+        throw new Error('Falha ao limpar dados do banco');
       }
 
-      console.log('✅ Dados atualizados no Supabase com sucesso');
+      console.log('✅ Dados Supabase limpos com sucesso');
 
-      // Limpar estados locais IMEDIATAMENTE
+      // 5. Limpar todos os estados locais imediatamente
       setConnectedInstance(null);
       setQrCodeData(null);
       setConfirmationStatus(null);
       setShowActiveConnectionMessage(false);
       setInstanceName('');
-      
-      // Limpar interval se ativo
-      if (statusCheckIntervalRef.current !== null) {
-        clearInterval(statusCheckIntervalRef.current);
-        statusCheckIntervalRef.current = null;
-      }
 
-      console.log('🧹 Estados locais limpos');
-
+      // 6. Mostrar sucesso
       toast({
-        title: "Instância desconectada",
-        description: "Sua instância foi desconectada com sucesso. Você pode criar uma nova conexão.",
+        title: "Desconectado com sucesso",
+        description: "Sua instância foi desconectada. Você pode criar uma nova conexão.",
       });
 
+      console.log('🎯 Desconexão manual concluída com sucesso');
+
     } catch (error) {
-      console.error('💥 Erro ao desconectar:', error);
+      console.error('💥 Erro na desconexão:', error);
+      
+      // Log detalhado do erro
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        user_id: user?.id,
+        instance_name: connectionStatus.instanceName || connectedInstance?.instance_name
+      });
+      
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado ao desconectar.",
+        title: "Erro ao desconectar",
+        description: "Houve um problema na desconexão. Tente atualizar a página.",
         variant: "destructive"
       });
     } finally {
