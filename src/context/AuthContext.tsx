@@ -32,10 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setIsLoading(false);
 
-        // Criar bucket automaticamente quando o usuário fizer login
+        // Executar ações automáticas quando o usuário fizer login
         if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(async () => {
             try {
+              // 1. Criar bucket do usuário
               const { data, error } = await supabase.functions.invoke('create-user-bucket', {
                 body: {
                   email: session.user.email,
@@ -48,8 +49,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               } else {
                 console.log('Bucket do usuário verificado/criado:', data.bucket_name);
               }
+
+              // 2. Executar sincronização Evolution automática
+              console.log('🔄 Executando sincronização Evolution para usuário:', session.user.email);
+              
+              const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-evolution-kiwify', {
+                body: {
+                  automatic: true,
+                  user_id: session.user.id,
+                  user_email: session.user.email,
+                  source: 'user_login'
+                }
+              });
+
+              if (syncError) {
+                console.error('Erro na sincronização Evolution:', syncError);
+              } else {
+                console.log('✅ Sincronização Evolution concluída:', syncData);
+              }
             } catch (error) {
-              console.error('Erro na criação automática do bucket:', error);
+              console.error('Erro nas ações automáticas:', error);
             }
           }, 100);
         }
