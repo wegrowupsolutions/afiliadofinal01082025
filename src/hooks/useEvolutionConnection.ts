@@ -76,6 +76,7 @@ export function useEvolutionConnection() {
         console.log('🔄 Atualização realtime da conexão Evolution:', payload);
         
         const newData = payload.new as any;
+        const oldData = payload.old as any;
         const eventType = payload.eventType;
 
         if (eventType === 'UPDATE' || eventType === 'INSERT') {
@@ -91,6 +92,9 @@ export function useEvolutionConnection() {
             console.log('❌ Conexão perdida via realtime');
             setConnectionStatus({ isConnected: false });
           }
+        } else if (eventType === 'DELETE') {
+          console.log('🗑️ Registro removido via realtime');
+          setConnectionStatus({ isConnected: false });
         }
       })
       .subscribe();
@@ -98,9 +102,27 @@ export function useEvolutionConnection() {
     // Check initial status
     checkConnectionStatus();
 
+    // Refresh status when page becomes visible (helps catch disconnections)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('📱 Página ficou visível, verificando status da conexão...');
+        setTimeout(checkConnectionStatus, 1000);
+      }
+    };
+
+    // Refresh status periodically to catch disconnections from Evolution API
+    const interval = setInterval(() => {
+      console.log('⏰ Verificação periódica do status da conexão');
+      checkConnectionStatus();
+    }, 30000); // Check every 30 seconds
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       console.log('🔄 Removendo subscription realtime');
       supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
     };
   }, [user?.id]);
 

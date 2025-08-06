@@ -35,7 +35,15 @@ const Evolution = () => {
     checkConnectionStatus: checkEvolutionConnectionStatus 
   } = useEvolutionApi();
   
-  const { connectionStatus, loading: connectionLoading } = useEvolutionConnection();
+  const { connectionStatus, loading: connectionLoading, refreshStatus } = useEvolutionConnection();
+  
+  // Forçar verificação quando página carrega ou usuário muda
+  useEffect(() => {
+    if (user?.id && refreshStatus) {
+      console.log('🔄 Forçando verificação de status na página Evolution');
+      refreshStatus();
+    }
+  }, [user?.id, refreshStatus]);
   
   // Atualizar estado baseado na conexão realtime
   useEffect(() => {
@@ -74,8 +82,28 @@ const Evolution = () => {
     } else if (!connectionStatus.isConnected) {
       console.log('ℹ️ Nenhuma conexão ativa detectada');
       setConnectedInstance(null);
+      
+      // Se estava em modo conectado mas agora perdeu conexão, limpar states
+      if (connectedInstance) {
+        console.log('🔄 Limpando estados devido à perda de conexão');
+        setConfirmationStatus(null);
+        setQrCodeData(null);
+        setShowActiveConnectionMessage(false);
+        
+        // Limpar interval se ativo
+        if (statusCheckIntervalRef.current !== null) {
+          clearInterval(statusCheckIntervalRef.current);
+          statusCheckIntervalRef.current = null;
+        }
+        
+        toast({
+          title: "Conexão perdida",
+          description: "Sua instância foi desconectada. Você pode criar uma nova conexão.",
+          variant: "destructive"
+        });
+      }
     }
-  }, [connectionStatus, confirmationStatus, qrCodeData, toast]);
+  }, [connectionStatus, confirmationStatus, qrCodeData, toast, connectedInstance]);
   
   // Cleanup interval on unmount
   useEffect(() => {

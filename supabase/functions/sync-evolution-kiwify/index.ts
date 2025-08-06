@@ -170,6 +170,12 @@ serve(async (req) => {
 
         console.log(`📝 Atualizando user ${matchedUser.user_id}:`, updateData)
 
+        // Verificar se user_id é válido
+        if (!matchedUser.user_id || matchedUser.user_id === 'null' || matchedUser.user_id === null) {
+          console.error(`❌ User ID inválido para instância ${instanceName}:`, matchedUser.user_id)
+          continue
+        }
+
         // Atualizar dados do usuário
         const { error: updateError } = await supabase
           .from('kiwify')
