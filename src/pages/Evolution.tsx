@@ -567,7 +567,7 @@ const Evolution = () => {
         )}
         
         <div className="max-w-xl mx-auto">
-          {connectedInstance && !qrCodeData && confirmationStatus !== 'confirmed' && (
+          {(connectedInstance || connectionStatus.isConnected) && !qrCodeData && confirmationStatus !== 'confirmed' && (
             <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30 mb-6">
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
@@ -575,12 +575,12 @@ const Evolution = () => {
                     <Check className="h-10 w-10 text-green-600 dark:text-green-400" />
                   </div>
                   <h3 className="text-xl font-medium text-gray-900 dark:text-white">Instância Conectada</h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Você já possui uma instância <span className="font-semibold">{connectedInstance.instance_name}</span> conectada
-                    {connectedInstance.phone_number && (
-                      <span> ao número <span className="font-semibold">{connectedInstance.phone_number}</span></span>
-                    )}.
-                  </p>
+                   <p className="text-gray-600 dark:text-gray-300">
+                     Você já possui uma instância <span className="font-semibold">{connectedInstance?.instance_name || connectionStatus.instanceName}</span> conectada
+                     {(connectedInstance?.phone_number || connectionStatus.phoneNumber) && (
+                       <span> ao número <span className="font-semibold">{connectedInstance?.phone_number || connectionStatus.phoneNumber}</span></span>
+                     )}.
+                   </p>
                    <div className="flex gap-3 justify-center">
                     <Button 
                       onClick={() => navigate('/chats')}
@@ -609,7 +609,7 @@ const Evolution = () => {
           )}
           
           {/* Só mostrar o card de criação se não há instância conectada */}
-          {!connectedInstance && (
+          {!connectedInstance && !connectionStatus.isConnected && (
             <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
