@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check, Unplug } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -513,8 +513,13 @@ const Evolution = () => {
     }
   };
   
-  const handleCreateInstance = async () => {
+  const handleCreateInstance = useCallback(async () => {
+    console.log('🔍 handleCreateInstance chamado');
+    console.log('🔍 instanceName:', instanceName);
+    console.log('🔍 user?.id:', user?.id);
+    
     if (!instanceName.trim()) {
+      console.log('❌ Nome vazio');
       toast({
         title: "Nome obrigatório",
         description: "Por favor, informe um nome para a instância.",
@@ -526,6 +531,7 @@ const Evolution = () => {
     // Validar nome da instância antes de criar
     const validInstanceName = instanceName.trim().replace(/[^a-zA-Z0-9-_]/g, '');
     if (validInstanceName.length < 3) {
+      console.log('❌ Nome inválido:', validInstanceName);
       toast({
         title: "Nome inválido",
         description: "Use apenas letras, números, - ou _. Mínimo 3 caracteres.",
@@ -543,6 +549,7 @@ const Evolution = () => {
         .maybeSingle();
 
       if (existingData?.['Nome da instancia da Evolution']) {
+        console.log('❌ Instância já existe:', existingData);
         toast({
           title: "Instância existente",
           description: "Você já possui uma instância. Desconecte-a primeiro.",
@@ -554,6 +561,7 @@ const Evolution = () => {
       console.error('Erro ao verificar instância existente:', error);
     }
 
+    console.log('✅ Iniciando criação da instância...');
     setIsLoading(true);
     setQrCodeData(null);
     setConfirmationStatus(null);
@@ -658,7 +666,7 @@ const Evolution = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [instanceName, user?.id, createEvolutionInstance, checkEvolutionConnectionStatus, checkConnectionState, toast]);
 
   const handleTryAgain = () => {
     setIsLoading(true);
@@ -973,6 +981,12 @@ const Evolution = () => {
                         className="dark:bg-gray-700"
                         value={instanceName}
                         onChange={(e) => setInstanceName(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && instanceName.trim() && !isLoading) {
+                            handleCreateInstance();
+                          }
+                        }}
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
@@ -981,7 +995,8 @@ const Evolution = () => {
                     <Button 
                       onClick={handleCreateInstance}
                       className="w-full bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
-                      disabled={isLoading}
+                      disabled={isLoading || !instanceName.trim()}
+                      type="button"
                     >
                       {isLoading ? (
                         <span className="flex items-center justify-center">
