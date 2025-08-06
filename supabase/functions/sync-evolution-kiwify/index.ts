@@ -16,15 +16,23 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Pegar dados do request se enviados (instância específica)
+    // Pegar dados do request se enviados (instância específica ou modo automático)
     let requestData = null
+    let isAutomaticSync = false
     try {
-      requestData = await req.json()
+      const body = await req.json()
+      requestData = body
+      isAutomaticSync = body?.automatic === true
     } catch {
-      // Sem dados no request, buscar todas as instâncias
+      // Sem dados no request, executar sincronização automática para todos
+      isAutomaticSync = true
     }
 
-    console.log('🔄 Iniciando sincronização Evolution → Kiwify...', requestData)
+    console.log('🔄 Iniciando sincronização Evolution → Kiwify...', { 
+      requestData, 
+      isAutomaticSync,
+      timestamp: new Date().toISOString()
+    })
 
     // 1. Buscar todas as instâncias da Evolution API
     const evolutionResponse = await fetch('https://evolution.serverwegrowup.com.br/instance/fetchInstances', {
@@ -57,11 +65,11 @@ serve(async (req) => {
 
     console.log(`📊 ${instances.length} instâncias encontradas`)
 
-    // 3. Buscar usuários na tabela kiwify
+    // 3. Buscar usuários na tabela kiwify (todos os usuários para sincronização automática)
     const { data: users, error: usersError } = await supabase
       .from('kiwify')
-      .select('user_id, "Nome da instancia da Evolution"')
-      .not('"Nome da instancia da Evolution"', 'is', null)
+      .select('user_id, email, "Nome da instancia da Evolution", is_connected, evolution_last_sync')
+      .not('email', 'is', null)
 
     if (usersError) {
       console.error('❌ Erro buscar usuários:', usersError)
@@ -87,10 +95,23 @@ serve(async (req) => {
 
       console.log(`🔍 Processando: ${instanceName}`)
 
-      // Buscar usuário correspondente
-      const matchedUser = users?.find(u => 
+      // Buscar usuário correspondente (por nome da instância ou criar novo registro)
+      let matchedUser = users?.find(u => 
         u["Nome da instancia da Evolution"] === instanceName
       )
+
+      // Se não encontrou por nome da instância, tentar criar/atualizar para usuários sem instância definida
+      if (!matchedUser && isAutomaticSync) {
+        // Buscar usuário sem instância conectada que possa corresponder a esta
+        const userWithoutInstance = users?.find(u => 
+          !u["Nome da instancia da Evolution"] && !u.is_connected
+        )
+        
+        if (userWithoutInstance) {
+          matchedUser = userWithoutInstance
+          console.log(`🔗 Associando instância ${instanceName} ao usuário ${userWithoutInstance.user_id}`)
+        }
+      }
 
       if (matchedUser) {
         console.log(`✅ Match: ${instanceName} → User ${matchedUser.user_id}`)

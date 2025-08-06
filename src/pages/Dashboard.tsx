@@ -10,6 +10,7 @@ import ChatsCard from '@/components/dashboard/ChatsCard';
 import KnowledgeCard from '@/components/dashboard/KnowledgeCard';
 import ClientsCard from '@/components/dashboard/ClientsCard';
 import EvolutionCard from '@/components/dashboard/EvolutionCard';
+import SyncStatusCard from '@/components/dashboard/SyncStatusCard';
 import AcademiaCard from '@/components/dashboard/AcademiaCard';
 import ConfigCard from '@/components/dashboard/ConfigCard';
 import AgentConfigCard from '@/components/dashboard/AgentConfigCard';
