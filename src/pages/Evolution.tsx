@@ -32,7 +32,9 @@ const Evolution = () => {
   const { 
     createInstance: createEvolutionInstance, 
     updateQrCode: updateEvolutionQrCode, 
-    checkConnectionStatus: checkEvolutionConnectionStatus 
+    checkConnectionStatus: checkEvolutionConnectionStatus,
+    logoutInstance,
+    deleteInstance
   } = useEvolutionApi();
   
   const { connectionStatus, loading: connectionLoading, refreshStatus, markManualDisconnection } = useEvolutionConnection();
@@ -413,49 +415,73 @@ const Evolution = () => {
   };
 
   const handleDisconnectInstance = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !connectedInstance) return;
     
     try {
       setIsLoading(true);
       
-      // PARAR TUDO imediatamente
-      if (statusCheckIntervalRef.current !== null) {
+      // 1. Parar verificações
+      if (statusCheckIntervalRef.current) {
         clearInterval(statusCheckIntervalRef.current);
         statusCheckIntervalRef.current = null;
       }
       
-      // Esconder card temporário imediatamente se estiver visível
-      setShowActiveConnectionMessage(false);
+      const instanceName = connectedInstance.instance_name;
       
-      // Limpar APENAS o Supabase - sem chamar Evolution API
-      const { error } = await supabase
+      // 2. Fazer logout na Evolution
+      try {
+        await logoutInstance(instanceName);
+        console.log('✅ Logout realizado na Evolution');
+      } catch (error) {
+        console.log('⚠️ Erro no logout:', error);
+      }
+      
+      // 3. Deletar instância na Evolution
+      try {
+        await deleteInstance(instanceName);
+        console.log('✅ Instância deletada da Evolution');
+      } catch (error) {
+        console.log('⚠️ Erro ao deletar instância:', error);
+      }
+      
+      // 4. Limpar dados no Supabase
+      const { error: dbError } = await supabase
         .from('kiwify')
         .update({
-          "Nome da instancia da Evolution": null,
+          'Nome da instancia da Evolution': null,
           is_connected: false,
           connected_at: null,
-          disconnected_at: new Date().toISOString()
+          disconnected_at: new Date().toISOString(),
+          remojid: null,
+          evolution_raw_data: null
         })
         .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      // Limpar estados FORÇADAMENTE
+      
+      if (!dbError) {
+        console.log('✅ Dados limpos no Supabase');
+      }
+      
+      // 5. Resetar estados locais
       setConnectedInstance(null);
       setQrCodeData(null);
       setConfirmationStatus(null);
-      setShowActiveConnectionMessage(false);
       setInstanceName('');
-
+      setShowActiveConnectionMessage(false);
+      
+      // 6. Forçar atualização do status de conexão
+      if (refreshStatus) {
+        refreshStatus();
+      }
+      
       toast({
         title: "Desconectado com sucesso",
-        description: "Sua instância foi desconectada.",
+        description: "Instância removida completamente.",
       });
-
+      
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('❌ Erro na desconexão:', error);
       toast({
-        title: "Erro ao desconectar", 
+        title: "Erro ao desconectar",
         description: "Tente novamente.",
         variant: "destructive"
       });
