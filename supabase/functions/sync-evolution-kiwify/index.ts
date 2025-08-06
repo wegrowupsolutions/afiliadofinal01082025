@@ -63,39 +63,53 @@ serve(async (req) => {
 
     for (const instanceData of evolutionData) {
       try {
-        const instance = instanceData.instance
+        console.log('🔍 Processando instância:', {
+          name: instanceData.name,
+          id: instanceData.id,
+          connectionStatus: instanceData.connectionStatus,
+          profileName: instanceData.profileName
+        })
 
-        if (!instance?.instanceName) {
+        if (!instanceData.name) {
           console.warn('⚠️ Instância sem nome, pulando:', instanceData)
           continue
         }
 
         // 4. Preparar dados para atualizar na kiwify (apenas campos evolution_*)
         const updateData = {
-          evolution_instance_id: instance.instanceId,
-          evolution_profile_name: instance.profileName,
-          evolution_profile_picture_url: instance.profilePictureURL,
-          evolution_profile_status: instance.profileStatus,
-          evolution_server_url: instance.serverUrl,
-          evolution_api_key: instance.apikey,
-          evolution_integration_data: instance.integration || null,
+          evolution_instance_id: instanceData.id,
+          evolution_profile_name: instanceData.profileName,
+          evolution_profile_picture_url: instanceData.profilePicUrl,
+          evolution_profile_status: instanceData.connectionStatus,
+          evolution_server_url: config.evolution_api_url,
+          evolution_api_key: config.evolution_api_key,
+          evolution_integration_data: instanceData.integration || null,
           evolution_raw_data: instanceData,
           evolution_last_sync: new Date().toISOString()
         }
 
+        console.log(`📝 Tentando atualizar instância "${instanceData.name}" com dados:`, {
+          evolution_instance_id: updateData.evolution_instance_id,
+          evolution_profile_name: updateData.evolution_profile_name,
+          evolution_profile_status: updateData.evolution_profile_status
+        })
+
         // 5. Atualizar registro existente na kiwify por nome da instância
-        const { error: updateError } = await supabase
+        const { data: updateResult, error: updateError } = await supabase
           .from('kiwify')
           .update(updateData)
-          .eq('Nome da instancia da Evolution', instance.instanceName)
+          .eq('Nome da instancia da Evolution', instanceData.name)
+          .select()
 
         if (updateError) {
-          console.error(`❌ Erro ao atualizar instância ${instance.instanceName}:`, updateError)
+          console.error(`❌ Erro ao atualizar instância ${instanceData.name}:`, updateError)
           errorCount++
-        } else {
-          console.log(`✅ Instância ${instance.instanceName} atualizada com sucesso`)
+        } else if (updateResult && updateResult.length > 0) {
+          console.log(`✅ Instância ${instanceData.name} atualizada com sucesso`)
           successCount++
-          processedInstances.push(instance.instanceName)
+          processedInstances.push(instanceData.name)
+        } else {
+          console.warn(`⚠️ Nenhum registro encontrado na kiwify para a instância: ${instanceData.name}`)
         }
 
       } catch (error) {
