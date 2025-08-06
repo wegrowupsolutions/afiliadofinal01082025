@@ -35,7 +35,7 @@ const Evolution = () => {
     checkConnectionStatus: checkEvolutionConnectionStatus 
   } = useEvolutionApi();
   
-  const { connectionStatus, loading: connectionLoading, refreshStatus } = useEvolutionConnection();
+  const { connectionStatus, loading: connectionLoading, refreshStatus, markManualDisconnection } = useEvolutionConnection();
   
   // Forçar verificação quando página carrega ou usuário muda
   useEffect(() => {
@@ -417,20 +417,20 @@ const Evolution = () => {
     
     try {
       setIsLoading(true);
+      console.log('🔌 Iniciando processo de desconexão...');
       
-      // Primeiro tentar sincronizar para pegar dados mais recentes
-      try {
-        console.log('🔄 Sincronizando dados antes da desconexão...');
-        await supabase.functions.invoke('sync-evolution-kiwify');
-      } catch (syncError) {
-        console.log('⚠️ Erro na sincronização pré-desconexão:', syncError);
+      // Marcar desconexão manual para evitar interferência do hook realtime
+      if (markManualDisconnection) {
+        markManualDisconnection();
       }
-
       // Tentar identificar instância para limpar na Evolution API
-      let instanceNameToDelete = connectionStatus.instanceName;
+      let instanceNameToDelete = connectionStatus.instanceName || connectedInstance?.instance_name;
+      
+      console.log('🔍 Nome da instância a ser desconectada:', instanceNameToDelete);
       
       // Se não tem nome da instância no status, buscar no banco
       if (!instanceNameToDelete) {
+        console.log('🔍 Buscando nome da instância no banco...');
         const { data: kiwifyData } = await supabase
           .from('kiwify')
           .select('"Nome da instancia da Evolution"')
@@ -438,20 +438,7 @@ const Evolution = () => {
           .maybeSingle();
           
         instanceNameToDelete = kiwifyData?.['Nome da instancia da Evolution'];
-      }
-      
-      // Se ainda não tem nome, tentar buscar no Evolution baseado no email
-      if (!instanceNameToDelete) {
-        console.log('⚠️ Nome da instância não encontrado, tentando buscar por email...');
-        
-        try {
-          const searchResponse = await supabase.functions.invoke('sync-evolution-kiwify');
-          if (searchResponse.data) {
-            console.log('📊 Dados Evolution após busca:', searchResponse.data);
-          }
-        } catch (error) {
-          console.log('⚠️ Erro ao buscar instâncias:', error);
-        }
+        console.log('📊 Nome da instância encontrado no banco:', instanceNameToDelete);
       }
 
       // Chamar Evolution API se temos nome da instância
@@ -470,7 +457,9 @@ const Evolution = () => {
         console.log('⚠️ Nenhuma instância encontrada para deletar da Evolution API');
       }
       
-      // MANTER: Todas as operações Supabase existentes
+      console.log('💾 Atualizando dados no Supabase...');
+      
+      // Atualizar dados no Supabase
       const { error } = await supabase
         .from('kiwify')
         .update({
@@ -493,7 +482,7 @@ const Evolution = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao desconectar instância:', error);
+        console.error('❌ Erro ao desconectar instância:', error);
         toast({
           title: "Erro ao desconectar",
           description: "Não foi possível desconectar a instância. Tente novamente.",
@@ -502,7 +491,9 @@ const Evolution = () => {
         return;
       }
 
-      // Limpar estados locais
+      console.log('✅ Dados atualizados no Supabase com sucesso');
+
+      // Limpar estados locais IMEDIATAMENTE
       setConnectedInstance(null);
       setQrCodeData(null);
       setConfirmationStatus(null);
@@ -515,13 +506,15 @@ const Evolution = () => {
         statusCheckIntervalRef.current = null;
       }
 
+      console.log('🧹 Estados locais limpos');
+
       toast({
         title: "Instância desconectada",
         description: "Sua instância foi desconectada com sucesso. Você pode criar uma nova conexão.",
       });
 
     } catch (error) {
-      console.error('Erro ao desconectar:', error);
+      console.error('💥 Erro ao desconectar:', error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro inesperado ao desconectar.",

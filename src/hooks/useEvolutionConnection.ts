@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,6 +15,7 @@ export function useEvolutionConnection() {
   });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const isManualDisconnection = useRef(false);
 
   // Check initial connection status
   const checkConnectionStatus = async () => {
@@ -41,22 +42,41 @@ export function useEvolutionConnection() {
 
       if (data) {
         console.log('✅ Instância conectada encontrada:', data);
-        setConnectionStatus({
-          isConnected: true,
-          instanceName: data['Nome da instancia da Evolution'],
-          phoneNumber: data.remojid,
-          connectedAt: data.connected_at
-        });
+        if (!isManualDisconnection.current) {
+          setConnectionStatus({
+            isConnected: true,
+            instanceName: data['Nome da instancia da Evolution'],
+            phoneNumber: data.remojid,
+            connectedAt: data.connected_at
+          });
+        }
       } else {
         console.log('ℹ️ Nenhuma instância conectada encontrada');
-        setConnectionStatus({ isConnected: false });
+        if (!isManualDisconnection.current) {
+          setConnectionStatus({ isConnected: false });
+        }
       }
     } catch (error) {
       console.error('❌ Erro ao verificar conexão:', error);
-      setConnectionStatus({ isConnected: false });
+      if (!isManualDisconnection.current) {
+        setConnectionStatus({ isConnected: false });
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to mark manual disconnection
+  const markManualDisconnection = () => {
+    console.log('🔄 Marcando desconexão manual');
+    isManualDisconnection.current = true;
+    setConnectionStatus({ isConnected: false });
+    
+    // Reset flag after 5 seconds to allow normal operation
+    setTimeout(() => {
+      isManualDisconnection.current = false;
+      console.log('🔄 Flag de desconexão manual resetada');
+    }, 5000);
   };
 
   // Set up realtime subscription for connection updates
@@ -74,6 +94,12 @@ export function useEvolutionConnection() {
         filter: `user_id=eq.${user.id}`
       }, (payload) => {
         console.log('🔄 Atualização realtime da conexão Evolution:', payload);
+        
+        // Ignorar atualizações se estamos em processo de desconexão manual
+        if (isManualDisconnection.current) {
+          console.log('🔄 Ignorando atualização realtime devido à desconexão manual');
+          return;
+        }
         
         const newData = payload.new as any;
         const oldData = payload.old as any;
@@ -104,7 +130,7 @@ export function useEvolutionConnection() {
 
     // Refresh status when page becomes visible (helps catch disconnections)
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      if (!document.hidden && !isManualDisconnection.current) {
         console.log('📱 Página ficou visível, verificando status da conexão...');
         setTimeout(checkConnectionStatus, 1000);
       }
@@ -112,8 +138,10 @@ export function useEvolutionConnection() {
 
     // Refresh status periodically to catch disconnections from Evolution API
     const interval = setInterval(() => {
-      console.log('⏰ Verificação periódica do status da conexão');
-      checkConnectionStatus();
+      if (!isManualDisconnection.current) {
+        console.log('⏰ Verificação periódica do status da conexão');
+        checkConnectionStatus();
+      }
     }, 30000); // Check every 30 seconds
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -129,6 +157,7 @@ export function useEvolutionConnection() {
   return {
     connectionStatus,
     loading,
-    refreshStatus: checkConnectionStatus
+    refreshStatus: checkConnectionStatus,
+    markManualDisconnection
   };
 }
