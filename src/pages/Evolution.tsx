@@ -153,10 +153,13 @@ const Evolution = () => {
     };
   }, []);
 
-  // useEffect para verificar e limpar instâncias órfãs
+  // useEffect para verificar e limpar instâncias órfãs (apenas se não há conexão ativa)
   useEffect(() => {
     const checkOrphanInstances = async () => {
-      if (!user?.id) return;
+      if (!user?.id || connectionStatus?.isConnected) {
+        console.log('🔍 Pulando verificação de órfãs - usuário não logado ou conexão ativa');
+        return;
+      }
       
       try {
         console.log('🔍 Verificando instâncias órfãs para usuário:', user.id);
@@ -173,16 +176,16 @@ const Evolution = () => {
         
         if (userData?.['Nome da instancia da Evolution'] && userData?.is_connected) {
           const instanceName = userData['Nome da instancia da Evolution'];
-          console.log('🔎 Verificando instância:', instanceName);
+          console.log('🔎 Verificando instância na Evolution API:', instanceName);
           
-          // 2. Verificar se instância existe na Evolution
+          // 2. Verificar se instância existe na Evolution usando checkEvolutionConnectionStatus
           try {
-            const state = await checkConnectionState(instanceName);
-            console.log('📊 Estado da instância:', state);
+            const evolutionStatus = await checkEvolutionConnectionStatus(instanceName);
+            console.log('📊 Status da instância na Evolution:', evolutionStatus);
             
-            if (!state || state.state !== 'open') {
-              // Instância não existe ou não está conectada
-              console.log('🧹 Limpando instância órfã:', instanceName);
+            if (!evolutionStatus) {
+              // Instância não existe ou não está conectada na Evolution
+              console.log('🧹 Instância não existe na Evolution API, limpando dados do Supabase');
               
               // Limpar no Supabase
               await supabase
@@ -191,7 +194,8 @@ const Evolution = () => {
                   'Nome da instancia da Evolution': null,
                   is_connected: false,
                   remojid: null,
-                  evolution_raw_data: null
+                  evolution_raw_data: null,
+                  disconnected_at: new Date().toISOString()
                 })
                 .eq('user_id', user.id);
 
@@ -202,39 +206,27 @@ const Evolution = () => {
                 refreshStatus();
               }
             } else {
-              console.log('✅ Instância válida e conectada');
+              console.log('✅ Instância válida e conectada na Evolution API');
             }
           } catch (error) {
-            // Instância não existe na Evolution
-            console.log('🧹 Instância não encontrada na Evolution, limpando dados');
-            
-            await supabase
-              .from('kiwify')
-              .update({
-                'Nome da instancia da Evolution': null,
-                is_connected: false,
-                remojid: null,
-                evolution_raw_data: null
-              })
-              .eq('user_id', user.id);
-
-            console.log('✅ Dados de instância inexistente limpos');
-            
-            // Forçar atualização do status se disponível
-            if (refreshStatus) {
-              refreshStatus();
-            }
+            console.error('❌ Erro ao verificar instância na Evolution:', error);
+            // Em caso de erro na verificação, não limpar automaticamente
+            // pode ser um erro temporário de rede
           }
         } else {
-          console.log('ℹ️ Nenhuma instância conectada encontrada para verificar');
+          console.log('ℹ️ Nenhuma instância conectada encontrada no Supabase para verificar');
         }
       } catch (error) {
         console.error('❌ Erro ao verificar instâncias órfãs:', error);
       }
     };
     
-    checkOrphanInstances();
-  }, [user?.id, checkConnectionState, refreshStatus]);
+    // Executar verificação apenas se não há conexão ativa e após delay
+    if (!connectionStatus?.isConnected) {
+      const timer = setTimeout(checkOrphanInstances, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [user?.id, connectionStatus?.isConnected, checkEvolutionConnectionStatus, refreshStatus]);
   
   const checkConnectionStatus = async () => {
     try {
@@ -449,37 +441,76 @@ const Evolution = () => {
               statusCheckIntervalRef.current = null;
               setConfirmationStatus('confirmed');
               
-              // Buscar dados completos da instância conectada
-              try {
-                const instanceData = await checkConnectionState(instanceName.trim());
-                if (instanceData?.instance) {
-                  // Extrair número limpo do WhatsApp
-                  const phoneNumber = instanceData.instance.owner
-                    ?.replace('@s.whatsapp.net', '')
-                    ?.replace('@c.us', '');
-                  
-                  // Salvar dados adicionais no Supabase
-                  const { error } = await supabase
-                    .from('kiwify')
-                    .update({
-                      remojid: phoneNumber,
-                      evolution_raw_data: instanceData
-                    })
-                    .eq('user_id', user?.id);
-                  
-                  if (!error) {
-                    console.log('✅ Dados completos da instância salvos:', phoneNumber);
-                    
-                    // Atualizar estado local com o número
-                    setConnectedInstance({
-                      instance_name: instanceName.trim(),
-                      phone_number: phoneNumber
-                    });
-                  }
-                }
-              } catch (error) {
-                console.error('Erro ao buscar/salvar dados completos:', error);
+        // Buscar dados completos da instância conectada e salvar no Supabase
+        try {
+          console.log('🔍 Buscando dados completos da instância conectada...');
+          const instanceData = await checkConnectionState(instanceName.trim());
+          console.log('🔍 Dados da instância:', instanceData);
+          
+          if (instanceData?.instance) {
+            // Extrair número limpo do WhatsApp
+            const phoneNumber = instanceData.instance.owner
+              ?.replace('@s.whatsapp.net', '')
+              ?.replace('@c.us', '');
+            
+            console.log('🔍 Número extraído:', phoneNumber);
+            
+            // Primeiro, salvar dados usando mark_instance_connected
+            try {
+              const { data: rpcResult, error: rpcError } = await supabase.rpc('mark_instance_connected', {
+                p_user_id: user?.id,
+                p_instance_name: instanceName.trim(),
+                p_phone_number: phoneNumber
+              });
+              
+              if (rpcError) {
+                console.error('❌ Erro na RPC mark_instance_connected:', rpcError);
+              } else {
+                console.log('✅ RPC mark_instance_connected executada:', rpcResult);
               }
+            } catch (rpcError) {
+              console.error('❌ Erro ao executar RPC:', rpcError);
+            }
+            
+            // Depois, atualizar com dados adicionais
+            const { error: updateError } = await supabase
+              .from('kiwify')
+              .update({
+                'Nome da instancia da Evolution': instanceName.trim(),
+                remojid: phoneNumber,
+                evolution_raw_data: instanceData,
+                is_connected: true,
+                connected_at: new Date().toISOString(),
+                disconnected_at: null
+              })
+              .eq('user_id', user?.id);
+            
+            if (updateError) {
+              console.error('❌ Erro ao atualizar dados da instância:', updateError);
+            } else {
+              console.log('✅ Dados completos da instância salvos no Supabase:', phoneNumber);
+              
+              // Verificar se os dados foram salvos corretamente
+              const { data: verifyData } = await supabase
+                .from('kiwify')
+                .select('*')
+                .eq('user_id', user?.id)
+                .single();
+              
+              console.log('🔍 Verificação dos dados salvos:', verifyData);
+              
+              // Atualizar estado local com o número
+              setConnectedInstance({
+                instance_name: instanceName.trim(),
+                phone_number: phoneNumber
+              });
+            }
+          } else {
+            console.log('⚠️ Dados da instância não encontrados ou inválidos');
+          }
+        } catch (error) {
+          console.error('❌ Erro ao buscar/salvar dados completos:', error);
+        }
               
               setConnectedInstance({
                 instance_name: instanceName.trim(),

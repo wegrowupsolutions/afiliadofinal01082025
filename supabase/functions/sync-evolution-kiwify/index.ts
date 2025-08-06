@@ -144,13 +144,14 @@ serve(async (req) => {
         }
 
         // Preparar dados para update
+        const isConnected = instanceDetails.connectionStatus === 'open' || instanceDetails.status === 'open' || instanceDetails.state === 'open';
+        
         const updateData = {
-          // Status de conexão
-          is_connected: instanceDetails.connectionStatus === 'open' || instanceDetails.status === 'open' || instanceDetails.state === 'open',
-          connected_at: (instanceDetails.connectionStatus === 'open' || instanceDetails.status === 'open' || instanceDetails.state === 'open') 
-            ? new Date().toISOString() : null,
-          disconnected_at: (instanceDetails.connectionStatus !== 'open' && instanceDetails.status !== 'open' && instanceDetails.state !== 'open') 
-            ? new Date().toISOString() : null,
+          // Status de conexão - MAIS IMPORTANTE: garantir que estos campos sejam atualizados
+          'Nome da instancia da Evolution': instanceName,
+          is_connected: isConnected,
+          connected_at: isConnected ? new Date().toISOString() : null,
+          disconnected_at: !isConnected ? new Date().toISOString() : null,
           
           // Dados da Evolution
           evolution_instance_id: instanceDetails.instanceId || instanceDetails.id || instanceName,
@@ -168,7 +169,11 @@ serve(async (req) => {
           evo_instance: instanceName
         }
 
-        console.log(`📝 Atualizando user ${matchedUser.user_id}:`, updateData)
+        console.log(`📝 Atualizando user ${matchedUser.user_id} com dados:`, {
+          instanceName,
+          isConnected,
+          updateData
+        });
 
         // Verificar se user_id é válido
         if (!matchedUser.user_id || matchedUser.user_id === 'null' || matchedUser.user_id === null) {
@@ -183,9 +188,27 @@ serve(async (req) => {
           .eq('user_id', matchedUser.user_id)
 
         if (updateError) {
-          console.error(`❌ Erro update ${instanceName}:`, updateError)
+          console.error(`❌ Erro ao atualizar ${instanceName}:`, updateError)
         } else {
-          console.log(`✅ ${instanceName} sincronizado com sucesso`)
+          console.log(`✅ ${instanceName} sincronizado com sucesso para user ${matchedUser.user_id}`)
+          
+          // Verificar se os dados foram salvos corretamente
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('kiwify')
+            .select('*')
+            .eq('user_id', matchedUser.user_id)
+            .single();
+          
+          if (verifyError) {
+            console.error(`❌ Erro ao verificar dados salvos para ${instanceName}:`, verifyError);
+          } else {
+            console.log(`🔍 Dados verificados para ${instanceName}:`, {
+              is_connected: verifyData.is_connected,
+              instance_name: verifyData['Nome da instancia da Evolution'],
+              phone: verifyData.remojid
+            });
+          }
+          
           syncCount++
           processedInstances.push({
             instance_name: instanceName,
