@@ -39,7 +39,10 @@ const ChatHeader = ({ signOut }: ChatHeaderProps) => {
             {user?.user_metadata?.name || user?.email}
           </Badge>
           <ThemeToggle />
-          <Button variant="outline" onClick={signOut} className="border-white text-white bg-gray-950/50 hover:bg-gray-800 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600">
+          <Button variant="outline" onClick={() => {
+            signOut();
+            window.location.href = 'https://afiliado.seuagente.ai/';
+          }} className="border-white text-white bg-gray-950/50 hover:bg-gray-800 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600">
             <LogOut className="mr-2 h-4 w-4" />
             Sair
           </Button>
