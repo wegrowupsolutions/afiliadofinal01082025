@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { useEvolutionConnection } from '@/hooks/useEvolutionConnection';
-import SyncTestButton from '@/components/SyncTestButton';
 
 
 const Evolution = () => {
@@ -568,9 +567,6 @@ const Evolution = () => {
         )}
         
         <div className="max-w-xl mx-auto">
-          {/* Botão de teste temporário */}
-          <SyncTestButton />
-          
           {(connectedInstance || connectionStatus.isConnected) && !qrCodeData && confirmationStatus !== 'confirmed' && (
             <Card className="dark:bg-gray-800 shadow-lg border-green-100 dark:border-green-900/30 mb-6">
               <CardContent className="pt-6">
