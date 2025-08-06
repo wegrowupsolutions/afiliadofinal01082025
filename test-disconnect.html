@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Desconexão Evolution</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Desconectando instância do usuário viniciushtx@hotmail.com</h1>
+    <div id="result"></div>
+
+    <script>
+        const { createClient } = supabase;
+        
+        const supabaseClient = createClient(
+            'https://ufcarzzouvxgqljqxdnc.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmY2FyenpvdXZ4Z3FsanF4ZG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1NzU5NTMsImV4cCI6MjA2OTE1MTk1M30.wurxO8lV_TMb4UD6WtPEytMOejzySupgnfSIeNgPg-c'
+        );
+
+        async function disconnectUser() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '🔄 Processando desconexão...';
+
+            try {
+                console.log('Chamando edge function evolution-logout-delete...');
+                
+                const { data, error } = await supabaseClient.functions.invoke('evolution-logout-delete', {
+                    body: {
+                        instanceName: 'testevini1350/0608',
+                        userId: '9dcd94fa-1d19-4ddb-8d92-ab1c34235fd9',
+                        email: 'viniciushtx@hotmail.com'
+                    }
+                });
+
+                if (error) {
+                    console.error('Erro:', error);
+                    resultDiv.innerHTML = `❌ Erro: ${error.message}`;
+                    return;
+                }
+
+                console.log('Resultado:', data);
+                resultDiv.innerHTML = `✅ Sucesso: ${JSON.stringify(data, null, 2)}`;
+
+            } catch (err) {
+                console.error('Erro geral:', err);
+                resultDiv.innerHTML = `💥 Erro: ${err.message}`;
+            }
+        }
+
+        // Executar automaticamente
+        disconnectUser();
+    </script>
+</body>
+</html>
