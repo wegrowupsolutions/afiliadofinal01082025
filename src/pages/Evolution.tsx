@@ -821,7 +821,7 @@ const Evolution = () => {
     }
   };
 
-  const handleDisconnectInstance = async () => {
+  const handleDisconnectInstanceOld = async () => {
     if (!user?.id || !connectedInstance) return;
     
     try {
@@ -983,7 +983,7 @@ const Evolution = () => {
                       Ir para Conversas
                     </Button>
                     <Button 
-                      onClick={handleDisconnectInstance}
+                      onClick={handleDisconnectInstanceOld}
                       disabled={isLoading}
                       variant="destructive"
                       className="px-6 py-2"
