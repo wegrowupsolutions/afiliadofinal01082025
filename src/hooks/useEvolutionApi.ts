@@ -282,11 +282,99 @@ export const useEvolutionApi = () => {
     }
   };
 
+  // Buscar todas as instâncias
+  const fetchInstances = async () => {
+    try {
+      const response = await fetch('https://evolution.serverwegrowup.com.br/instance/fetchInstances', {
+        method: 'GET',
+        headers: {
+          'apikey': '066327121bd64f8356c26e9edfa1799d'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao buscar instâncias:', error);
+      throw error;
+    }
+  };
+
+  // Verificar estado da conexão
+  const checkConnectionState = async (instanceName: string) => {
+    try {
+      const response = await fetch(`https://evolution.serverwegrowup.com.br/instance/connectionState/${instanceName}`, {
+        method: 'GET',
+        headers: {
+          'apikey': '066327121bd64f8356c26e9edfa1799d'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao verificar estado da conexão:', error);
+      throw error;
+    }
+  };
+
+  // Fazer logout da instância
+  const logoutInstance = async (instanceName: string) => {
+    try {
+      const response = await fetch(`https://evolution.serverwegrowup.com.br/instance/logout/${instanceName}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': '066327121bd64f8356c26e9edfa1799d'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao fazer logout da instância:', error);
+      throw error;
+    }
+  };
+
+  // Deletar instância
+  const deleteInstance = async (instanceName: string) => {
+    try {
+      const response = await fetch(`https://evolution.serverwegrowup.com.br/instance/delete/${instanceName}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': '066327121bd64f8356c26e9edfa1799d'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao deletar instância:', error);
+      throw error;
+    }
+  };
+
   return {
     createInstance,
     updateQrCode,
     checkConnectionStatus,
     getInstanceStatus,
+    fetchInstances,
+    checkConnectionState,
+    logoutInstance,
+    deleteInstance,
     isConnecting,
     connectionStatus,
     setConnectionStatus,
