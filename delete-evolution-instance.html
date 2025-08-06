@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deletar Instância Evolution</title>
+</head>
+<body>
+    <h1>Deletando instância testevini1350/0608</h1>
+    <div id="result"></div>
+
+    <script>
+        async function deleteInstance() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '🔄 Deletando instância...';
+
+            try {
+                // 1. Primeiro fazer logout
+                console.log('🔌 Fazendo logout da instância...');
+                const logoutResponse = await fetch('https://evolution.serverwegrowup.com.br/instance/logout/testevini1350/0608', {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': '066327121bd64f8356c26e9edfa1799d',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Logout response:', logoutResponse.status, logoutResponse.statusText);
+
+                // 2. Agora deletar a instância
+                console.log('🗑️ Deletando instância...');
+                const deleteResponse = await fetch('https://evolution.serverwegrowup.com.br/instance/delete/testevini1350/0608', {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': '066327121bd64f8356c26e9edfa1799d',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Delete response:', deleteResponse.status, deleteResponse.statusText);
+
+                if (deleteResponse.ok) {
+                    resultDiv.innerHTML = '✅ Instância testevini1350/0608 deletada com sucesso!';
+                } else {
+                    const errorText = await deleteResponse.text();
+                    resultDiv.innerHTML = `❌ Erro ao deletar: ${deleteResponse.status} - ${errorText}`;
+                }
+
+            } catch (error) {
+                console.error('Erro:', error);
+                resultDiv.innerHTML = `💥 Erro: ${error.message}`;
+            }
+        }
+
+        // Executar automaticamente
+        deleteInstance();
+    </script>
+</body>
+</html>
