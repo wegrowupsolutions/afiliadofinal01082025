@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check } from 'lucide-react';
+import { ArrowLeft, Link, Bot, Plus, QrCode, Loader2, RefreshCw, Check, Unplug } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -366,6 +366,62 @@ const Evolution = () => {
       statusCheckIntervalRef.current = null;
     }
   };
+
+  const handleDisconnectInstance = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('kiwify')
+        .update({
+          "Nome da instancia da Evolution": null,
+          is_connected: false,
+          connected_at: null,
+          disconnected_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao desconectar instância:', error);
+        toast({
+          title: "Erro ao desconectar",
+          description: "Não foi possível desconectar a instância. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Limpar estados locais
+      setConnectedInstance(null);
+      setQrCodeData(null);
+      setConfirmationStatus(null);
+      setShowActiveConnectionMessage(false);
+      setInstanceName('');
+      
+      // Limpar interval se ativo
+      if (statusCheckIntervalRef.current !== null) {
+        clearInterval(statusCheckIntervalRef.current);
+        statusCheckIntervalRef.current = null;
+      }
+
+      toast({
+        title: "Instância desconectada",
+        description: "Sua instância foi desconectada com sucesso. Você pode criar uma nova conexão.",
+      });
+
+    } catch (error) {
+      console.error('Erro ao desconectar:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado ao desconectar.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
@@ -451,6 +507,19 @@ const Evolution = () => {
                       className="bg-green-600 hover:bg-green-700"
                     >
                       Ir para Conversas
+                    </Button>
+                    <Button 
+                      onClick={handleDisconnectInstance}
+                      disabled={isLoading}
+                      variant="destructive"
+                      className="px-6 py-2"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Unplug className="h-4 w-4 mr-2" />
+                      )}
+                      Desconectar
                     </Button>
                   </div>
                 </div>
