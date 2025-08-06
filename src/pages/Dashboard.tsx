@@ -52,7 +52,6 @@ const Dashboard = () => {
           <KnowledgeCard />
           <ClientsCard />
           <EvolutionCard />
-          <SyncStatusCard />
           <AcademiaCard />
           <AgentConfigCard />
           {isAdmin && <ConfigCard />}
