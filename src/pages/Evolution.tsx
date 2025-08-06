@@ -33,6 +33,7 @@ const Evolution = () => {
     createInstance: createEvolutionInstance, 
     updateQrCode: updateEvolutionQrCode, 
     checkConnectionStatus: checkEvolutionConnectionStatus,
+    checkConnectionState,
     logoutInstance,
     deleteInstance
   } = useEvolutionApi();
@@ -115,6 +116,89 @@ const Evolution = () => {
       }
     };
   }, []);
+
+  // useEffect para verificar e limpar instâncias órfãs
+  useEffect(() => {
+    const checkOrphanInstances = async () => {
+      if (!user?.id) return;
+      
+      try {
+        console.log('🔍 Verificando instâncias órfãs para usuário:', user.id);
+        
+        // 1. Buscar dados do usuário no Supabase
+        const { data: userData } = await supabase
+          .from('kiwify')
+          .select(`
+            "Nome da instancia da Evolution",
+            is_connected
+          `)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (userData?.['Nome da instancia da Evolution'] && userData?.is_connected) {
+          const instanceName = userData['Nome da instancia da Evolution'];
+          console.log('🔎 Verificando instância:', instanceName);
+          
+          // 2. Verificar se instância existe na Evolution
+          try {
+            const state = await checkConnectionState(instanceName);
+            console.log('📊 Estado da instância:', state);
+            
+            if (!state || state.state !== 'open') {
+              // Instância não existe ou não está conectada
+              console.log('🧹 Limpando instância órfã:', instanceName);
+              
+              // Limpar no Supabase
+              await supabase
+                .from('kiwify')
+                .update({
+                  'Nome da instancia da Evolution': null,
+                  is_connected: false,
+                  remojid: null,
+                  evolution_raw_data: null
+                })
+                .eq('user_id', user.id);
+
+              console.log('✅ Instância órfã limpa com sucesso');
+              
+              // Forçar atualização do status se disponível
+              if (refreshStatus) {
+                refreshStatus();
+              }
+            } else {
+              console.log('✅ Instância válida e conectada');
+            }
+          } catch (error) {
+            // Instância não existe na Evolution
+            console.log('🧹 Instância não encontrada na Evolution, limpando dados');
+            
+            await supabase
+              .from('kiwify')
+              .update({
+                'Nome da instancia da Evolution': null,
+                is_connected: false,
+                remojid: null,
+                evolution_raw_data: null
+              })
+              .eq('user_id', user.id);
+
+            console.log('✅ Dados de instância inexistente limpos');
+            
+            // Forçar atualização do status se disponível
+            if (refreshStatus) {
+              refreshStatus();
+            }
+          }
+        } else {
+          console.log('ℹ️ Nenhuma instância conectada encontrada para verificar');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar instâncias órfãs:', error);
+      }
+    };
+    
+    checkOrphanInstances();
+  }, [user?.id, checkConnectionState, refreshStatus]);
   
   const checkConnectionStatus = async () => {
     try {
