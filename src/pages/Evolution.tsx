@@ -390,19 +390,56 @@ const Evolution = () => {
     try {
       setIsLoading(true);
       
-      // NOVA: Chamar Evolution API primeiro
-      const instanceName = connectionStatus.instanceName;
-      if (instanceName) {
+      // Primeiro tentar sincronizar para pegar dados mais recentes
+      try {
+        console.log('🔄 Sincronizando dados antes da desconexão...');
+        await supabase.functions.invoke('sync-evolution-kiwify');
+      } catch (syncError) {
+        console.log('⚠️ Erro na sincronização pré-desconexão:', syncError);
+      }
+
+      // Tentar identificar instância para limpar na Evolution API
+      let instanceNameToDelete = connectionStatus.instanceName;
+      
+      // Se não tem nome da instância no status, buscar no banco
+      if (!instanceNameToDelete) {
+        const { data: kiwifyData } = await supabase
+          .from('kiwify')
+          .select('"Nome da instancia da Evolution"')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        instanceNameToDelete = kiwifyData?.['Nome da instancia da Evolution'];
+      }
+      
+      // Se ainda não tem nome, tentar buscar no Evolution baseado no email
+      if (!instanceNameToDelete) {
+        console.log('⚠️ Nome da instância não encontrado, tentando buscar por email...');
+        
         try {
-          console.log('🔌 Calling Evolution API to logout/delete instance:', instanceName);
+          const searchResponse = await supabase.functions.invoke('sync-evolution-kiwify');
+          if (searchResponse.data) {
+            console.log('📊 Dados Evolution após busca:', searchResponse.data);
+          }
+        } catch (error) {
+          console.log('⚠️ Erro ao buscar instâncias:', error);
+        }
+      }
+
+      // Chamar Evolution API se temos nome da instância
+      if (instanceNameToDelete) {
+        try {
+          console.log('🔌 Calling Evolution API to logout/delete instance:', instanceNameToDelete);
           await supabase.functions.invoke('evolution-logout-delete', {
-            body: { instanceName }
+            body: { instanceName: instanceNameToDelete }
           });
           console.log('✅ Evolution API cleanup completed');
         } catch (error) {
           console.log('⚠️ Evolution API error (continuing with Supabase):', error);
           // Continuar mesmo se Evolution falhar
         }
+      } else {
+        console.log('⚠️ Nenhuma instância encontrada para deletar da Evolution API');
       }
       
       // MANTER: Todas as operações Supabase existentes
