@@ -74,6 +74,61 @@ const ChangePassword = () => {
     }
   };
 
+  // Função para criar perfil automaticamente
+  const createUserProfile = async (email: string) => {
+    try {
+      // 1. Buscar dados do usuário em kiwfy
+      const { data: kiwfyUser, error: kiwfyError } = await supabase
+        .from('kiwify')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (kiwfyError || !kiwfyUser) {
+        console.error('Erro ao buscar dados do kiwfy:', kiwfyError);
+        return;
+      }
+
+      // 2. Verificar se já existe perfil
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (profileCheckError) {
+        console.error('Erro ao verificar perfil existente:', profileCheckError);
+        return;
+      }
+
+      // 3. Se não existe, criar novo perfil
+      if (!existingProfile) {
+        const newProfile = {
+          id: crypto.randomUUID(), // Gerar UUID
+          email: kiwfyUser.email,
+          full_name: kiwfyUser.Nome || null,
+          phone: kiwfyUser.telefone || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert(newProfile);
+
+        if (insertError) {
+          console.error('Erro ao criar perfil:', insertError);
+        } else {
+          console.log('Perfil criado com sucesso para:', email);
+        }
+      } else {
+        console.log('Perfil já existe para:', email);
+      }
+    } catch (error) {
+      console.error('Erro geral ao criar perfil:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,6 +166,9 @@ const ChangePassword = () => {
       if (!updateSuccess) {
         throw new Error('Falha ao atualizar senha');
       }
+
+      // NOVO: Criar perfil automaticamente após sucesso
+      await createUserProfile(formData.email);
 
       // Mostrar modal de sucesso
       setShowSuccessModal(true);
