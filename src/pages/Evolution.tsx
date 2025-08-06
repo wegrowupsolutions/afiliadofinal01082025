@@ -317,7 +317,7 @@ const Evolution = () => {
           console.log('Response status value:', status);
           
             if (status === "positivo") {
-              console.log('🎉 Connection confirmed - stopping interval');
+              console.log('🎉 Connection confirmed via polling - stopping interval');
               
               // Prevent orphan cleanup during connection process
               setIsConnecting(true); 
@@ -327,6 +327,12 @@ const Evolution = () => {
                 statusCheckIntervalRef.current = null;
               }
               setConfirmationStatus('confirmed');
+              
+              // Show connection success toast for polling detections
+              toast({
+                title: "✅ Instância Conectada!",
+                description: `WhatsApp conectado com sucesso: ${instanceName}`,
+              });
               
               // ========== SIMPLIFIED AND IMPROVED DATA SAVING ==========
               try {
